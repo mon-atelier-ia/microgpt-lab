@@ -1,0 +1,13 @@
+#!/bin/sh
+cd app || exit 1
+
+echo "==> Type check (tsc --noEmit)..."
+npx tsc --noEmit || exit 1
+
+echo "==> Build (vite)..."
+pnpm build || exit 1
+
+echo "==> Duplication check (jscpd)..."
+npx jscpd src/ || exit 1
+
+echo "==> All pre-push checks passed."

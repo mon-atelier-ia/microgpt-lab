@@ -1,0 +1,8 @@
+node_modules/
+dist/
+model-rs/target/
+app/report/
+.DS_Store
+*.png
+.playwright-mcp/
+pnpm-build-config.yaml

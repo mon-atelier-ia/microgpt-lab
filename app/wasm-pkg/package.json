@@ -1,0 +1,15 @@
+{
+  "name": "microgpt-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "microgpt_wasm_bg.wasm",
+    "microgpt_wasm.js",
+    "microgpt_wasm.d.ts"
+  ],
+  "main": "microgpt_wasm.js",
+  "types": "microgpt_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

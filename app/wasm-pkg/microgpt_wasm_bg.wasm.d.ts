@@ -1,0 +1,27 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_wasmgpt_free: (a: number, b: number) => void;
+export const wasmgpt_bos: (a: number) => number;
+export const wasmgpt_compute_probs: (a: number, b: number, c: number, d: number) => [number, number, number, number];
+export const wasmgpt_config: (a: number) => any;
+export const wasmgpt_forward_trace: (a: number, b: number, c: number, d: number, e: number) => [number, number, number];
+export const wasmgpt_forward_with_grads: (a: number, b: number, c: number, d: number) => [number, number, number];
+export const wasmgpt_lm_head_row: (a: number, b: number) => [number, number, number, number];
+export const wasmgpt_new: (a: number, b: number) => [number, number, number];
+export const wasmgpt_reset: (a: number, b: number, c: number) => [number, number];
+export const wasmgpt_reset_training: (a: number) => void;
+export const wasmgpt_train: (a: number, b: number) => void;
+export const wasmgpt_train_step: (a: number) => any;
+export const wasmgpt_train_step_traced: (a: number) => [number, number, number];
+export const wasmgpt_training_meta: (a: number) => [number, number, number];
+export const wasmgpt_vocab_tokens: (a: number) => [number, number];
+export const wasmgpt_wpe_row: (a: number, b: number) => [number, number, number, number];
+export const wasmgpt_wte_row: (a: number, b: number) => [number, number, number, number];
+export const init_panic_hook: () => void;
+export const __wbindgen_malloc: (a: number, b: number) => number;
+export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
+export const __wbindgen_externrefs: WebAssembly.Table;
+export const __externref_table_dealloc: (a: number) => void;
+export const __wbindgen_start: () => void;
