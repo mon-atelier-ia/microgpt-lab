@@ -1,0 +1,116 @@
+<h2>Mode Compare — répartition verticale 40/30/30</h2>
+<p class="subtitle">Params éditables (40%) · Loss (30%) · Inférence (30%)</p>
+
+<div style="border:1px solid #444;border-radius:8px;padding:16px;margin-top:12px;">
+  <div style="display:flex;gap:10px;min-height:480px;">
+    <!-- Modèle A -->
+    <div style="flex:1;border:1px solid #2a4a6a;border-radius:6px;padding:12px;display:flex;flex-direction:column;">
+      <div style="background:#2a4a6a;padding:5px;border-radius:4px;margin-bottom:10px;text-align:center;font-size:12px;color:#8cf;font-weight:bold;">Modèle A</div>
+
+      <!-- PARAMS 40% -->
+      <div style="flex:4;margin-bottom:8px;">
+        <div style="color:#8cf;font-size:10px;margin-bottom:6px;font-weight:bold;">PARAMÈTRES</div>
+        <div style="background:#2a2a4e;padding:5px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">📦 prénoms-fr ▾</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:4px;">
+          <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;font-size:10px;">n_embd <span style="color:#8cf;float:right;">16 ▾</span></div>
+          <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;font-size:10px;">n_head <span style="color:#8cf;float:right;">2 ▾</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:4px;">
+          <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;font-size:10px;">n_layer <span style="color:#8cf;float:right;">1 ▾</span></div>
+          <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;font-size:10px;">block_size <span style="color:#8cf;float:right;">16 ▾</span></div>
+        </div>
+        <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;margin-bottom:3px;font-size:10px;">
+          lr <span style="color:#8cf;float:right;">0.01</span>
+          <div style="margin-top:3px;height:3px;background:#0a0a1e;border-radius:2px;"><div style="width:35%;height:3px;background:#4a8aff;border-radius:2px;"></div></div>
+        </div>
+        <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;margin-bottom:4px;font-size:10px;">
+          temperature <span style="color:#8cf;float:right;">0.8</span>
+          <div style="margin-top:3px;height:3px;background:#0a0a1e;border-radius:2px;"><div style="width:65%;height:3px;background:#4a8aff;border-radius:2px;"></div></div>
+        </div>
+        <div style="background:#2a6a4a;padding:5px;border-radius:4px;font-size:11px;text-align:center;cursor:pointer;font-weight:bold;">▶ Entraîner</div>
+      </div>
+
+      <!-- LOSS 30% -->
+      <div style="flex:3;margin-bottom:8px;">
+        <div style="color:#8cf;font-size:10px;margin-bottom:4px;font-weight:bold;">LOSS</div>
+        <div style="background:#0a0a1e;border-radius:4px;padding:6px;height:100%;">
+          <svg viewBox="0 0 200 70" style="width:100%;" preserveAspectRatio="none">
+            <polyline points="0,5 20,20 40,30 60,35 80,38 100,40 120,42 140,44 160,46 180,48 200,50" fill="none" stroke="#4a8aff" stroke-width="2"/>
+            <polyline points="0,3 20,15 40,28 60,33 80,36 100,39 120,41 140,43 160,45 180,47 200,49" fill="none" stroke="#4aff8a" stroke-width="1.5" opacity="0.5"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:#666;margin-top:2px;">
+            <span>142/200</span><span style="color:#4a8aff;">train 1.23</span><span style="color:#4aff8a;">eval 1.41</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- INFERENCE 30% -->
+      <div style="flex:3;">
+        <div style="color:#8cf;font-size:10px;margin-bottom:4px;font-weight:bold;">INFÉRENCE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">pierre</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">marie</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">lucas</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">sophir</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">jeanet</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">nicolé</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modèle B -->
+    <div style="flex:1;border:1px solid #4a2a6a;border-radius:6px;padding:12px;display:flex;flex-direction:column;">
+      <div style="background:#4a2a6a;padding:5px;border-radius:4px;margin-bottom:10px;text-align:center;font-size:12px;color:#d8f;font-weight:bold;">Modèle B</div>
+
+      <!-- PARAMS 40% -->
+      <div style="flex:4;margin-bottom:8px;">
+        <div style="color:#d8f;font-size:10px;margin-bottom:6px;font-weight:bold;">PARAMÈTRES</div>
+        <div style="background:#2a2a4e;padding:5px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">📦 prénoms-fr ▾</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:4px;">
+          <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;font-size:10px;">n_embd <span style="color:#d8f;float:right;">32 ▾</span></div>
+          <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;font-size:10px;">n_head <span style="color:#d8f;float:right;">4 ▾</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:4px;">
+          <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;font-size:10px;">n_layer <span style="color:#d8f;float:right;">1 ▾</span></div>
+          <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;font-size:10px;">block_size <span style="color:#d8f;float:right;">16 ▾</span></div>
+        </div>
+        <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;margin-bottom:3px;font-size:10px;">
+          lr <span style="color:#d8f;float:right;">0.01</span>
+          <div style="margin-top:3px;height:3px;background:#0a0a1e;border-radius:2px;"><div style="width:35%;height:3px;background:#b06aff;border-radius:2px;"></div></div>
+        </div>
+        <div style="background:#2a2a4e;padding:4px 6px;border-radius:4px;margin-bottom:4px;font-size:10px;">
+          temperature <span style="color:#d8f;float:right;">0.8</span>
+          <div style="margin-top:3px;height:3px;background:#0a0a1e;border-radius:2px;"><div style="width:65%;height:3px;background:#b06aff;border-radius:2px;"></div></div>
+        </div>
+        <div style="background:#2a6a4a;padding:5px;border-radius:4px;font-size:11px;text-align:center;cursor:pointer;font-weight:bold;">▶ Entraîner</div>
+      </div>
+
+      <!-- LOSS 30% -->
+      <div style="flex:3;margin-bottom:8px;">
+        <div style="color:#d8f;font-size:10px;margin-bottom:4px;font-weight:bold;">LOSS</div>
+        <div style="background:#0a0a1e;border-radius:4px;padding:6px;height:100%;">
+          <svg viewBox="0 0 200 70" style="width:100%;" preserveAspectRatio="none">
+            <polyline points="0,5 20,25 40,35 60,40 80,44 100,47 120,49 140,51 160,52 180,53 200,54" fill="none" stroke="#b06aff" stroke-width="2"/>
+            <polyline points="0,3 20,18 40,30 60,37 80,42 100,45 120,48 140,50 160,51 180,52 200,53" fill="none" stroke="#ff6ab0" stroke-width="1.5" opacity="0.5"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:#666;margin-top:2px;">
+            <span>170/200</span><span style="color:#b06aff;">train 0.98</span><span style="color:#ff6ab0;">eval 1.12</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- INFERENCE 30% -->
+      <div style="flex:3;">
+        <div style="color:#d8f;font-size:10px;margin-bottom:4px;font-weight:bold;">INFÉRENCE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">pierre</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">claire</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">émilie</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">pauline</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">lucien</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">martin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

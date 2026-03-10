@@ -1,0 +1,84 @@
+<h2>microgpt-lab — Layout révisé</h2>
+<p class="subtitle">Params + inférence = stars du show. Loss = indicateur secondaire.</p>
+
+<div class="section">
+  <h3>Mode Solo</h3>
+  <div style="border:1px solid #444;border-radius:8px;padding:16px;margin-top:8px;">
+    <div style="display:flex;gap:12px;">
+      <div style="width:220px;background:#1a1a2e;border-radius:6px;padding:12px;">
+        <div style="color:#8cf;font-size:11px;margin-bottom:8px;font-weight:bold;">PARAMÈTRES</div>
+        <div style="background:#2a2a4e;padding:6px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">📦 Dataset: prénoms-fr ▾</div>
+        <div style="background:#2a2a4e;padding:6px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">n_embd: <span style="color:#8cf">16</span> · n_head: <span style="color:#8cf">2</span> · n_layer: <span style="color:#8cf">1</span></div>
+        <div style="background:#2a2a4e;padding:6px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">block_size: <span style="color:#8cf">16</span></div>
+        <div style="background:#2a2a4e;padding:6px 8px;border-radius:4px;margin-bottom:4px;font-size:11px;">🎚️ lr: <span style="color:#8cf">0.01</span></div>
+        <div style="background:#2a2a4e;padding:6px 8px;border-radius:4px;margin-bottom:8px;font-size:11px;">🎚️ temperature: <span style="color:#8cf">0.8</span></div>
+        <div style="background:#2a6a4a;padding:6px 8px;border-radius:4px;margin-bottom:8px;font-size:11px;text-align:center;cursor:pointer;">▶ Entraîner</div>
+        <div style="border-top:1px solid #333;padding-top:8px;margin-top:4px;">
+          <div style="color:#666;font-size:10px;margin-bottom:4px;">PROGRESSION</div>
+          <div style="background:#0a0a1e;padding:4px;border-radius:4px;height:50px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#666;">📉 mini loss curve</div>
+          <div style="font-size:10px;color:#666;margin-top:4px;text-align:center;">step 142/200 · loss 1.23</div>
+        </div>
+      </div>
+      <div style="flex:1;background:#1a1a2e;border-radius:6px;padding:16px;">
+        <div style="color:#8cf;font-size:11px;margin-bottom:12px;font-weight:bold;">INFÉRENCE</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <div style="background:#2a2a4e;padding:6px 12px;border-radius:4px;font-size:11px;">🎚️ temperature: <span style="color:#8cf">0.8</span></div>
+          <div style="background:#2a4a6a;padding:6px 12px;border-radius:4px;font-size:11px;cursor:pointer;">🔄 Regénérer</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;">
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">pierre</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">marie</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">lucas</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">émilie</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">paulin</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">jeanet</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">sophir</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">nicolé</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">martin</div>
+          <div style="background:#0a0a1e;padding:10px;border-radius:6px;text-align:center;font-size:16px;font-weight:bold;color:#e8e8ff;">claire</div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:#666;text-align:center;">10 samples · temperature 0.8 · 200 steps</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Mode Compare</h3>
+  <div style="border:1px solid #444;border-radius:8px;padding:16px;margin-top:8px;">
+    <div style="display:flex;gap:8px;">
+      <div style="flex:1;border:1px solid #2a4a6a;border-radius:6px;padding:10px;">
+        <div style="background:#2a4a6a;padding:4px;border-radius:4px;margin-bottom:8px;text-align:center;font-size:12px;color:#8cf;font-weight:bold;">Modèle A — n_head=2</div>
+        <div style="font-size:10px;color:#888;margin-bottom:4px;">⚙️ n_embd=16, n_layer=1, lr=0.01</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <div style="flex:1;background:#0a0a1e;height:4px;border-radius:2px;"><div style="width:71%;background:#2a6a4a;height:4px;border-radius:2px;"></div></div>
+          <span style="font-size:9px;color:#666;">142/200 · 1.23</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">pierre</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">marie</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">lucas</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">sophir</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">jeanet</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">nicolé</div>
+        </div>
+      </div>
+      <div style="flex:1;border:1px solid #4a2a6a;border-radius:6px;padding:10px;">
+        <div style="background:#4a2a6a;padding:4px;border-radius:4px;margin-bottom:8px;text-align:center;font-size:12px;color:#d8f;font-weight:bold;">Modèle B — n_head=4</div>
+        <div style="font-size:10px;color:#888;margin-bottom:4px;">⚙️ n_embd=16, n_layer=1, lr=0.01</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <div style="flex:1;background:#0a0a1e;height:4px;border-radius:2px;"><div style="width:85%;background:#2a6a4a;height:4px;border-radius:2px;"></div></div>
+          <span style="font-size:9px;color:#666;">170/200 · 0.98</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">pierre</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">claire</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">émilie</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">martin</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">pauline</div>
+          <div style="background:#0a0a1e;padding:6px;border-radius:4px;text-align:center;font-size:13px;font-weight:bold;color:#e8e8ff;">lucien</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

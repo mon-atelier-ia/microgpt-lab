@@ -1,0 +1,1111 @@
+# microgpt-lab Implementation Plan
+
+> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build a parameter experimentation playground for microGPT with Solo and Compare modes, powered by Rust/WASM.
+
+**Architecture:** Three-panel triptyque (params/loss/inference) with a shared `ModelPanel` component. Solo renders one panel horizontally; Compare renders two vertically. Each model runs in its own Web Worker wrapping a `WasmGpt` WASM instance. shadcn/ui for controls, Chart.js for real-time loss curves, OKLCH tetradric palette for A/B color identity.
+
+**Tech Stack:** React 19, Vite 7, Tailwind 4, shadcn/ui (Radix), Chart.js + react-chartjs-2, microgpt-rs WASM, Vercel
+
+**Spec:** `docs/2026-03-10-microgpt-lab-design.md`
+
+---
+
+## File Structure
+
+```
+app/src/
+├── main.tsx                    # Entry point (existing)
+├── App.tsx                     # Root: mode toggle + panel routing
+├── index.css                   # Tailwind import + OKLCH tokens (existing)
+├── vite-env.d.ts               # Vite types (existing)
+├── theme/
+│   └── tokens.css              # OKLCH design tokens (tetradric palette)
+├── data/
+│   ├── presets.ts              # Dataset presets (name, data, default config)
+│   ├── prenoms-simple.ts       # ~50 French first names
+│   ├── baby-names.ts           # ~4500 English baby names
+│   ├── dinosaures.ts           # ~100 dinosaur names
+│   └── pokemon-fr.ts           # ~150 Pokémon FR names
+├── lib/
+│   ├── types.ts                # Shared types (ModelParams, TrainState, StepResult, etc.)
+│   ├── validation.ts           # n_embd % n_head constraint
+│   └── utils.ts                # cn() helper
+├── workers/
+│   └── model-worker.ts         # Web Worker: WASM init, train loop, generation
+├── hooks/
+│   ├── use-model-worker.ts     # Hook: spawn worker, send messages, receive state
+│   └── use-loss-data.ts        # Hook: accumulate loss points for Chart.js
+├── components/
+│   ├── ui/                     # shadcn/ui components (slider, select, button, tooltip)
+│   │   ├── slider.tsx
+│   │   ├── select.tsx
+│   │   ├── button.tsx
+│   │   └── tooltip.tsx
+│   ├── top-bar.tsx             # Mode toggle (Solo/Compare) + title
+│   ├── model-panel/
+│   │   ├── model-panel.tsx     # Orchestrator: params + loss + inference
+│   │   ├── params-panel.tsx    # All param controls (selects, sliders, buttons)
+│   │   ├── loss-panel.tsx      # Chart.js real-time loss curve
+│   │   └── inference-panel.tsx # Word grid display
+│   ├── solo-view.tsx           # Solo layout (horizontal 40/25/35)
+│   └── compare-view.tsx        # Compare layout (vertical split, two panels)
+```
+
+### Rust changes (in `model-rs/crates/microgpt-wasm/src/lib.rs`)
+
+- Add `new_with_config(names_text, n_embd, n_head, n_layer, block_size)` constructor
+- Add `set_lr(lr: f64)` method
+
+---
+
+## Chunk 1: Phase 0 — WASM API Extensions (Rust)
+
+> **Prerequisite:** Chunk 2 and 3 depend on Chunk 1 being complete and WASM rebuilt. Do not start Chunk 2 until Task 2 Step 6 (WASM rebuild) succeeds.
+
+### Task 1: Add configurable constructor and store ModelConfig
+
+**Files:**
+- Modify: `model-rs/crates/microgpt-wasm/src/lib.rs:64-117` (struct + impl)
+- Modify: `model-rs/crates/microgpt-wasm/tests/parity.rs`
+
+- [ ] **Step 1: Add `mc` field to WasmGpt struct**
+
+In `model-rs/crates/microgpt-wasm/src/lib.rs`, add `mc: ModelConfig` to the `WasmGpt` struct (after `tc`). Update the existing `new()` constructor to store `mc`:
+
+```rust
+// In struct WasmGpt:
+mc: ModelConfig,
+
+// In new(): before Ok(WasmGpt { ... })
+let mc = ModelConfig::default();
+// ... and add `mc,` to the struct literal
+```
+
+Also update `reset_training()` and `reset()` to use `self.mc` instead of `ModelConfig::default()`.
+
+- [ ] **Step 2: Write tests for new_with_config**
+
+The tests live in the existing `model-rs/crates/microgpt-wasm/tests/parity.rs`. Add imports if not present:
+
+```rust
+use microgpt_wasm::WasmGpt;
+```
+
+Add tests (these are integration tests — `WasmGpt` methods that return `Result<_, JsError>` work in native target because `JsError` implements `Debug`):
+
+```rust
+#[test]
+fn test_new_with_config_custom_params() {
+    let gpt = WasmGpt::new_with_config("alice\nbob\ncharlie", 8, 2, 1, 8)
+        .expect("should create with custom config");
+    assert_eq!(gpt.model_config().n_embd, 8);
+    assert_eq!(gpt.model_config().n_head, 2);
+    assert_eq!(gpt.model_config().n_layer, 1);
+    assert_eq!(gpt.model_config().block_size, 8);
+}
+
+#[test]
+fn test_new_with_config_invalid_head_dim() {
+    let result = WasmGpt::new_with_config("alice\nbob", 8, 3, 1, 16);
+    assert!(result.is_err(), "n_embd=8, n_head=3 should fail (8%3!=0)");
+}
+```
+
+- [ ] **Step 3: Run tests to verify they fail**
+
+Run: `cd model-rs && cargo test --test parity test_new_with_config 2>&1`
+Expected: compilation error — `new_with_config` and `model_config` don't exist yet
+
+- [ ] **Step 4: Implement new_with_config + model_config**
+
+In `model-rs/crates/microgpt-wasm/src/lib.rs`, add to `#[wasm_bindgen] impl WasmGpt`:
+
+```rust
+/// Create model with custom architecture config.
+/// Validates n_embd % n_head == 0.
+#[wasm_bindgen]
+pub fn new_with_config(
+    names_text: &str,
+    n_embd: usize,
+    n_head: usize,
+    n_layer: usize,
+    block_size: usize,
+) -> Result<WasmGpt, JsError> {
+    if n_embd % n_head != 0 {
+        return Err(JsError::new(&format!(
+            "n_embd ({n_embd}) must be divisible by n_head ({n_head})"
+        )));
+    }
+    let docs = parse_docs(names_text);
+    if docs.is_empty() {
+        return Err(JsError::new("new_with_config: names_text is empty"));
+    }
+    let doc_refs: Vec<&str> = docs.iter().map(|s| s.as_str()).collect();
+    let vocab = build_vocab(&doc_refs);
+    let mc = ModelConfig { n_embd, n_head, n_layer, block_size };
+    let tc = TrainConfig::default();
+    let mut rng = Rng::new(42);
+    let model = Model::new(vocab.size(), &mut rng, mc, &tc);
+    let train_order = Self::shuffled_order(docs.len(), &mut rng);
+    let (_, tracked) = build_param_options(&vocab.tokens);
+    let mut rng_t = Rng::new(42);
+    let tensor_model = TensorModel::new(vocab.size(), &mut rng_t, mc, &tc);
+    Ok(WasmGpt {
+        model, tensor_model, vocab, rng, docs, tc, mc,
+        step_count: 0, train_order, tracked, weights_dirty: false,
+    })
+}
+```
+
+And in the non-wasm `impl WasmGpt` block (test-only, no `#[wasm_bindgen]`):
+
+```rust
+/// Expose ModelConfig for testing.
+pub fn model_config(&self) -> ModelConfig {
+    self.mc
+}
+```
+
+- [ ] **Step 5: Fix reset_training() and reset() to use self.mc**
+
+Replace all `ModelConfig::default()` in `reset_training()` and `reset()` with `self.mc`.
+
+- [ ] **Step 6: Run tests to verify they pass**
+
+Run: `cd model-rs && cargo test --release 2>&1 | tail -20`
+Expected: all tests PASS including the two new ones
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add model-rs/
+git commit -m "feat(wasm): add configurable constructor new_with_config, store mc"
+```
+
+---
+
+### Task 2: Add set_lr method to WasmGpt
+
+**Files:**
+- Modify: `model-rs/crates/microgpt-wasm/src/lib.rs`
+- Modify: `model-rs/crates/microgpt-wasm/tests/parity.rs`
+
+- [ ] **Step 1: Write failing test for set_lr**
+
+In `model-rs/crates/microgpt-wasm/tests/parity.rs`, add:
+
+```rust
+#[test]
+fn test_set_lr() {
+    let mut gpt = WasmGpt::new("alice\nbob\ncharlie").expect("create");
+    gpt.set_lr(0.05);
+    assert!((gpt.current_lr() - 0.05).abs() < 1e-10);
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `cd model-rs && cargo test --test parity test_set_lr 2>&1`
+Expected: compilation error — `set_lr` and `current_lr` don't exist
+
+- [ ] **Step 3: Implement set_lr and current_lr**
+
+In `model-rs/crates/microgpt-wasm/src/lib.rs`, add to `#[wasm_bindgen] impl WasmGpt`:
+
+```rust
+/// Set learning rate (can be changed mid-training).
+pub fn set_lr(&mut self, lr: f64) {
+    self.tc.lr = lr;
+}
+
+/// Get current base learning rate.
+pub fn current_lr(&self) -> f64 {
+    self.tc.lr
+}
+```
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `cd model-rs && cargo test --release 2>&1 | tail -20`
+Expected: all tests PASS
+
+- [ ] **Step 5: Run fmt + clippy**
+
+Run: `cd model-rs && cargo fmt && cargo clippy -- -D warnings 2>&1`
+Expected: no errors
+
+- [ ] **Step 6: Rebuild WASM**
+
+Run: `cd /c/Dev/microgpt-lab && bash build-wasm.sh 2>&1`
+Expected: WASM output in `app/wasm-pkg/`, new `.d.ts` includes `new_with_config`, `set_lr`, `current_lr`
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add model-rs/ app/wasm-pkg/
+git commit -m "feat(wasm): add set_lr and current_lr methods"
+```
+
+---
+
+## Chunk 2: Phase 1 — Frontend Foundation
+
+> **Prerequisite:** Chunk 1 must be complete (WASM rebuilt with `new_with_config`, `set_lr`, `current_lr`) before starting Task 6 (Web Worker). Tasks 3-5 and 8 can start in parallel with Chunk 1.
+
+### Task 3: Install dependencies (shadcn/ui, Chart.js)
+
+**Files:**
+- Modify: `app/package.json`
+- Create: `app/src/lib/utils.ts`
+- Create: `app/src/components/ui/button.tsx`
+- Create: `app/src/components/ui/select.tsx`
+- Create: `app/src/components/ui/slider.tsx`
+- Create: `app/src/components/ui/tooltip.tsx`
+
+- [ ] **Step 1: Install Radix + Chart.js + shadcn deps**
+
+```bash
+cd app && pnpm add @radix-ui/react-select @radix-ui/react-slider @radix-ui/react-tooltip @radix-ui/react-slot chart.js react-chartjs-2 class-variance-authority clsx tailwind-merge lucide-react
+```
+
+- [ ] **Step 2: Create cn() utility**
+
+Write `app/src/lib/utils.ts`:
+```ts
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+- [ ] **Step 3: Copy shadcn/ui components from microgpt-ts-fr**
+
+Copy and adapt these files from `C:/Dev/microgpt-ts-fr/web/components/ui/`:
+- `button.tsx`
+- `select.tsx`
+- `slider.tsx`
+- `tooltip.tsx`
+
+Adapt imports: change `@/lib/utils` path if needed. Remove any Next.js-specific imports.
+
+- [ ] **Step 4: Verify build**
+
+Run: `cd app && npx tsc --noEmit && pnpm build`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add app/
+git commit -m "feat: install shadcn/ui components and Chart.js"
+```
+
+---
+
+### Task 4: Dataset presets
+
+**Files:**
+- Create: `app/src/data/prenoms-simple.ts`
+- Create: `app/src/data/dinosaures.ts`
+- Create: `app/src/data/pokemon-fr.ts`
+- Create: `app/src/data/presets.ts`
+
+- [ ] **Step 1: Copy dataset files from microgpt-ts-fr**
+
+Copy the raw arrays from:
+- `C:/Dev/microgpt-ts-fr/datasets/prenoms-simple.ts` → `app/src/data/prenoms-simple.ts`
+- `C:/Dev/microgpt-ts-fr/datasets/baby-names.ts` → `app/src/data/baby-names.ts`
+- `C:/Dev/microgpt-ts-fr/datasets/dinosaures.ts` → `app/src/data/dinosaures.ts`
+- `C:/Dev/microgpt-ts-fr/datasets/pokemon-fr.ts` → `app/src/data/pokemon-fr.ts`
+
+- [ ] **Step 2: Create presets.ts**
+
+Write `app/src/data/presets.ts`:
+```ts
+import { prenomsSimple } from './prenoms-simple';
+import { babyNames } from './baby-names';
+import { dinosaures } from './dinosaures';
+import { pokemonFr } from './pokemon-fr';
+
+export type Preset = {
+  id: string;
+  name: string;
+  description: string;
+  data: string[];
+};
+
+export const PRESETS: Preset[] = [
+  {
+    id: 'prenoms-simple',
+    name: 'Prénoms FR',
+    description: '~50 prénoms français courants',
+    data: prenomsSimple,
+  },
+  {
+    id: 'baby-names',
+    name: 'Baby Names EN',
+    description: '~4500 English baby names',
+    data: babyNames,
+  },
+  {
+    id: 'dinosaures',
+    name: 'Dinosaures',
+    description: '~100 noms de dinosaures',
+    data: dinosaures,
+  },
+  {
+    id: 'pokemon-fr',
+    name: 'Pokémon FR',
+    description: '~150 noms de Pokémon en français',
+    data: pokemonFr,
+  },
+];
+```
+
+- [ ] **Step 3: Verify build**
+
+Run: `cd app && npx tsc --noEmit && pnpm build`
+Expected: PASS
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/src/data/
+git commit -m "feat: add dataset presets from microgpt-ts-fr"
+```
+
+---
+
+### Task 5: Types and validation
+
+**Files:**
+- Create: `app/src/lib/types.ts`
+- Create: `app/src/lib/validation.ts`
+
+- [ ] **Step 1: Create shared types**
+
+Write `app/src/lib/types.ts`:
+```ts
+export type ModelParams = {
+  datasetId: string;
+  n_embd: number;
+  n_head: number;
+  n_layer: number;
+  block_size: number;
+  lr: number;
+  temperature: number;
+};
+
+export type StepResult = {
+  step: number;
+  loss: number;
+  word: string;
+  lr: number;
+};
+
+export type TrainState = 'idle' | 'training' | 'trained' | 'error';
+
+export type WorkerMessage =
+  | { type: 'init'; datasetText: string; config: ModelParams }
+  | { type: 'train'; n_steps: number }
+  | { type: 'set_lr'; lr: number }
+  | { type: 'generate'; temperature: number; n_samples: number };
+
+export type WorkerResponse =
+  | { type: 'ready' }
+  | { type: 'step'; data: StepResult }
+  | { type: 'train_done' }
+  | { type: 'generated'; words: string[] }
+  | { type: 'error'; message: string };
+
+export const DEFAULT_PARAMS: ModelParams = {
+  datasetId: 'prenoms-simple',
+  n_embd: 16,
+  n_head: 4,
+  n_layer: 1,
+  block_size: 16,
+  lr: 0.01,
+  temperature: 0.8,
+};
+```
+
+- [ ] **Step 2: Create validation helper**
+
+Write `app/src/lib/validation.ts`:
+```ts
+/** Valid n_head values for a given n_embd (n_embd % n_head must be 0). */
+export function validHeadCounts(n_embd: number, options: number[]): number[] {
+  return options.filter((h) => n_embd % h === 0);
+}
+```
+
+- [ ] **Step 3: Verify build**
+
+Run: `cd app && npx tsc --noEmit`
+Expected: PASS
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/src/lib/
+git commit -m "feat: add shared types and validation helpers"
+```
+
+---
+
+### Task 6: Web Worker (model-worker.ts)
+
+**Files:**
+- Create: `app/src/workers/model-worker.ts`
+
+- [ ] **Step 1: Write the Web Worker**
+
+Write `app/src/workers/model-worker.ts`:
+```ts
+import init, { WasmGpt } from '@wasm/microgpt_wasm';
+import type { WorkerMessage, WorkerResponse } from '../lib/types';
+
+let gpt: WasmGpt | null = null;
+
+function post(msg: WorkerResponse) {
+  self.postMessage(msg);
+}
+
+async function handleInit(datasetText: string, config: { n_embd: number; n_head: number; n_layer: number; block_size: number }) {
+  await init();
+  if (gpt) gpt.free();
+  gpt = WasmGpt.new_with_config(datasetText, config.n_embd, config.n_head, config.n_layer, config.block_size);
+  post({ type: 'ready' });
+}
+
+let trainRemaining = 0;
+
+function handleTrain(n_steps: number) {
+  if (!gpt) { post({ type: 'error', message: 'Model not initialized' }); return; }
+  trainRemaining = n_steps;
+  trainChunk();
+}
+
+function trainChunk() {
+  if (!gpt || trainRemaining <= 0) {
+    post({ type: 'train_done' });
+    return;
+  }
+  const chunkSize = Math.min(10, trainRemaining);
+  for (let i = 0; i < chunkSize; i++) {
+    const result = gpt.train_step();
+    post({ type: 'step', data: result as any });
+    trainRemaining--;
+  }
+  // Yield to message queue so main thread can process step events,
+  // then continue with next chunk.
+  if (trainRemaining > 0) {
+    setTimeout(trainChunk, 0);
+  } else {
+    post({ type: 'train_done' });
+  }
+}
+
+function handleGenerate(temperature: number, n_samples: number) {
+  if (!gpt) { post({ type: 'error', message: 'Model not initialized' }); return; }
+  const vocab = JSON.parse(gpt.vocab_tokens()) as string[];
+  const bos = gpt.bos();
+  const words: string[] = [];
+
+  for (let s = 0; s < n_samples; s++) {
+    let prefix = new Uint32Array([bos]);
+    let word = '';
+    for (let t = 0; t < 20; t++) {
+      const probs = gpt.compute_probs(prefix, temperature);
+      const token = sampleFromProbs(probs);
+      if (token === bos) break;
+      word += vocab[token];
+      const newPrefix = new Uint32Array(prefix.length + 1);
+      newPrefix.set(prefix);
+      newPrefix[prefix.length] = token;
+      prefix = newPrefix;
+    }
+    if (word.length > 0) words.push(word);
+  }
+  post({ type: 'generated', words });
+}
+
+function sampleFromProbs(probs: Float64Array): number {
+  const r = Math.random();
+  let cum = 0;
+  for (let i = 0; i < probs.length; i++) {
+    cum += probs[i];
+    if (r < cum) return i;
+  }
+  return probs.length - 1;
+}
+
+self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
+  try {
+    switch (e.data.type) {
+      case 'init':
+        await handleInit(e.data.datasetText, e.data.config);
+        break;
+      case 'train':
+        handleTrain(e.data.n_steps);
+        break;
+      case 'set_lr':
+        if (gpt) gpt.set_lr(e.data.lr);
+        break;
+      case 'generate':
+        handleGenerate(e.data.temperature, e.data.n_samples);
+        break;
+    }
+  } catch (err) {
+    post({ type: 'error', message: err instanceof Error ? err.message : String(err) });
+  }
+};
+```
+
+The `handleTrain` function uses a chunked `setTimeout(trainChunk, 0)` pattern: train 10 steps, yield to the message queue so the main thread can process step events and update the loss chart, then continue. This avoids blocking the worker's message loop while ensuring all steps complete.
+
+- [ ] **Step 2: Verify build**
+
+Run: `cd app && npx tsc --noEmit`
+Expected: PASS (worker file type-checks with the WASM types)
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/src/workers/
+git commit -m "feat: add model-worker wrapping WASM for train + generate"
+```
+
+---
+
+### Task 7: useModelWorker hook
+
+**Files:**
+- Create: `app/src/hooks/use-model-worker.ts`
+
+- [ ] **Step 1: Write the hook**
+
+Write `app/src/hooks/use-model-worker.ts`:
+```ts
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ModelParams, StepResult, TrainState, WorkerMessage, WorkerResponse } from '../lib/types';
+import { PRESETS } from '../data/presets';
+
+export function useModelWorker() {
+  const workerRef = useRef<Worker | null>(null);
+  const [trainState, setTrainState] = useState<TrainState>('idle');
+  const [steps, setSteps] = useState<StepResult[]>([]);
+  const [words, setWords] = useState<string[]>([]);
+
+  useEffect(() => {
+    const worker = new Worker(new URL('../workers/model-worker.ts', import.meta.url), { type: 'module' });
+    workerRef.current = worker;
+
+    worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
+      switch (e.data.type) {
+        case 'ready':
+          setTrainState('idle');
+          break;
+        case 'step':
+          setSteps((prev) => [...prev, e.data.data]);
+          break;
+        case 'train_done':
+          setTrainState('trained');
+          break;
+        case 'generated':
+          setWords(e.data.words);
+          break;
+        case 'error':
+          setTrainState('error');
+          console.error('Worker error:', e.data.message);
+          break;
+      }
+    };
+
+    return () => worker.terminate();
+  }, []);
+
+  const send = useCallback((msg: WorkerMessage) => {
+    workerRef.current?.postMessage(msg);
+  }, []);
+
+  const initModel = useCallback((params: ModelParams) => {
+    const preset = PRESETS.find((p) => p.id === params.datasetId);
+    if (!preset) return;
+    setSteps([]);
+    setWords([]);
+    setTrainState('idle');
+    send({
+      type: 'init',
+      datasetText: preset.data.join('\n'),
+      config: params,
+    });
+  }, [send]);
+
+  const train = useCallback((n_steps: number) => {
+    setTrainState('training');
+    send({ type: 'train', n_steps });
+  }, [send]);
+
+  const setLr = useCallback((lr: number) => {
+    send({ type: 'set_lr', lr });
+  }, [send]);
+
+  const generate = useCallback((temperature: number, n_samples: number) => {
+    send({ type: 'generate', temperature, n_samples });
+  }, [send]);
+
+  return { trainState, steps, words, initModel, train, setLr, generate };
+}
+```
+
+- [ ] **Step 2: Verify build**
+
+Run: `cd app && npx tsc --noEmit`
+Expected: PASS
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/src/hooks/
+git commit -m "feat: add useModelWorker hook for worker lifecycle"
+```
+
+---
+
+### Task 8: OKLCH design tokens
+
+**Files:**
+- Create: `app/src/theme/tokens.css`
+- Modify: `app/src/index.css`
+
+- [ ] **Step 1: Create OKLCH tokens**
+
+Write `app/src/theme/tokens.css`:
+```css
+/*
+ * OKLCH tetradric palette (double complementary ±15°).
+ * Final hues to be refined with frontend-design skill.
+ * Placeholder: A=220° (blue), B=40° (amber), A'=235°, B'=55°
+ */
+:root {
+  /* Surface */
+  --surface-0: oklch(0.13 0.01 260);
+  --surface-1: oklch(0.17 0.01 260);
+  --surface-2: oklch(0.21 0.015 260);
+
+  /* Model A (blue) */
+  --model-a: oklch(0.65 0.15 220);
+  --model-a-accent: oklch(0.55 0.12 235);
+  --model-a-muted: oklch(0.35 0.06 220);
+
+  /* Model B (amber) */
+  --model-b: oklch(0.70 0.15 40);
+  --model-b-accent: oklch(0.60 0.12 55);
+  --model-b-muted: oklch(0.35 0.06 40);
+
+  /* Semantic */
+  --success: oklch(0.65 0.15 145);
+  --error: oklch(0.60 0.18 25);
+  --text-primary: oklch(0.93 0.01 260);
+  --text-secondary: oklch(0.65 0.01 260);
+  --text-muted: oklch(0.45 0.01 260);
+}
+```
+
+- [ ] **Step 2: Import tokens in index.css**
+
+Modify `app/src/index.css`:
+```css
+@import 'tailwindcss';
+@import './theme/tokens.css';
+```
+
+- [ ] **Step 3: Verify build**
+
+Run: `cd app && pnpm build`
+Expected: PASS
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/src/theme/ app/src/index.css
+git commit -m "feat: add OKLCH tetradric design tokens"
+```
+
+---
+
+### Task 9: Params panel component
+
+**Files:**
+- Create: `app/src/components/model-panel/params-panel.tsx`
+
+- [ ] **Step 1: Write params panel**
+
+Write `app/src/components/model-panel/params-panel.tsx`:
+
+A form component that renders:
+- Dataset select (from PRESETS)
+- Model config selects: n_embd (8/16/32), n_head (filtered by validHeadCounts), n_layer (1/2/4), block_size (8/16/32/64)
+- LR slider (log scale, 0.001–0.5)
+- Temperature slider (0.1–2.0)
+- Train button + Generate button
+
+Props:
+```ts
+type ParamsPanelProps = {
+  params: ModelParams;
+  onParamsChange: (params: ModelParams) => void;
+  onTrain: () => void;
+  onGenerate: () => void;
+  trainState: TrainState;
+  colorVar: 'a' | 'b';
+};
+```
+
+Uses shadcn/ui `Select`, `Slider`, `Button`. Color-coded with CSS vars `--model-a` or `--model-b` based on `colorVar`.
+
+- [ ] **Step 2: Verify build**
+
+Run: `cd app && npx tsc --noEmit`
+Expected: PASS
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/src/components/model-panel/
+git commit -m "feat: add params-panel component with all controls"
+```
+
+---
+
+### Task 10: Loss panel component (Chart.js)
+
+**Files:**
+- Create: `app/src/hooks/use-loss-data.ts`
+- Create: `app/src/components/model-panel/loss-panel.tsx`
+
+- [ ] **Step 1: Write useLossData hook**
+
+Write `app/src/hooks/use-loss-data.ts`:
+```ts
+import { useMemo } from 'react';
+import type { StepResult } from '../lib/types';
+
+export function useLossData(steps: StepResult[], colorVar: 'a' | 'b') {
+  return useMemo(() => ({
+    labels: steps.map((s) => s.step),
+    datasets: [
+      {
+        label: 'Train Loss',
+        data: steps.map((s) => s.loss),
+        borderColor: `var(--model-${colorVar})`,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0.3,
+      },
+    ],
+  }), [steps, colorVar]);
+}
+```
+
+- [ ] **Step 2: Write loss panel**
+
+Write `app/src/components/model-panel/loss-panel.tsx`:
+
+A Chart.js Line chart component:
+- Takes `steps: StepResult[]` and `colorVar: 'a' | 'b'`
+- Canvas-based, no animation (perf), responsive
+- Shows step count and current loss value below chart
+- Chart options: no legend, minimal axes, dark background
+
+- [ ] **Step 3: Verify build**
+
+Run: `cd app && npx tsc --noEmit && pnpm build`
+Expected: PASS
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/src/hooks/use-loss-data.ts app/src/components/model-panel/loss-panel.tsx
+git commit -m "feat: add loss-panel with real-time Chart.js curve"
+```
+
+---
+
+### Task 11: Inference panel component
+
+**Files:**
+- Create: `app/src/components/model-panel/inference-panel.tsx`
+
+- [ ] **Step 1: Write inference panel**
+
+Write `app/src/components/model-panel/inference-panel.tsx`:
+
+A grid of generated words:
+- Takes `words: string[]` and `colorVar: 'a' | 'b'`
+- CSS grid, auto-fill columns
+- Each word in a card with surface-2 background
+- Empty state: subtle "Train a model to see generated words" message
+- Word count + temperature footer
+
+- [ ] **Step 2: Verify build**
+
+Run: `cd app && npx tsc --noEmit`
+Expected: PASS
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/src/components/model-panel/inference-panel.tsx
+git commit -m "feat: add inference-panel word grid component"
+```
+
+---
+
+### Task 12: ModelPanel orchestrator
+
+**Files:**
+- Create: `app/src/components/model-panel/model-panel.tsx`
+
+- [ ] **Step 1: Write model panel**
+
+Write `app/src/components/model-panel/model-panel.tsx`:
+
+Orchestrator that composes `ParamsPanel`, `LossPanel`, `InferencePanel`:
+- Takes `colorVar: 'a' | 'b'` and `layout: 'horizontal' | 'vertical'`
+- `horizontal` (Solo): flexbox row, flex 40/25/35
+- `vertical` (Compare): flexbox column, flex 35/25/40
+- Accepts an optional `workerHandle` prop (from parent) OR creates its own `useModelWorker()` — this enables state preservation when switching modes (see Task 15)
+- Manages `ModelParams` state, auto-inits worker on mount and on model config changes (config change = reinit + warning)
+- When model config changes (n_embd, n_head, etc.) while `trainState === 'trained'`, show a warning: "Changing this parameter will reset training." Proceed on confirm.
+- LR changes go through `setLr()` without reinit (mid-training safe)
+- Calls `train(200)` on Train click, `generate(temperature, 10)` on Generate click
+
+- [ ] **Step 2: Verify build**
+
+Run: `cd app && npx tsc --noEmit`
+Expected: PASS
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/src/components/model-panel/model-panel.tsx
+git commit -m "feat: add ModelPanel orchestrator component"
+```
+
+---
+
+## Chunk 3: Phase 2 — Views and Polish
+
+### Task 13: TopBar component
+
+**Files:**
+- Create: `app/src/components/top-bar.tsx`
+
+- [ ] **Step 1: Write top bar**
+
+Write `app/src/components/top-bar.tsx`:
+
+Simple bar with:
+- "microgpt-lab" title (left)
+- Mode toggle: "Solo" / "Compare" buttons (right)
+- Props: `mode: 'solo' | 'compare'`, `onModeChange: (mode) => void`
+
+- [ ] **Step 2: Verify build**
+
+Run: `cd app && npx tsc --noEmit`
+Expected: PASS
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/src/components/top-bar.tsx
+git commit -m "feat: add TopBar with mode toggle"
+```
+
+---
+
+### Task 14: SoloView and CompareView
+
+**Files:**
+- Create: `app/src/components/solo-view.tsx`
+- Create: `app/src/components/compare-view.tsx`
+
+- [ ] **Step 1: Write SoloView**
+
+Write `app/src/components/solo-view.tsx`:
+
+Receives `workerHandle` prop from App. Renders one `<ModelPanel layout="horizontal" colorVar="a" workerHandle={workerHandle} />` at full width.
+
+- [ ] **Step 2: Write CompareView**
+
+Write `app/src/components/compare-view.tsx`:
+
+Receives `workerHandleA` prop from App. Creates its own `useModelWorker()` for Model B. Renders two `<ModelPanel layout="vertical" />` side by side:
+- Left: `colorVar="a"` with `workerHandle={workerHandleA}` (preserved from Solo)
+- Right: `colorVar="b"` with its own worker (created on mount, destroyed on unmount)
+- Flexbox with gap, each flex-1
+
+- [ ] **Step 3: Verify build**
+
+Run: `cd app && npx tsc --noEmit`
+Expected: PASS
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/src/components/solo-view.tsx app/src/components/compare-view.tsx
+git commit -m "feat: add SoloView and CompareView layouts"
+```
+
+---
+
+### Task 15: Wire up App.tsx
+
+**Files:**
+- Modify: `app/src/App.tsx`
+
+- [ ] **Step 1: Update App.tsx**
+
+Replace `app/src/App.tsx` with:
+```tsx
+import { useState } from 'react';
+import { TopBar } from './components/top-bar';
+import { SoloView } from './components/solo-view';
+import { CompareView } from './components/compare-view';
+import { useModelWorker } from './hooks/use-model-worker';
+
+type Mode = 'solo' | 'compare';
+
+export default function App() {
+  const [mode, setMode] = useState<Mode>('solo');
+  // Model A worker lives at App level so it survives mode switches.
+  const modelA = useModelWorker();
+
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--surface-0)', color: 'var(--text-primary)' }}>
+      <TopBar mode={mode} onModeChange={setMode} />
+      <main className="p-4">
+        {mode === 'solo' ? (
+          <SoloView workerHandle={modelA} />
+        ) : (
+          <CompareView workerHandleA={modelA} />
+        )}
+      </main>
+    </div>
+  );
+}
+```
+
+**Key decision:** Model A's worker handle is owned by `App`, not by `ModelPanel`. This means switching Solo → Compare preserves Model A's training state (worker stays alive). Model B gets its own worker inside `CompareView`. Switching Compare → Solo destroys Model B only.
+
+- [ ] **Step 2: Verify full build**
+
+Run: `cd app && npx tsc --noEmit && pnpm build`
+Expected: PASS
+
+- [ ] **Step 3: Manual smoke test**
+
+Run: `cd app && pnpm dev`
+- Open http://localhost:5173
+- Verify Solo mode shows params/loss/inference panels
+- Click "Compare" — verify two columns appear
+- Select a dataset, click Train — verify loss curve updates in real time
+- Click Generate — verify words appear
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/src/App.tsx
+git commit -m "feat: wire up App with Solo and Compare modes"
+```
+
+---
+
+### Task 16: Vercel config
+
+**Files:**
+- Modify: `app/vercel.json` (create if missing)
+- Modify: `app/vite.config.js`
+
+- [ ] **Step 1: Create vercel.json**
+
+Write `app/vercel.json`:
+```json
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "headers": [
+    {
+      "source": "/assets/(.*).wasm",
+      "headers": [
+        { "key": "Content-Type", "value": "application/wasm" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}
+```
+
+- [ ] **Step 2: Ensure WASM is included in build**
+
+Verify `vite.config.js` handles `.wasm` files correctly. Vite 7 handles WASM imports natively. If needed, add `assetsInclude: ['**/*.wasm']` to the Vite config.
+
+- [ ] **Step 3: Verify production build**
+
+Run: `cd app && pnpm build && ls dist/assets/*.wasm 2>/dev/null`
+Expected: WASM file present in dist/assets/
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/vercel.json app/vite.config.js
+git commit -m "chore: add Vercel config with WASM headers"
+```
+
+---
+
+### Task 17: Frontend design polish pass
+
+- [ ] **Step 1: Invoke frontend-design skill**
+
+Use the `frontend-design` skill to review and polish:
+- OKLCH palette finalization (tetradric harmony)
+- Component spacing and visual hierarchy
+- Dark theme consistency
+- Responsive behavior (mobile → stack vertically)
+
+- [ ] **Step 2: Apply feedback and commit**
+
+```bash
+git add -A
+git commit -m "style: apply frontend-design polish pass"
+```
+
+---
+
+### Task 18: Final integration commit
+
+- [ ] **Step 1: Run all quality gates**
+
+```bash
+cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && npx jscpd src/
+```
+Expected: all PASS
+
+- [ ] **Step 2: Add .superpowers to .gitignore**
+
+Append `.superpowers/` to `.gitignore` if not already there.
+
+- [ ] **Step 3: Final commit**
+
+```bash
+git add -A
+git commit -m "chore: final integration — all quality gates pass"
+```

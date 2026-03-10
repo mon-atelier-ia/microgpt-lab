@@ -6,3 +6,4 @@ app/report/
 *.png
 .playwright-mcp/
 pnpm-build-config.yaml
+.superpowers/

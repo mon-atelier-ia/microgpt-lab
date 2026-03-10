@@ -1,0 +1,125 @@
+<h2>microgpt-lab — Layout triptyque</h2>
+<p class="subtitle">40% params · 30% loss · 30% inférence</p>
+
+<div class="section">
+  <h3>Mode Solo</h3>
+  <div style="border:1px solid #444;border-radius:8px;padding:16px;margin-top:8px;">
+    <div style="display:flex;gap:12px;min-height:340px;">
+      <!-- PARAMS 40% -->
+      <div style="flex:4;background:#1a1a2e;border-radius:6px;padding:14px;display:flex;flex-direction:column;">
+        <div style="color:#8cf;font-size:11px;margin-bottom:10px;font-weight:bold;">PARAMÈTRES</div>
+        <div style="background:#2a2a4e;padding:6px 8px;border-radius:4px;margin-bottom:5px;font-size:11px;">📦 Dataset: prénoms-fr ▾</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px;">
+          <div style="background:#2a2a4e;padding:5px 8px;border-radius:4px;font-size:11px;">n_embd <span style="color:#8cf;float:right;">16 ▾</span></div>
+          <div style="background:#2a2a4e;padding:5px 8px;border-radius:4px;font-size:11px;">n_head <span style="color:#8cf;float:right;">2 ▾</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px;">
+          <div style="background:#2a2a4e;padding:5px 8px;border-radius:4px;font-size:11px;">n_layer <span style="color:#8cf;float:right;">1 ▾</span></div>
+          <div style="background:#2a2a4e;padding:5px 8px;border-radius:4px;font-size:11px;">block_size <span style="color:#8cf;float:right;">16 ▾</span></div>
+        </div>
+        <div style="background:#2a2a4e;padding:5px 8px;border-radius:4px;margin-bottom:5px;font-size:11px;">
+          lr <span style="color:#8cf;float:right;">0.01</span>
+          <div style="margin-top:4px;height:4px;background:#0a0a1e;border-radius:2px;"><div style="width:35%;height:4px;background:#4a8aff;border-radius:2px;"></div></div>
+        </div>
+        <div style="background:#2a2a4e;padding:5px 8px;border-radius:4px;margin-bottom:8px;font-size:11px;">
+          temperature <span style="color:#8cf;float:right;">0.8</span>
+          <div style="margin-top:4px;height:4px;background:#0a0a1e;border-radius:2px;"><div style="width:65%;height:4px;background:#4a8aff;border-radius:2px;"></div></div>
+        </div>
+        <div style="margin-top:auto;display:flex;gap:6px;">
+          <div style="flex:1;background:#2a6a4a;padding:8px;border-radius:4px;font-size:12px;text-align:center;cursor:pointer;font-weight:bold;">▶ Entraîner</div>
+          <div style="flex:1;background:#2a4a6a;padding:8px;border-radius:4px;font-size:12px;text-align:center;cursor:pointer;">🔄 Générer</div>
+        </div>
+      </div>
+
+      <!-- LOSS 30% -->
+      <div style="flex:3;background:#1a1a2e;border-radius:6px;padding:14px;display:flex;flex-direction:column;">
+        <div style="color:#8cf;font-size:11px;margin-bottom:8px;font-weight:bold;">LOSS</div>
+        <div style="flex:1;background:#0a0a1e;border-radius:6px;padding:12px;display:flex;flex-direction:column;justify-content:space-between;">
+          <!-- Fake chart -->
+          <svg viewBox="0 0 200 100" style="width:100%;flex:1;" preserveAspectRatio="none">
+            <polyline points="0,10 10,35 20,55 30,48 40,60 50,55 60,62 70,65 80,68 90,70 100,72 110,74 120,76 130,78 140,80 150,82 160,84 170,86 180,87 190,88 200,90" fill="none" stroke="#4a8aff" stroke-width="2" opacity="0.8"/>
+            <polyline points="0,5 10,25 20,45 30,50 40,52 50,58 60,60 70,63 80,66 90,69 100,71 110,73 120,75 130,77 140,79 150,81 160,83 170,85 180,87 190,89 200,91" fill="none" stroke="#4aff8a" stroke-width="2" opacity="0.5"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:8px;">
+            <span>step <strong style="color:#ccc;">142</strong>/200</span>
+            <span>train <strong style="color:#4a8aff;">1.23</strong></span>
+            <span>eval <strong style="color:#4aff8a;">1.41</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- INFERENCE 30% -->
+      <div style="flex:3;background:#1a1a2e;border-radius:6px;padding:14px;display:flex;flex-direction:column;">
+        <div style="color:#8cf;font-size:11px;margin-bottom:8px;font-weight:bold;">INFÉRENCE</div>
+        <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start;">
+          <div style="background:#0a0a1e;padding:8px;border-radius:5px;text-align:center;font-size:14px;font-weight:bold;color:#e8e8ff;">pierre</div>
+          <div style="background:#0a0a1e;padding:8px;border-radius:5px;text-align:center;font-size:14px;font-weight:bold;color:#e8e8ff;">marie</div>
+          <div style="background:#0a0a1e;padding:8px;border-radius:5px;text-align:center;font-size:14px;font-weight:bold;color:#e8e8ff;">lucas</div>
+          <div style="background:#0a0a1e;padding:8px;border-radius:5px;text-align:center;font-size:14px;font-weight:bold;color:#e8e8ff;">émilie</div>
+          <div style="background:#0a0a1e;padding:8px;border-radius:5px;text-align:center;font-size:14px;font-weight:bold;color:#e8e8ff;">paulin</div>
+          <div style="background:#0a0a1e;padding:8px;border-radius:5px;text-align:center;font-size:14px;font-weight:bold;color:#e8e8ff;">sophir</div>
+          <div style="background:#0a0a1e;padding:8px;border-radius:5px;text-align:center;font-size:14px;font-weight:bold;color:#e8e8ff;">martin</div>
+          <div style="background:#0a0a1e;padding:8px;border-radius:5px;text-align:center;font-size:14px;font-weight:bold;color:#e8e8ff;">claire</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Mode Compare</h3>
+  <div style="border:1px solid #444;border-radius:8px;padding:16px;margin-top:8px;">
+    <div style="display:flex;gap:10px;">
+      <!-- Modèle A -->
+      <div style="flex:1;border:1px solid #2a4a6a;border-radius:6px;padding:12px;">
+        <div style="background:#2a4a6a;padding:5px;border-radius:4px;margin-bottom:10px;text-align:center;font-size:12px;color:#8cf;font-weight:bold;">Modèle A</div>
+        <!-- Params compact -->
+        <div style="font-size:10px;color:#aaa;margin-bottom:6px;">
+          n_embd=<span style="color:#8cf;">16</span> · n_head=<span style="color:#8cf;">2</span> · n_layer=<span style="color:#8cf;">1</span> · lr=<span style="color:#8cf;">0.01</span>
+        </div>
+        <!-- Loss mini -->
+        <div style="background:#0a0a1e;border-radius:4px;padding:6px;margin-bottom:8px;">
+          <svg viewBox="0 0 200 60" style="width:100%;height:50px;" preserveAspectRatio="none">
+            <polyline points="0,5 20,20 40,30 60,35 80,38 100,40 120,42 140,44 160,46 180,48 200,50" fill="none" stroke="#4a8aff" stroke-width="2"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:#666;margin-top:2px;">
+            <span>142/200</span><span>loss 1.23</span>
+          </div>
+        </div>
+        <!-- Inference -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">pierre</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">marie</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">sophir</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">jeanet</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">nicolé</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">lucas</div>
+        </div>
+      </div>
+
+      <!-- Modèle B -->
+      <div style="flex:1;border:1px solid #4a2a6a;border-radius:6px;padding:12px;">
+        <div style="background:#4a2a6a;padding:5px;border-radius:4px;margin-bottom:10px;text-align:center;font-size:12px;color:#d8f;font-weight:bold;">Modèle B</div>
+        <div style="font-size:10px;color:#aaa;margin-bottom:6px;">
+          n_embd=<span style="color:#d8f;">32</span> · n_head=<span style="color:#d8f;">4</span> · n_layer=<span style="color:#d8f;">1</span> · lr=<span style="color:#d8f;">0.01</span>
+        </div>
+        <div style="background:#0a0a1e;border-radius:4px;padding:6px;margin-bottom:8px;">
+          <svg viewBox="0 0 200 60" style="width:100%;height:50px;" preserveAspectRatio="none">
+            <polyline points="0,5 20,25 40,35 60,40 80,44 100,47 120,49 140,51 160,52 180,53 200,54" fill="none" stroke="#b06aff" stroke-width="2"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:#666;margin-top:2px;">
+            <span>170/200</span><span>loss 0.98</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">pierre</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">claire</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">émilie</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">pauline</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">lucien</div>
+          <div style="background:#0a0a1e;padding:5px;border-radius:4px;text-align:center;font-size:12px;font-weight:bold;color:#e8e8ff;">martin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
