@@ -128,19 +128,21 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
         onOpenChange={(open) => !open && setPendingArch(null)}
       >
         <AlertDialogContent>
-          <AlertDialogTitle className="text-sm font-semibold">Reset training?</AlertDialogTitle>
+          <AlertDialogTitle className="text-sm font-semibold">
+            Réinitialiser l&apos;entraînement ?
+          </AlertDialogTitle>
           <AlertDialogDescription className="mt-2 text-xs text-text-secondary">
-            Changing architecture parameters will reset all training progress.
+            Modifier les paramètres d&apos;architecture réinitialisera la progression.
           </AlertDialogDescription>
           <div className="mt-4 flex justify-end gap-2">
             <AlertDialogCancel asChild>
               <Button size="sm" variant="ghost">
-                Cancel
+                Annuler
               </Button>
             </AlertDialogCancel>
             <AlertDialogAction asChild>
               <Button size="sm" onClick={confirmArchChange} className="bg-error text-surface-0">
-                Reset &amp; apply
+                Réinitialiser
               </Button>
             </AlertDialogAction>
           </div>

@@ -172,7 +172,7 @@ export function ParamsPanel({
       <ArchGrid params={params} disabled={isTraining} onChange={update} />
 
       <LabeledSlider
-        label="Learning rate"
+        label="Taux d'apprentissage"
         display={formatLr(params.lr)}
         accentColor={accent}
         mutedColor={muted}

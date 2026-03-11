@@ -28,7 +28,7 @@ export function useLossData(
       labels: steps.map((s) => s.step),
       datasets: [
         {
-          label: 'Train Loss',
+          label: 'Loss brute',
           data: losses,
           borderColor: rawColor,
           borderWidth: 1,
