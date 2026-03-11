@@ -6,9 +6,7 @@ import { cn, modelAccent, resolveVar } from '../../lib/utils';
 
 const LossChart = lazy(() => import('./loss-chart').then((m) => ({ default: m.LossChart })));
 
-function buildChartOptions(): ChartOptions<'line'> {
-  const textMuted = resolveVar('--text-muted');
-  const gridColor = resolveVar('--border-subtle');
+function buildChartOptions(textMuted: string, gridColor: string): ChartOptions<'line'> {
   return {
     animation: false as const,
     responsive: true,
@@ -46,8 +44,11 @@ export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
   const lastStep = steps[steps.length - 1];
   const hasData = steps.length > 0;
   const [hasAnimated, setHasAnimated] = useState(false);
+  // Resolve CSS vars outside useMemo for theme reactivity
+  const textMuted = resolveVar('--text-muted');
+  const gridColor = resolveVar('--border-subtle');
   const chartOptions = useMemo(() => {
-    const opts = buildChartOptions();
+    const opts = buildChartOptions(textMuted, gridColor);
     // Animate draw on first data appearance only, then disable for real-time perf
     if (hasData && !hasAnimated) {
       opts.animation = {
@@ -57,16 +58,16 @@ export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
       };
     }
     return opts;
-  }, [hasData, hasAnimated]);
+  }, [hasData, hasAnimated, textMuted, gridColor]);
 
   return (
     <div
-      aria-label="Loss curve"
+      aria-label="Courbe de loss"
       className={cn('flex flex-col gap-2 rounded-lg p-4 panel-surface', glowClass)}
     >
       <div role="status" className="flex items-center justify-between">
         <span className="instrument-header text-xs font-semibold uppercase tracking-wider text-text-secondary">
-          Loss curve
+          Courbe de loss
         </span>
         <div className="flex items-center gap-3">
           {lastStep && (

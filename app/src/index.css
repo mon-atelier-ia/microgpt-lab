@@ -52,22 +52,44 @@
 /* ── Lab grid background + grain texture ───────────── */
 body {
   background-color: var(--surface-0);
+  /* sRGB fallback grid */
   background-image:
-    radial-gradient(circle at 50% 0%, oklch(0.18 0.03 220 / 0.4), transparent 60%),
+    radial-gradient(circle at 50% 0%, rgba(30, 45, 65, 0.4), transparent 60%),
     repeating-linear-gradient(
       0deg,
       transparent,
       transparent 59px,
-      oklch(0.2 0.005 260 / 0.3) 59px,
-      oklch(0.2 0.005 260 / 0.3) 60px
+      rgba(40, 40, 60, 0.3) 59px,
+      rgba(40, 40, 60, 0.3) 60px
     ),
     repeating-linear-gradient(
       90deg,
       transparent,
       transparent 59px,
-      oklch(0.2 0.005 260 / 0.3) 59px,
-      oklch(0.2 0.005 260 / 0.3) 60px
+      rgba(40, 40, 60, 0.3) 59px,
+      rgba(40, 40, 60, 0.3) 60px
     );
+}
+
+@supports (color: oklch(0 0 0)) {
+  body {
+    background-image:
+      radial-gradient(circle at 50% 0%, oklch(0.18 0.03 220 / 0.4), transparent 60%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 59px,
+        oklch(0.2 0.005 260 / 0.3) 59px,
+        oklch(0.2 0.005 260 / 0.3) 60px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 59px,
+        oklch(0.2 0.005 260 / 0.3) 59px,
+        oklch(0.2 0.005 260 / 0.3) 60px
+      );
+  }
 }
 
 /* Noise grain overlay for lab texture */
