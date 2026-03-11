@@ -5,6 +5,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  assetsInclude: ['**/*.wasm'],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
