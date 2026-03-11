@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ColorVar, ModelParams } from '../../lib/types';
-import { DEFAULT_PARAMS, DEFAULT_N_SAMPLES } from '../../lib/constants';
+import { DEFAULT_N_SAMPLES } from '../../lib/constants';
 import { isArchChange } from '../../lib/validation';
 import { useModelWorker } from '../../hooks/use-model-worker';
 import type { WorkerHandle } from '../../hooks/use-model-worker';
@@ -43,9 +43,18 @@ function ModelPanelWithOwnWorker(props: Omit<ModelPanelInnerProps, 'handle'>) {
 }
 
 function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
-  const { trainState, steps, words, errorMessage, initModel, train, setLr, generate } = handle;
-
-  const [params, setParams] = useState<ModelParams>({ ...DEFAULT_PARAMS });
+  const {
+    trainState,
+    steps,
+    words,
+    errorMessage,
+    params,
+    setParams,
+    initModel,
+    train,
+    setLr,
+    generate,
+  } = handle;
   const [pendingArch, setPendingArch] = useState<ModelParams | null>(null);
   const initialized = useRef(false);
 
@@ -85,8 +94,8 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
   }
 
   const isHorizontal = layout === 'horizontal';
-
-  const containerClass = isHorizontal ? 'flex flex-row gap-2 min-w-0' : 'flex flex-col gap-2';
+  const containerClass = isHorizontal ? 'flex flex-row gap-3 min-w-0' : 'flex flex-col gap-3';
+  const glowClass = colorVar === 'a' ? 'panel-glow-a' : 'panel-glow-b';
 
   return (
     <div className={containerClass}>
@@ -99,13 +108,19 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
           onGenerate={() => generate(params.temperature, DEFAULT_N_SAMPLES)}
           trainState={trainState}
           colorVar={colorVar}
+          glowClass={glowClass}
         />
       </div>
       <div className={isHorizontal ? 'flex-[0_0_25%] min-w-0' : 'flex-[0_0_25%]'}>
-        <LossPanel steps={steps} colorVar={colorVar} />
+        <LossPanel steps={steps} colorVar={colorVar} glowClass={glowClass} />
       </div>
       <div className={isHorizontal ? 'flex-[1_1_35%] min-w-0' : 'flex-[1_1_40%]'}>
-        <InferencePanel words={words} colorVar={colorVar} temperature={params.temperature} />
+        <InferencePanel
+          words={words}
+          colorVar={colorVar}
+          temperature={params.temperature}
+          glowClass={glowClass}
+        />
       </div>
 
       <AlertDialog

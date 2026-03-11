@@ -14,6 +14,7 @@ import type {
   WorkerMessage,
   WorkerResponse,
 } from '../lib/types';
+import { DEFAULT_PARAMS } from '../lib/constants';
 import { PRESETS } from '../data/presets';
 
 const MAX_STEPS = 5000;
@@ -92,6 +93,7 @@ export function useModelWorker() {
   const [steps, setSteps] = useState<StepResult[]>([]);
   const [words, setWords] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [params, setParams] = useState<ModelParams>({ ...DEFAULT_PARAMS });
   const { stepBufferRef, flushTimerRef, flushSteps, clearBuffer } = useStepBuffer(setSteps);
 
   useEffect(() => {
@@ -156,7 +158,18 @@ export function useModelWorker() {
     [send],
   );
 
-  return { trainState, steps, words, errorMessage, initModel, train, setLr, generate };
+  return {
+    trainState,
+    steps,
+    words,
+    errorMessage,
+    params,
+    setParams,
+    initModel,
+    train,
+    setLr,
+    generate,
+  };
 }
 
 export type WorkerHandle = ReturnType<typeof useModelWorker>;
