@@ -35,7 +35,7 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
         </span>
       </div>
 
-      <nav role="tablist" className="flex gap-1">
+      <div role="tablist" aria-label="View mode" className="flex gap-1">
         {TABS.map(({ key, label }) => (
           <button
             key={key}
@@ -56,7 +56,7 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
             )}
           </button>
         ))}
-      </nav>
+      </div>
     </header>
   );
 }

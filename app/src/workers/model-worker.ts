@@ -75,7 +75,12 @@ function trainChunk() {
 function handleGenerate(temperature: number, n_samples: number) {
   const g = requireGpt();
   if (!g) return;
-  const vocab = JSON.parse(g.vocab_tokens()) as string[];
+  const rawVocab: unknown = JSON.parse(g.vocab_tokens());
+  if (!Array.isArray(rawVocab) || rawVocab.some((t) => typeof t !== 'string')) {
+    post({ type: 'error', message: 'Invalid vocab format from WASM' });
+    return;
+  }
+  const vocab = rawVocab as string[];
   const bos = g.bos();
   const words: string[] = [];
 

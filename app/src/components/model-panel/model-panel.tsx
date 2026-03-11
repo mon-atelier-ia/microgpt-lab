@@ -100,7 +100,7 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
   return (
     <div className={containerClass}>
       <ErrorBanner message={errorMessage} />
-      <div className={isHorizontal ? 'flex-[0_0_40%] min-w-0' : 'flex-[0_0_35%]'}>
+      <div className={isHorizontal ? 'flex-[0_0_40%] min-w-0' : ''}>
         <ParamsPanel
           params={params}
           onParamsChange={handleParamsChange}
@@ -111,10 +111,10 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
           glowClass={glowClass}
         />
       </div>
-      <div className={isHorizontal ? 'flex-[0_0_25%] min-w-0' : 'flex-[0_0_25%]'}>
+      <div className={isHorizontal ? 'flex-[0_0_25%] min-w-0' : ''}>
         <LossPanel steps={steps} colorVar={colorVar} glowClass={glowClass} />
       </div>
-      <div className={isHorizontal ? 'flex-[1_1_35%] min-w-0' : 'flex-[1_1_40%]'}>
+      <div className={isHorizontal ? 'flex-[1_1_35%] min-w-0' : ''}>
         <InferencePanel
           words={words}
           colorVar={colorVar}

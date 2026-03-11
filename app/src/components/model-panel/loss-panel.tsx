@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import type { ChartOptions, TooltipItem } from 'chart.js';
 import type { ColorVar, StepResult } from '../../lib/types';
 import { useLossData } from '../../hooks/use-loss-data';
@@ -6,10 +6,9 @@ import { cn, modelAccent, resolveVar } from '../../lib/utils';
 
 const LossChart = lazy(() => import('./loss-chart').then((m) => ({ default: m.LossChart })));
 
-const GRID_COLOR = 'rgba(255,255,255,0.05)';
-
-function getChartOptions(): ChartOptions<'line'> {
+function buildChartOptions(): ChartOptions<'line'> {
   const textMuted = resolveVar('--text-muted');
+  const gridColor = resolveVar('--border-subtle');
   return {
     animation: false as const,
     responsive: true,
@@ -26,11 +25,11 @@ function getChartOptions(): ChartOptions<'line'> {
     scales: {
       x: {
         ticks: { color: textMuted, maxTicksLimit: 6 },
-        grid: { color: GRID_COLOR },
+        grid: { color: gridColor },
       },
       y: {
         ticks: { color: textMuted },
-        grid: { color: GRID_COLOR },
+        grid: { color: gridColor },
       },
     },
   };
@@ -45,7 +44,7 @@ type LossPanelProps = {
 export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
   const data = useLossData(steps, colorVar);
   const lastStep = steps[steps.length - 1];
-  const chartOptions = getChartOptions();
+  const chartOptions = useMemo(() => buildChartOptions(), []);
   const hasData = steps.length > 0;
 
   return (

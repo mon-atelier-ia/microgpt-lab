@@ -57,11 +57,12 @@ function ActionButtons({
         onClick={onTrain}
         disabled={isTraining}
         style={trainBtnStyle}
-        aria-label="Training status"
-        aria-live="polite"
       >
         {isTraining ? 'Entraînement…' : 'Entraîner'}
       </Button>
+      <span role="status" aria-live="polite" className="sr-only">
+        {isTraining ? 'Entraînement en cours' : ''}
+      </span>
       <Button
         size="sm"
         variant="outline"

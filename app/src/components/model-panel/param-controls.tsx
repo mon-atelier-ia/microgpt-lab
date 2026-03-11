@@ -1,15 +1,18 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useId, type CSSProperties, type ReactNode } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Slider } from '../ui/slider';
 
-type FieldProps = { label: string; children: ReactNode };
+type FieldProps = { label: string; labelId?: string; children: ReactNode };
 
-export function Field({ label, children }: FieldProps) {
+export function Field({ label, labelId, children }: FieldProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium uppercase tracking-wider text-text-secondary">
+      <span
+        id={labelId}
+        className="text-xs font-medium uppercase tracking-wider text-text-secondary"
+      >
         {label}
-      </label>
+      </span>
       {children}
     </div>
   );
@@ -24,10 +27,11 @@ export type NumSelectProps = {
 };
 
 export function NumSelect({ label, value, options, onChange, disabled }: NumSelectProps) {
+  const id = useId();
   return (
-    <Field label={label}>
+    <Field label={label} labelId={id}>
       <Select value={String(value)} onValueChange={(v) => onChange(Number(v))} disabled={disabled}>
-        <SelectTrigger className="h-8 font-mono text-xs">
+        <SelectTrigger className="h-8 font-mono text-xs" aria-labelledby={id}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -90,6 +94,8 @@ export function LabeledSlider({
         onValueChange={([v]) => onValueChange(v ?? value)}
         disabled={disabled}
         style={sliderStyle}
+        aria-label={label}
+        aria-valuetext={display}
       />
     </div>
   );

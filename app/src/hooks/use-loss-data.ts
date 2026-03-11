@@ -18,10 +18,9 @@ export function useLossData(
   steps: StepResult[],
   colorVar: ColorVar,
 ): ChartData<'line', number[], number> {
-  const rawColor = resolveVar(`--model-${colorVar}`);
-  const emaColor = resolveVar(`--model-${colorVar}-accent`);
-
   return useMemo(() => {
+    const rawColor = resolveVar(`--model-${colorVar}`);
+    const emaColor = resolveVar(`--model-${colorVar}-accent`);
     const losses = steps.map((s) => s.loss);
     const ema = computeEma(losses, EMA_ALPHA);
 
@@ -50,5 +49,5 @@ export function useLossData(
         },
       ],
     };
-  }, [steps, rawColor, emaColor]);
+  }, [steps, colorVar]);
 }

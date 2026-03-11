@@ -13,7 +13,7 @@
   --error: #d94a3a;
   --text-primary: #ebebed;
   --text-secondary: #a0a0a5;
-  --text-muted: #6b6b70;
+  --text-muted: #7a7a80;
   --border-subtle: #252530;
 }
 
@@ -41,7 +41,7 @@
     /* Text hierarchy */
     --text-primary: oklch(0.93 0.01 260);
     --text-secondary: oklch(0.65 0.01 260);
-    --text-muted: oklch(0.45 0.01 260);
+    --text-muted: oklch(0.5 0.01 260);
 
     /* Borders */
     --border-subtle: oklch(0.2 0.01 260);

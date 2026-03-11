@@ -83,23 +83,25 @@ body::after {
   background-size: 256px 256px;
 }
 
-/* ── Panel glow — territorial color identity ─────────── */
+/* ── Panel glow — territorial color identity (DRY via --glow-* vars) */
 .panel-glow-a {
-  border: 1px solid color-mix(in oklch, var(--model-a-muted), transparent 40%);
-  background: color-mix(in oklch, var(--model-a-muted), transparent 85%);
-  box-shadow:
-    0 0 30px -4px color-mix(in oklch, var(--model-a-accent), transparent 75%),
-    0 0 60px -8px color-mix(in oklch, var(--model-a-muted), transparent 70%),
-    inset 0 1px 0 0 color-mix(in oklch, var(--model-a-muted), transparent 80%);
+  --glow-accent: var(--model-a-accent);
+  --glow-muted: var(--model-a-muted);
 }
 
 .panel-glow-b {
-  border: 1px solid color-mix(in oklch, var(--model-b-muted), transparent 40%);
-  background: color-mix(in oklch, var(--model-b-muted), transparent 85%);
+  --glow-accent: var(--model-b-accent);
+  --glow-muted: var(--model-b-muted);
+}
+
+.panel-glow-a,
+.panel-glow-b {
+  border: 1px solid color-mix(in oklch, var(--glow-muted), transparent 40%);
+  background: color-mix(in oklch, var(--glow-muted), transparent 85%);
   box-shadow:
-    0 0 30px -4px color-mix(in oklch, var(--model-b-accent), transparent 75%),
-    0 0 60px -8px color-mix(in oklch, var(--model-b-muted), transparent 70%),
-    inset 0 1px 0 0 color-mix(in oklch, var(--model-b-muted), transparent 80%);
+    0 0 30px -4px color-mix(in oklch, var(--glow-accent), transparent 75%),
+    0 0 60px -8px color-mix(in oklch, var(--glow-muted), transparent 70%),
+    inset 0 1px 0 0 color-mix(in oklch, var(--glow-muted), transparent 80%);
 }
 
 /* ── Color-aware slider — uses CSS vars set by parent ── */

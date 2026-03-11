@@ -30,7 +30,7 @@ describe('ParamsPanel', () => {
         colorVar="a"
       />,
     );
-    const trainBtn = getByRole('button', { name: /Training status/i });
+    const trainBtn = getByRole('button', { name: /entraîn/i });
     expect(trainBtn.textContent).toBe('Entraîner');
     expect((trainBtn as HTMLButtonElement).disabled).toBe(false);
   });
@@ -46,7 +46,7 @@ describe('ParamsPanel', () => {
         colorVar="a"
       />,
     );
-    const trainBtn = getByRole('button', { name: /Training status/i });
+    const trainBtn = getByRole('button', { name: /entraîn/i });
     expect(trainBtn.textContent).toBe('Entraînement…');
     expect((trainBtn as HTMLButtonElement).disabled).toBe(true);
   });
