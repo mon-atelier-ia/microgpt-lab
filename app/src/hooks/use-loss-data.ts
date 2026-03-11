@@ -7,20 +7,23 @@ export function useLossData(
   steps: StepResult[],
   colorVar: 'a' | 'b',
 ): ChartData<'line', number[], number> {
-  return useMemo(
-    () => ({
-      labels: steps.map((s) => s.step),
-      datasets: [
-        {
-          label: 'Train Loss',
-          data: steps.map((s) => s.loss),
-          borderColor: resolveVar(`--model-${colorVar}`),
-          borderWidth: 1.5,
-          pointRadius: 0,
-          tension: 0.3,
-        },
-      ],
-    }),
-    [steps, colorVar],
-  );
+  const lossValues = useMemo(() => steps.map((s) => s.loss), [steps]);
+  const labels = useMemo(() => steps.map((s) => s.step), [steps]);
+
+  // Resolve color every render so theme changes are picked up immediately.
+  const borderColor = resolveVar(`--model-${colorVar}`);
+
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'Train Loss',
+        data: lossValues,
+        borderColor,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0.3,
+      },
+    ],
+  };
 }
