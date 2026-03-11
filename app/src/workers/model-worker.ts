@@ -40,16 +40,23 @@ function validateField(value: number, name: string): boolean {
 }
 
 let trainRemaining = 0;
+let busy = false;
 
 function handleTrain(n_steps: number) {
   const g = requireGpt();
   if (!g) return;
+  if (busy) {
+    post({ type: 'error', message: 'Model is busy — wait for current operation to finish' });
+    return;
+  }
   trainRemaining = n_steps;
+  busy = true;
   trainChunk();
 }
 
 function trainChunk() {
   if (!gpt || trainRemaining <= 0) {
+    busy = false;
     post({ type: 'train_done' });
     return;
   }
@@ -60,6 +67,7 @@ function trainChunk() {
     if (!isStepResult(raw)) {
       post({ type: 'error', message: 'Unexpected train_step result' });
       trainRemaining = 0;
+      busy = false;
       return;
     }
     post({ type: 'step', data: raw });
@@ -68,6 +76,7 @@ function trainChunk() {
   if (trainRemaining > 0) {
     setTimeout(trainChunk, 0);
   } else {
+    busy = false;
     post({ type: 'train_done' });
   }
 }
@@ -75,6 +84,11 @@ function trainChunk() {
 function handleGenerate(temperature: number, n_samples: number) {
   const g = requireGpt();
   if (!g) return;
+  if (busy) {
+    post({ type: 'error', message: 'Model is busy — wait for current operation to finish' });
+    return;
+  }
+  busy = true;
   const rawVocab: unknown = JSON.parse(g.vocab_tokens());
   if (!Array.isArray(rawVocab) || rawVocab.some((t) => typeof t !== 'string')) {
     post({ type: 'error', message: 'Invalid vocab format from WASM' });
@@ -99,6 +113,7 @@ function handleGenerate(temperature: number, n_samples: number) {
     }
     if (word.length > 0) words.push(word);
   }
+  busy = false;
   post({ type: 'generated', words });
 }
 
@@ -171,7 +186,7 @@ async function dispatch(msg: WorkerMessage) {
       return;
     case 'set_lr':
       if (!validateField(msg.lr, 'lr')) return;
-      if (gpt) gpt.set_lr(msg.lr);
+      if (gpt && !busy) gpt.set_lr(msg.lr);
       return;
     case 'generate':
       if (!validateField(msg.temperature, 'temperature')) return;
