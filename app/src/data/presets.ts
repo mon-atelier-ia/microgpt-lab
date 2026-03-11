@@ -1,9 +1,4 @@
-export type Preset = {
-  id: string;
-  name: string;
-  description: string;
-  load: () => Promise<string[]>;
-};
+import type { Preset } from '../lib/types';
 
 export const PRESETS: Preset[] = [
   {

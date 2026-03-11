@@ -20,7 +20,9 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
         <Button
           size="sm"
           role="tab"
+          id="tab-solo"
           aria-selected={mode === 'solo'}
+          aria-controls="main-tabpanel"
           variant={mode === 'solo' ? 'default' : 'ghost'}
           onClick={() => onModeChange('solo')}
         >
@@ -29,7 +31,9 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
         <Button
           size="sm"
           role="tab"
+          id="tab-compare"
           aria-selected={mode === 'compare'}
+          aria-controls="main-tabpanel"
           variant={mode === 'compare' ? 'default' : 'ghost'}
           onClick={() => onModeChange('compare')}
         >

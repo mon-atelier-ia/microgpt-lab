@@ -35,3 +35,10 @@ export type WorkerResponse =
   | { type: 'train_done' }
   | { type: 'generated'; words: string[] }
   | { type: 'error'; message: string };
+
+export type Preset = {
+  id: string;
+  name: string;
+  description: string;
+  load: () => Promise<string[]>;
+};

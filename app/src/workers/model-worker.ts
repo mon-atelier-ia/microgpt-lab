@@ -111,18 +111,21 @@ function isPositiveFinite(v: number): boolean {
   return Number.isFinite(v) && v > 0;
 }
 
+function hasKey<K extends string>(o: object, k: K): o is Record<K, unknown> {
+  return k in o;
+}
+
 function isStepResult(v: unknown): v is { step: number; loss: number; word: string; lr: number } {
+  if (typeof v !== 'object' || v === null) return false;
   return (
-    typeof v === 'object' &&
-    v !== null &&
-    'step' in v &&
-    typeof (v as Record<string, unknown>).step === 'number' &&
-    'loss' in v &&
-    typeof (v as Record<string, unknown>).loss === 'number' &&
-    'word' in v &&
-    typeof (v as Record<string, unknown>).word === 'string' &&
-    'lr' in v &&
-    typeof (v as Record<string, unknown>).lr === 'number'
+    hasKey(v, 'step') &&
+    typeof v.step === 'number' &&
+    hasKey(v, 'loss') &&
+    typeof v.loss === 'number' &&
+    hasKey(v, 'word') &&
+    typeof v.word === 'string' &&
+    hasKey(v, 'lr') &&
+    typeof v.lr === 'number'
   );
 }
 

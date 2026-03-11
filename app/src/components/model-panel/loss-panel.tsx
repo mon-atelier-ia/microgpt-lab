@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense } from 'react';
 import type { ChartOptions, TooltipItem } from 'chart.js';
 import type { ColorVar, StepResult } from '../../lib/types';
 import { useLossData } from '../../hooks/use-loss-data';
@@ -44,7 +44,7 @@ type LossPanelProps = {
 export function LossPanel({ steps, colorVar }: LossPanelProps) {
   const data = useLossData(steps, colorVar);
   const lastStep = steps[steps.length - 1];
-  const chartOptions = useMemo(() => getChartOptions(), []);
+  const chartOptions = getChartOptions();
 
   return (
     <div aria-label="Loss curve" className="flex flex-col gap-2 rounded-lg bg-surface-1 p-4">

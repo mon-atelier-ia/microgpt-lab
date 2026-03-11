@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ColorVar, ModelParams } from '../../lib/types';
-import { DEFAULT_PARAMS } from '../../lib/constants';
+import { DEFAULT_PARAMS, DEFAULT_N_SAMPLES } from '../../lib/constants';
 import { isArchChange } from '../../lib/validation';
-import { useModelWorker, type WorkerHandle } from '../../hooks/use-model-worker';
+import { useModelWorker } from '../../hooks/use-model-worker';
+import type { WorkerHandle } from '../../hooks/use-model-worker';
 import { ParamsPanel } from './params-panel';
 import { LossPanel } from './loss-panel';
 import { InferencePanel } from './inference-panel';
@@ -95,7 +96,7 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
           params={params}
           onParamsChange={handleParamsChange}
           onTrain={() => train(params.trainSteps)}
-          onGenerate={() => generate(params.temperature, 10)}
+          onGenerate={() => generate(params.temperature, DEFAULT_N_SAMPLES)}
           trainState={trainState}
           colorVar={colorVar}
         />

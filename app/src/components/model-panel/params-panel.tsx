@@ -3,6 +3,13 @@ import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import type { ColorVar, ModelParams, TrainState } from '../../lib/types';
 import { PRESETS } from '../../data/presets';
+import {
+  N_EMBD_OPTIONS,
+  N_LAYER_OPTIONS,
+  BLOCK_SIZE_OPTIONS,
+  TRAIN_STEPS_OPTIONS,
+  HEAD_OPTIONS,
+} from '../../lib/constants';
 import { validHeadCounts } from '../../lib/validation';
 import { modelColor } from '../../lib/utils';
 import { posToLr, lrToPos, formatLr } from './params-utils';
@@ -16,12 +23,6 @@ export type ParamsPanelProps = {
   trainState: TrainState;
   colorVar: ColorVar;
 };
-
-const N_EMBD_OPTIONS = [8, 16, 32] as const;
-const N_LAYER_OPTIONS = [1, 2, 4] as const;
-const BLOCK_SIZE_OPTIONS = [8, 16, 32, 64] as const;
-const TRAIN_STEPS_OPTIONS = [100, 200, 500, 1000, 2000] as const;
-const HEAD_OPTIONS = [1, 2, 4, 8] as const;
 
 type ArchGridProps = {
   params: ModelParams;

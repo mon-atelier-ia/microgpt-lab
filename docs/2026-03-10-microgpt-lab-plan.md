@@ -1789,3 +1789,164 @@ Main chunk < 300KB gzipped.
 ```bash
 git commit -m "chore: final quality pass — all gates green, zero suppressions"
 ```
+
+---
+
+## Chunk 6: Phase 5 — Final Audit Fixes
+
+> **Context:** Final audit revealed 8 important and 4 minor issues. All must be fixed.
+
+### Task 40: Add React ErrorBoundary (I1)
+
+**Files:**
+- Create: `app/src/components/error-boundary.tsx`
+- Modify: `app/src/App.tsx`
+
+- [ ] **Step 1: Create ErrorBoundary class component** — catches render errors, shows recovery UI
+- [ ] **Step 2: Wrap App content in ErrorBoundary**
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "feat: add React ErrorBoundary for crash recovery"
+```
+
+---
+
+### Task 41: Delete orphaned loss-chart-options.ts, deduplicate (I2 + M1)
+
+**Files:**
+- Delete: `app/src/components/model-panel/loss-chart-options.ts`
+- Modify: `app/src/components/model-panel/loss-panel.tsx` — already has inline copy, keep it
+
+- [ ] **Step 1: Delete orphaned file**
+- [ ] **Step 2: Verify build**
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "refactor: delete orphaned loss-chart-options.ts"
+```
+
+---
+
+### Task 42: Move Preset type to types.ts (I3)
+
+**Files:**
+- Modify: `app/src/lib/types.ts` — add `Preset` type
+- Modify: `app/src/data/presets.ts` — import from types.ts instead of defining locally
+
+- [ ] **Step 1: Move type, update imports**
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "refactor: move Preset type to types.ts per convention"
+```
+
+---
+
+### Task 43: Remove `as` casts in isStepResult (I5)
+
+**Files:**
+- Modify: `app/src/workers/model-worker.ts`
+
+- [ ] **Step 1: Refactor isStepResult to use `in` narrowing without `as Record<>`**
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "refactor: remove as casts in isStepResult type guard"
+```
+
+---
+
+### Task 44: Fix useLossData memoization (I7 + M8)
+
+**Files:**
+- Modify: `app/src/hooks/use-loss-data.ts` — wrap returned ChartData in useMemo keyed on steps + borderColor
+- Modify: `app/src/components/model-panel/loss-panel.tsx` — remove `useMemo(() => getChartOptions(), [])`, resolve every render for theme reactivity
+
+- [ ] **Step 1: Memoize ChartData object properly** — deps: [lossValues, labels, borderColor]
+- [ ] **Step 2: Fix chartOptions to also resolve on every render** (or pass borderColor as dep)
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "fix: proper memoization for Chart.js data and options"
+```
+
+---
+
+### Task 45: Complete ARIA tab pattern (M6)
+
+**Files:**
+- Modify: `app/src/components/top-bar.tsx` — add `aria-controls` + `id` linking
+- Modify: `app/src/App.tsx` — add `role="tabpanel"` + `id` on content area
+
+- [ ] **Step 1: Wire aria-controls/id on tabs and tabpanel**
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "fix: complete ARIA tab pattern with tabpanel linkage"
+```
+
+---
+
+### Task 46: Move param options to constants.ts (M2)
+
+**Files:**
+- Modify: `app/src/lib/constants.ts` — add N_EMBD_OPTIONS, N_LAYER_OPTIONS, etc.
+- Modify: `app/src/components/model-panel/params-panel.tsx` — import from constants
+
+- [ ] **Step 1: Move constants, update imports**
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "refactor: move param options to constants.ts"
+```
+
+---
+
+### Task 47: Extract n_samples constant (M7)
+
+**Files:**
+- Modify: `app/src/lib/constants.ts`
+- Modify: `app/src/components/model-panel/model-panel.tsx`
+
+- [ ] **Step 1: Add DEFAULT_N_SAMPLES = 10 to constants.ts**
+- [ ] **Step 2: Use it in model-panel.tsx**
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "refactor: extract n_samples constant"
+```
+
+---
+
+### Task 48: Fix import style consistency (M10)
+
+**Files:**
+- Modify: `app/src/components/model-panel/model-panel.tsx`
+
+- [ ] **Step 1: Split mixed import into separate runtime and type imports**
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "style: consistent type-only imports"
+```
+
+---
+
+### Task 49: Mark all completed tasks in plan
+
+- [ ] **Step 1: Check all task checkboxes `[x]` for Tasks 1-48**
+- [ ] **Step 2: Commit**
+
+---
+
+### Task 50: Final quality gate (definitive)
+
+- [ ] **Step 1: Run ALL checks**: tsc, build, eslint, jscpd, vitest, playwright
+- [ ] **Step 2: Verify zero `as` casts outside ui/ and worker JSON.parse**
+- [ ] **Step 3: Verify zero orphaned files**
+- [ ] **Step 4: Commit**
+
+```bash
+git commit -m "chore: chunk 6 complete — all audit findings fixed"
+```
