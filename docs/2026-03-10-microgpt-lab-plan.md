@@ -70,7 +70,7 @@ app/src/
 - Modify: `model-rs/crates/microgpt-wasm/src/lib.rs:64-117` (struct + impl)
 - Modify: `model-rs/crates/microgpt-wasm/tests/parity.rs`
 
-- [ ] **Step 1: Add `mc` field to WasmGpt struct**
+- [x] **Step 1: Add `mc` field to WasmGpt struct**
 
 In `model-rs/crates/microgpt-wasm/src/lib.rs`, add `mc: ModelConfig` to the `WasmGpt` struct (after `tc`). Update the existing `new()` constructor to store `mc`:
 
@@ -85,7 +85,7 @@ let mc = ModelConfig::default();
 
 Also update `reset_training()` and `reset()` to use `self.mc` instead of `ModelConfig::default()`.
 
-- [ ] **Step 2: Write tests for new_with_config**
+- [x] **Step 2: Write tests for new_with_config**
 
 The tests live in the existing `model-rs/crates/microgpt-wasm/tests/parity.rs`. Add imports if not present:
 
@@ -113,12 +113,12 @@ fn test_new_with_config_invalid_head_dim() {
 }
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `cd model-rs && cargo test --test parity test_new_with_config 2>&1`
 Expected: compilation error — `new_with_config` and `model_config` don't exist yet
 
-- [ ] **Step 4: Implement new_with_config + model_config**
+- [x] **Step 4: Implement new_with_config + model_config**
 
 In `model-rs/crates/microgpt-wasm/src/lib.rs`, add to `#[wasm_bindgen] impl WasmGpt`:
 
@@ -168,16 +168,16 @@ pub fn model_config(&self) -> ModelConfig {
 }
 ```
 
-- [ ] **Step 5: Fix reset_training() and reset() to use self.mc**
+- [x] **Step 5: Fix reset_training() and reset() to use self.mc**
 
 Replace all `ModelConfig::default()` in `reset_training()` and `reset()` with `self.mc`.
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `cd model-rs && cargo test --release 2>&1 | tail -20`
 Expected: all tests PASS including the two new ones
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add model-rs/
@@ -192,7 +192,7 @@ git commit -m "feat(wasm): add configurable constructor new_with_config, store m
 - Modify: `model-rs/crates/microgpt-wasm/src/lib.rs`
 - Modify: `model-rs/crates/microgpt-wasm/tests/parity.rs`
 
-- [ ] **Step 1: Write failing test for set_lr**
+- [x] **Step 1: Write failing test for set_lr**
 
 In `model-rs/crates/microgpt-wasm/tests/parity.rs`, add:
 
@@ -205,12 +205,12 @@ fn test_set_lr() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd model-rs && cargo test --test parity test_set_lr 2>&1`
 Expected: compilation error — `set_lr` and `current_lr` don't exist
 
-- [ ] **Step 3: Implement set_lr and current_lr**
+- [x] **Step 3: Implement set_lr and current_lr**
 
 In `model-rs/crates/microgpt-wasm/src/lib.rs`, add to `#[wasm_bindgen] impl WasmGpt`:
 
@@ -226,22 +226,22 @@ pub fn current_lr(&self) -> f64 {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd model-rs && cargo test --release 2>&1 | tail -20`
 Expected: all tests PASS
 
-- [ ] **Step 5: Run fmt + clippy**
+- [x] **Step 5: Run fmt + clippy**
 
 Run: `cd model-rs && cargo fmt && cargo clippy -- -D warnings 2>&1`
 Expected: no errors
 
-- [ ] **Step 6: Rebuild WASM**
+- [x] **Step 6: Rebuild WASM**
 
 Run: `cd /c/Dev/microgpt-lab && bash build-wasm.sh 2>&1`
 Expected: WASM output in `app/wasm-pkg/`, new `.d.ts` includes `new_with_config`, `set_lr`, `current_lr`
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add model-rs/ app/wasm-pkg/
@@ -264,13 +264,13 @@ git commit -m "feat(wasm): add set_lr and current_lr methods"
 - Create: `app/src/components/ui/slider.tsx`
 - Create: `app/src/components/ui/tooltip.tsx`
 
-- [ ] **Step 1: Install Radix + Chart.js + shadcn deps**
+- [x] **Step 1: Install Radix + Chart.js + shadcn deps**
 
 ```bash
 cd app && pnpm add @radix-ui/react-select @radix-ui/react-slider @radix-ui/react-tooltip @radix-ui/react-slot chart.js react-chartjs-2 class-variance-authority clsx tailwind-merge lucide-react
 ```
 
-- [ ] **Step 2: Create cn() utility**
+- [x] **Step 2: Create cn() utility**
 
 Write `app/src/lib/utils.ts`:
 ```ts
@@ -282,7 +282,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 ```
 
-- [ ] **Step 3: Copy shadcn/ui components from microgpt-ts-fr**
+- [x] **Step 3: Copy shadcn/ui components from microgpt-ts-fr**
 
 Copy and adapt these files from `C:/Dev/microgpt-ts-fr/web/components/ui/`:
 - `button.tsx`
@@ -292,12 +292,12 @@ Copy and adapt these files from `C:/Dev/microgpt-ts-fr/web/components/ui/`:
 
 Adapt imports: change `@/lib/utils` path if needed. Remove any Next.js-specific imports.
 
-- [ ] **Step 4: Verify build**
+- [x] **Step 4: Verify build**
 
 Run: `cd app && npx tsc --noEmit && pnpm build`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/
@@ -314,7 +314,7 @@ git commit -m "feat: install shadcn/ui components and Chart.js"
 - Create: `app/src/data/pokemon-fr.ts`
 - Create: `app/src/data/presets.ts`
 
-- [ ] **Step 1: Copy dataset files from microgpt-ts-fr**
+- [x] **Step 1: Copy dataset files from microgpt-ts-fr**
 
 Copy the raw arrays from:
 - `C:/Dev/microgpt-ts-fr/datasets/prenoms-simple.ts` → `app/src/data/prenoms-simple.ts`
@@ -322,7 +322,7 @@ Copy the raw arrays from:
 - `C:/Dev/microgpt-ts-fr/datasets/dinosaures.ts` → `app/src/data/dinosaures.ts`
 - `C:/Dev/microgpt-ts-fr/datasets/pokemon-fr.ts` → `app/src/data/pokemon-fr.ts`
 
-- [ ] **Step 2: Create presets.ts**
+- [x] **Step 2: Create presets.ts**
 
 Write `app/src/data/presets.ts`:
 ```ts
@@ -366,12 +366,12 @@ export const PRESETS: Preset[] = [
 ];
 ```
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `cd app && npx tsc --noEmit && pnpm build`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/src/data/
@@ -386,7 +386,7 @@ git commit -m "feat: add dataset presets from microgpt-ts-fr"
 - Create: `app/src/lib/types.ts`
 - Create: `app/src/lib/validation.ts`
 
-- [ ] **Step 1: Create shared types**
+- [x] **Step 1: Create shared types**
 
 Write `app/src/lib/types.ts`:
 ```ts
@@ -433,7 +433,7 @@ export const DEFAULT_PARAMS: ModelParams = {
 };
 ```
 
-- [ ] **Step 2: Create validation helper**
+- [x] **Step 2: Create validation helper**
 
 Write `app/src/lib/validation.ts`:
 ```ts
@@ -443,12 +443,12 @@ export function validHeadCounts(n_embd: number, options: number[]): number[] {
 }
 ```
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `cd app && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/src/lib/
@@ -462,7 +462,7 @@ git commit -m "feat: add shared types and validation helpers"
 **Files:**
 - Create: `app/src/workers/model-worker.ts`
 
-- [ ] **Step 1: Write the Web Worker**
+- [x] **Step 1: Write the Web Worker**
 
 Write `app/src/workers/model-worker.ts`:
 ```ts
@@ -568,12 +568,12 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 
 The `handleTrain` function uses a chunked `setTimeout(trainChunk, 0)` pattern: train 10 steps, yield to the message queue so the main thread can process step events and update the loss chart, then continue. This avoids blocking the worker's message loop while ensuring all steps complete.
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `cd app && npx tsc --noEmit`
 Expected: PASS (worker file type-checks with the WASM types)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/workers/
@@ -587,7 +587,7 @@ git commit -m "feat: add model-worker wrapping WASM for train + generate"
 **Files:**
 - Create: `app/src/hooks/use-model-worker.ts`
 
-- [ ] **Step 1: Write the hook**
+- [x] **Step 1: Write the hook**
 
 Write `app/src/hooks/use-model-worker.ts`:
 ```ts
@@ -663,12 +663,12 @@ export function useModelWorker() {
 }
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `cd app && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/hooks/
@@ -683,7 +683,7 @@ git commit -m "feat: add useModelWorker hook for worker lifecycle"
 - Create: `app/src/theme/tokens.css`
 - Modify: `app/src/index.css`
 
-- [ ] **Step 1: Create OKLCH tokens**
+- [x] **Step 1: Create OKLCH tokens**
 
 Write `app/src/theme/tokens.css`:
 ```css
@@ -717,7 +717,7 @@ Write `app/src/theme/tokens.css`:
 }
 ```
 
-- [ ] **Step 2: Import tokens in index.css**
+- [x] **Step 2: Import tokens in index.css**
 
 Modify `app/src/index.css`:
 ```css
@@ -725,12 +725,12 @@ Modify `app/src/index.css`:
 @import './theme/tokens.css';
 ```
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `cd app && pnpm build`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/src/theme/ app/src/index.css
@@ -744,7 +744,7 @@ git commit -m "feat: add OKLCH tetradric design tokens"
 **Files:**
 - Create: `app/src/components/model-panel/params-panel.tsx`
 
-- [ ] **Step 1: Write params panel**
+- [x] **Step 1: Write params panel**
 
 Write `app/src/components/model-panel/params-panel.tsx`:
 
@@ -769,12 +769,12 @@ type ParamsPanelProps = {
 
 Uses shadcn/ui `Select`, `Slider`, `Button`. Color-coded with CSS vars `--model-a` or `--model-b` based on `colorVar`.
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `cd app && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/components/model-panel/
@@ -789,7 +789,7 @@ git commit -m "feat: add params-panel component with all controls"
 - Create: `app/src/hooks/use-loss-data.ts`
 - Create: `app/src/components/model-panel/loss-panel.tsx`
 
-- [ ] **Step 1: Write useLossData hook**
+- [x] **Step 1: Write useLossData hook**
 
 Write `app/src/hooks/use-loss-data.ts`:
 ```ts
@@ -813,7 +813,7 @@ export function useLossData(steps: StepResult[], colorVar: 'a' | 'b') {
 }
 ```
 
-- [ ] **Step 2: Write loss panel**
+- [x] **Step 2: Write loss panel**
 
 Write `app/src/components/model-panel/loss-panel.tsx`:
 
@@ -823,12 +823,12 @@ A Chart.js Line chart component:
 - Shows step count and current loss value below chart
 - Chart options: no legend, minimal axes, dark background
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `cd app && npx tsc --noEmit && pnpm build`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/src/hooks/use-loss-data.ts app/src/components/model-panel/loss-panel.tsx
@@ -842,7 +842,7 @@ git commit -m "feat: add loss-panel with real-time Chart.js curve"
 **Files:**
 - Create: `app/src/components/model-panel/inference-panel.tsx`
 
-- [ ] **Step 1: Write inference panel**
+- [x] **Step 1: Write inference panel**
 
 Write `app/src/components/model-panel/inference-panel.tsx`:
 
@@ -853,12 +853,12 @@ A grid of generated words:
 - Empty state: subtle "Train a model to see generated words" message
 - Word count + temperature footer
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `cd app && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/components/model-panel/inference-panel.tsx
@@ -872,7 +872,7 @@ git commit -m "feat: add inference-panel word grid component"
 **Files:**
 - Create: `app/src/components/model-panel/model-panel.tsx`
 
-- [ ] **Step 1: Write model panel**
+- [x] **Step 1: Write model panel**
 
 Write `app/src/components/model-panel/model-panel.tsx`:
 
@@ -886,12 +886,12 @@ Orchestrator that composes `ParamsPanel`, `LossPanel`, `InferencePanel`:
 - LR changes go through `setLr()` without reinit (mid-training safe)
 - Calls `train(200)` on Train click, `generate(temperature, 10)` on Generate click
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `cd app && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/components/model-panel/model-panel.tsx
@@ -907,7 +907,7 @@ git commit -m "feat: add ModelPanel orchestrator component"
 **Files:**
 - Create: `app/src/components/top-bar.tsx`
 
-- [ ] **Step 1: Write top bar**
+- [x] **Step 1: Write top bar**
 
 Write `app/src/components/top-bar.tsx`:
 
@@ -916,12 +916,12 @@ Simple bar with:
 - Mode toggle: "Solo" / "Compare" buttons (right)
 - Props: `mode: 'solo' | 'compare'`, `onModeChange: (mode) => void`
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `cd app && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/src/components/top-bar.tsx
@@ -936,13 +936,13 @@ git commit -m "feat: add TopBar with mode toggle"
 - Create: `app/src/components/solo-view.tsx`
 - Create: `app/src/components/compare-view.tsx`
 
-- [ ] **Step 1: Write SoloView**
+- [x] **Step 1: Write SoloView**
 
 Write `app/src/components/solo-view.tsx`:
 
 Receives `workerHandle` prop from App. Renders one `<ModelPanel layout="horizontal" colorVar="a" workerHandle={workerHandle} />` at full width.
 
-- [ ] **Step 2: Write CompareView**
+- [x] **Step 2: Write CompareView**
 
 Write `app/src/components/compare-view.tsx`:
 
@@ -951,12 +951,12 @@ Receives `workerHandleA` prop from App. Creates its own `useModelWorker()` for M
 - Right: `colorVar="b"` with its own worker (created on mount, destroyed on unmount)
 - Flexbox with gap, each flex-1
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `cd app && npx tsc --noEmit`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/src/components/solo-view.tsx app/src/components/compare-view.tsx
@@ -970,7 +970,7 @@ git commit -m "feat: add SoloView and CompareView layouts"
 **Files:**
 - Modify: `app/src/App.tsx`
 
-- [ ] **Step 1: Update App.tsx**
+- [x] **Step 1: Update App.tsx**
 
 Replace `app/src/App.tsx` with:
 ```tsx
@@ -1004,12 +1004,12 @@ export default function App() {
 
 **Key decision:** Model A's worker handle is owned by `App`, not by `ModelPanel`. This means switching Solo → Compare preserves Model A's training state (worker stays alive). Model B gets its own worker inside `CompareView`. Switching Compare → Solo destroys Model B only.
 
-- [ ] **Step 2: Verify full build**
+- [x] **Step 2: Verify full build**
 
 Run: `cd app && npx tsc --noEmit && pnpm build`
 Expected: PASS
 
-- [ ] **Step 3: Manual smoke test**
+- [x] **Step 3: Manual smoke test**
 
 Run: `cd app && pnpm dev`
 - Open http://localhost:5173
@@ -1018,7 +1018,7 @@ Run: `cd app && pnpm dev`
 - Select a dataset, click Train — verify loss curve updates in real time
 - Click Generate — verify words appear
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/src/App.tsx
@@ -1033,7 +1033,7 @@ git commit -m "feat: wire up App with Solo and Compare modes"
 - Modify: `app/vercel.json` (create if missing)
 - Modify: `app/vite.config.js`
 
-- [ ] **Step 1: Create vercel.json**
+- [x] **Step 1: Create vercel.json**
 
 Write `app/vercel.json`:
 ```json
@@ -1053,16 +1053,16 @@ Write `app/vercel.json`:
 }
 ```
 
-- [ ] **Step 2: Ensure WASM is included in build**
+- [x] **Step 2: Ensure WASM is included in build**
 
 Verify `vite.config.js` handles `.wasm` files correctly. Vite 7 handles WASM imports natively. If needed, add `assetsInclude: ['**/*.wasm']` to the Vite config.
 
-- [ ] **Step 3: Verify production build**
+- [x] **Step 3: Verify production build**
 
 Run: `cd app && pnpm build && ls dist/assets/*.wasm 2>/dev/null`
 Expected: WASM file present in dist/assets/
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/vercel.json app/vite.config.js
@@ -1073,7 +1073,7 @@ git commit -m "chore: add Vercel config with WASM headers"
 
 ### Task 17: Frontend design polish pass
 
-- [ ] **Step 1: Invoke frontend-design skill**
+- [x] **Step 1: Invoke frontend-design skill**
 
 Use the `frontend-design` skill to review and polish:
 - OKLCH palette finalization (tetradric harmony)
@@ -1081,7 +1081,7 @@ Use the `frontend-design` skill to review and polish:
 - Dark theme consistency
 - Responsive behavior (mobile → stack vertically)
 
-- [ ] **Step 2: Apply feedback and commit**
+- [x] **Step 2: Apply feedback and commit**
 
 ```bash
 git add -A
@@ -1092,18 +1092,18 @@ git commit -m "style: apply frontend-design polish pass"
 
 ### Task 18: Final integration commit
 
-- [ ] **Step 1: Run all quality gates**
+- [x] **Step 1: Run all quality gates**
 
 ```bash
 cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && npx jscpd src/
 ```
 Expected: all PASS
 
-- [ ] **Step 2: Add .superpowers to .gitignore**
+- [x] **Step 2: Add .superpowers to .gitignore**
 
 Append `.superpowers/` to `.gitignore` if not already there.
 
-- [ ] **Step 3: Final commit**
+- [x] **Step 3: Final commit**
 
 ```bash
 git add -A
@@ -1123,29 +1123,29 @@ git commit -m "chore: final integration — all quality gates pass"
 - Modify: `app/src/components/model-panel/model-panel.tsx`
 - Modify: `app/src/workers/model-worker.ts`
 
-- [ ] **Step 1: C1 — Unbounded `steps` array growth**
+- [x] **Step 1: C1 — Unbounded `steps` array growth**
 
 In `use-model-worker.ts`, the `steps` array grows without limit via `setSteps(prev => [...prev, item])` on every training step. This causes O(n²) copies, memory leaks, and re-render storms over sustained training sessions.
 
 Fix: Accumulate steps in a `useRef` buffer, flush to state at a throttled interval (e.g., every 100ms) or on `train_done`. Cap the array to a reasonable maximum (e.g., 5000 points) using a ring buffer or tail truncation.
 
-- [ ] **Step 2: C2 — Confirm dialog fires after `setParams`**
+- [x] **Step 2: C2 — Confirm dialog fires after `setParams`**
 
 In `model-panel.tsx`, `setParams(next)` is called on line 60 before the `window.confirm` check. If the user cancels, the UI shows new params but the model still has old ones — desync.
 
 Fix: Move `setParams(next)` after the confirm check. Only update state when the change is actually applied.
 
-- [ ] **Step 3: C3 — WASM `free()` not called on worker termination**
+- [x] **Step 3: C3 — WASM `free()` not called on worker termination**
 
 In `model-worker.ts`, when the worker is terminated via `worker.terminate()`, `gpt.free()` is never called. WASM linear memory may leak.
 
 Fix: Add a `'dispose'` message type. In `use-model-worker.ts`, send `dispose` before `terminate()`. In the worker, call `gpt.free()` on dispose.
 
-- [ ] **Step 4: Verify build**
+- [x] **Step 4: Verify build**
 
 Run: `cd app && npx tsc --noEmit && pnpm build`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "fix: critical — unbounded steps array, confirm desync, WASM free on dispose"
@@ -1158,15 +1158,15 @@ git commit -m "fix: critical — unbounded steps array, confirm desync, WASM fre
 **Files:**
 - Modify: `app/src/hooks/use-loss-data.ts`
 
-- [ ] **Step 1: I2 — CSS custom properties not supported by Canvas 2D**
+- [x] **Step 1: I2 — CSS custom properties not supported by Canvas 2D**
 
 `borderColor: var(--model-a)` is invalid for Canvas 2D context. Chart.js renders to `<canvas>`, not DOM.
 
 Fix: Resolve CSS variables at render time using `getComputedStyle(document.documentElement).getPropertyValue(...)`, or pass resolved color strings as props.
 
-- [ ] **Step 2: Verify the loss curve actually renders with correct color**
+- [x] **Step 2: Verify the loss curve actually renders with correct color**
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "fix: resolve CSS vars for Chart.js canvas rendering"
@@ -1181,15 +1181,15 @@ git commit -m "fix: resolve CSS vars for Chart.js canvas rendering"
 - Modify: `app/src/workers/model-worker.ts`
 - Modify: `app/src/components/model-panel/model-panel.tsx`
 
-- [ ] **Step 1: I1 — Surface error messages in UI**
+- [x] **Step 1: I1 — Surface error messages in UI**
 
 Add `errorMessage: string | null` state to `useModelWorker`. Set it on `'error'` responses. Display it in `ModelPanel` (e.g., a styled banner).
 
-- [ ] **Step 2: I4 — Validate worker messages**
+- [x] **Step 2: I4 — Validate worker messages**
 
 Add guards in the worker's `onmessage`: `n_steps > 0`, `temperature > 0`, `lr > 0`, config values are positive integers. Return an `'error'` response for invalid inputs.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "fix: surface worker errors in UI, validate worker messages"
@@ -1206,7 +1206,7 @@ git commit -m "fix: surface worker errors in UI, validate worker messages"
 - Modify: `app/src/components/model-panel/model-panel.tsx`
 - Modify: `app/src/components/top-bar.tsx`
 
-- [ ] **Step 1: M2 — Add ARIA attributes**
+- [x] **Step 1: M2 — Add ARIA attributes**
 
 - Training status as `aria-live="polite"` region
 - `aria-label` on all custom interactive elements
@@ -1214,7 +1214,7 @@ git commit -m "fix: surface worker errors in UI, validate worker messages"
 - `role="list"` on word grid, `role="listitem"` on word cards
 - Keyboard-navigable mode toggle (ensure Button handles this via Radix)
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git commit -m "fix: add ARIA attributes for screen reader support"
@@ -1229,11 +1229,11 @@ git commit -m "fix: add ARIA attributes for screen reader support"
 - Modify: `app/src/components/solo-view.tsx`
 - Modify: `app/src/components/model-panel/model-panel.tsx`
 
-- [ ] **Step 1: M3 — Add responsive breakpoints**
+- [x] **Step 1: M3 — Add responsive breakpoints**
 
 Compare mode: stack vertically on mobile (< 768px). Solo mode: panels wrap on narrow viewports. Use Tailwind responsive classes or CSS media queries.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git commit -m "fix: responsive layout for mobile viewports"
@@ -1252,20 +1252,20 @@ git commit -m "fix: responsive layout for mobile viewports"
 - Modify: `app/src/components/model-panel/model-panel.tsx` (M9)
 - Modify: `model-rs/crates/microgpt-wasm/src/lib.rs` (M10)
 
-- [ ] **Step 1: M1 — Deduplicate `Mode` type to `types.ts`**
-- [ ] **Step 2: M5 — Fix fragile key prop** — use index only since words have no stable identity
-- [ ] **Step 3: M6 — Add OKLCH fallbacks** — `@supports` fallback with sRGB hex equivalents
-- [ ] **Step 4: M9 — Replace `window.confirm` with custom dialog** — use Radix AlertDialog
-- [ ] **Step 5: M10 — Make `train_step` return `Result`** — align with `train_step_traced` pattern
+- [x] **Step 1: M1 — Deduplicate `Mode` type to `types.ts`**
+- [x] **Step 2: M5 — Fix fragile key prop** — use index only since words have no stable identity
+- [x] **Step 3: M6 — Add OKLCH fallbacks** — `@supports` fallback with sRGB hex equivalents
+- [x] **Step 4: M9 — Replace `window.confirm` with custom dialog** — use Radix AlertDialog
+- [x] **Step 5: M10 — Make `train_step` return `Result`** — align with `train_step_traced` pattern
 
-- [ ] **Step 6: Verify build (Rust + Frontend)**
+- [x] **Step 6: Verify build (Rust + Frontend)**
 
 ```bash
 cd model-rs && cargo test --release && cargo clippy -- -D warnings
 cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git commit -m "fix: code quality — deduplicate types, OKLCH fallbacks, custom dialog, consistent Rust API"
@@ -1281,17 +1281,17 @@ git commit -m "fix: code quality — deduplicate types, OKLCH fallbacks, custom 
 - Modify: `app/src/data/presets.ts` (M8)
 - Potentially modify: `app/src/components/model-panel/loss-panel.tsx` (M7)
 
-- [ ] **Step 1: M4 — Configurable training step count** — add a steps slider/input in params-panel (100/200/500/1000)
-- [ ] **Step 2: M8 — Lazy-load datasets** — use dynamic `import()` in presets, load on selection
-- [ ] **Step 3: M7 — Evaluate Chart.js replacement** — if bundle impact > 150KB gzipped, consider a lightweight SVG sparkline. Otherwise document the tradeoff and keep Chart.js.
+- [x] **Step 1: M4 — Configurable training step count** — add a steps slider/input in params-panel (100/200/500/1000)
+- [x] **Step 2: M8 — Lazy-load datasets** — use dynamic `import()` in presets, load on selection
+- [x] **Step 3: M7 — Evaluate Chart.js replacement** — if bundle impact > 150KB gzipped, consider a lightweight SVG sparkline. Otherwise document the tradeoff and keep Chart.js.
 
-- [ ] **Step 4: Verify build + bundle size**
+- [x] **Step 4: Verify build + bundle size**
 
 ```bash
 cd app && pnpm build 2>&1 | grep -i chunk
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "perf: configurable steps, lazy datasets, evaluate chart bundle"
@@ -1306,12 +1306,12 @@ git commit -m "perf: configurable steps, lazy datasets, evaluate chart bundle"
 - Modify: `app/src/theme/tokens.css`
 - Modify: multiple component files
 
-- [ ] **Step 1: I7 — Unify styling approach**
+- [x] **Step 1: I7 — Unify styling approach**
 
 Extend Tailwind 4 theme with CSS custom properties using `@theme` block. Replace inline `style={{ background: 'var(--surface-0)' }}` with Tailwind classes like `bg-surface-0`. Apply consistently across all components.
 
-- [ ] **Step 2: Verify build**
-- [ ] **Step 3: Commit**
+- [x] **Step 2: Verify build**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "refactor: unify styling — Tailwind theme integration, remove inline styles"
@@ -1325,24 +1325,24 @@ git commit -m "refactor: unify styling — Tailwind theme integration, remove in
 - Create: `app/src/lib/__tests__/validation.test.ts`
 - Create: `app/src/components/model-panel/__tests__/params-utils.test.ts`
 
-- [ ] **Step 1: Install Vitest**
+- [x] **Step 1: Install Vitest**
 
 ```bash
 cd app && pnpm add -D vitest
 ```
 
-- [ ] **Step 2: Write tests for pure functions**
+- [x] **Step 2: Write tests for pure functions**
 
 - `validation.ts`: `validHeadCounts` edge cases
 - `params-utils.ts`: `posToLr`/`lrToPos` roundtrip, `formatLr` formatting
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 cd app && npx vitest run
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git commit -m "test: add unit tests for validation and params-utils"
@@ -1352,14 +1352,14 @@ git commit -m "test: add unit tests for validation and params-utils"
 
 ### Task 28: Final quality gate
 
-- [ ] **Step 1: Run all checks**
+- [x] **Step 1: Run all checks**
 
 ```bash
 cd model-rs && cargo test --release && cargo fmt --check && cargo clippy -- -D warnings
 cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && npx jscpd src/ && npx vitest run
 ```
 
-- [ ] **Step 2: Final commit**
+- [x] **Step 2: Final commit**
 
 ```bash
 git commit -m "chore: all industry audit fixes complete — quality gates green"
@@ -1373,7 +1373,7 @@ git commit -m "chore: all industry audit fixes complete — quality gates green"
 
 ### Task 29: Smoke test
 
-- [ ] **Step 1: Start dev server and verify manually**
+- [x] **Step 1: Start dev server and verify manually**
 
 ```bash
 cd app && pnpm dev
@@ -1391,14 +1391,14 @@ Open http://localhost:5173 and verify:
 - Change LR mid-training → no reinit, takes effect on next step
 - Error state: try invalid config → error banner shows
 
-- [ ] **Step 2: Fix any runtime issues found**
-- [ ] **Step 3: Commit if fixes needed**
+- [x] **Step 2: Fix any runtime issues found**
+- [x] **Step 3: Commit if fixes needed**
 
 ---
 
 ### Task 30: Pre-push hook validation
 
-- [ ] **Step 1: Run the actual pre-push hook**
+- [x] **Step 1: Run the actual pre-push hook**
 
 ```bash
 cd app && npx tsc --noEmit && pnpm build && npx jscpd src/
@@ -1406,7 +1406,7 @@ cd app && npx tsc --noEmit && pnpm build && npx jscpd src/
 
 These are the documented pre-push gates. Verify they pass end-to-end as the hook would run them.
 
-- [ ] **Step 2: Test the hook itself**
+- [x] **Step 2: Test the hook itself**
 
 ```bash
 cd /c/Dev/microgpt-lab && git stash && git stash pop
@@ -1420,7 +1420,7 @@ cd /c/Dev/microgpt-lab && git stash && git stash pop
 **Files:**
 - Modify: `app/src/hooks/use-model-worker.ts`
 
-- [ ] **Step 1: Audit the `eslint-disable react-hooks/exhaustive-deps`**
+- [x] **Step 1: Audit the `eslint-disable react-hooks/exhaustive-deps`**
 
 The auto-init `useEffect` in `model-panel.tsx` uses `// eslint-disable-next-line react-hooks/exhaustive-deps` to omit `initModel` and `params` from the deps array. This is intentional (init once on mount), but the pattern is fragile.
 
@@ -1437,9 +1437,9 @@ useEffect(() => {
 
 This satisfies the exhaustive-deps rule while maintaining mount-only behavior.
 
-- [ ] **Step 2: Remove all `eslint-disable` comments from app/src/**
-- [ ] **Step 3: Verify `npx eslint src/ --max-warnings=0`**
-- [ ] **Step 4: Commit**
+- [x] **Step 2: Remove all `eslint-disable` comments from app/src/**
+- [x] **Step 3: Verify `npx eslint src/ --max-warnings=0`**
+- [x] **Step 4: Commit**
 
 ```bash
 git commit -m "fix: remove eslint-disable — use ref guard for mount-only init"
@@ -1452,7 +1452,7 @@ git commit -m "fix: remove eslint-disable — use ref guard for mount-only init"
 **Files:**
 - Modify: `app/src/workers/model-worker.ts`
 
-- [ ] **Step 1: Add a type guard for StepResult**
+- [x] **Step 1: Add a type guard for StepResult**
 
 Replace the unsafe `as` cast on `gpt.train_step()` with a runtime validator:
 ```ts
@@ -1475,8 +1475,8 @@ if (!isStepResult(raw)) {
 post({ type: 'step', data: raw });
 ```
 
-- [ ] **Step 2: Verify tsc + build**
-- [ ] **Step 3: Commit**
+- [x] **Step 2: Verify tsc + build**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "fix: runtime type guard for WASM train_step return value"
@@ -1489,7 +1489,7 @@ git commit -m "fix: runtime type guard for WASM train_step return value"
 **Files:**
 - Modify: `app/src/components/model-panel/loss-panel.tsx`
 
-- [ ] **Step 1: Lazy-load Chart.js via React.lazy**
+- [x] **Step 1: Lazy-load Chart.js via React.lazy**
 
 Wrap the `Line` chart in a lazy-loaded component to split Chart.js (~200KB) into a separate chunk:
 
@@ -1502,7 +1502,7 @@ const LazyLine = lazy(() =>
 
 Create `app/src/components/model-panel/loss-chart.tsx` with the Chart.js imports and `<Line>` rendering.
 
-- [ ] **Step 2: Verify chunk split**
+- [x] **Step 2: Verify chunk split**
 
 ```bash
 cd app && pnpm build 2>&1 | grep -i chunk
@@ -1510,7 +1510,7 @@ cd app && pnpm build 2>&1 | grep -i chunk
 
 Expected: main chunk < 300KB, chart chunk separate.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "perf: lazy-load Chart.js to reduce initial bundle"
@@ -1523,7 +1523,7 @@ git commit -m "perf: lazy-load Chart.js to reduce initial bundle"
 **Files:**
 - Modify: `app/vercel.json`
 
-- [ ] **Step 1: Add Content-Security-Policy header**
+- [x] **Step 1: Add Content-Security-Policy header**
 
 WASM execution requires `'wasm-unsafe-eval'` in script-src. Add a security header:
 
@@ -1539,7 +1539,7 @@ WASM execution requires `'wasm-unsafe-eval'` in script-src. Add a security heade
 }
 ```
 
-- [ ] **Step 2: Verify local build + serve works with CSP**
+- [x] **Step 2: Verify local build + serve works with CSP**
 
 ```bash
 cd app && pnpm build && npx serve dist
@@ -1547,7 +1547,7 @@ cd app && pnpm build && npx serve dist
 
 Open in browser, check console for CSP violations.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "chore: add Content-Security-Policy headers for WASM"
@@ -1557,7 +1557,7 @@ git commit -m "chore: add Content-Security-Policy headers for WASM"
 
 ### Task 35: License audit
 
-- [ ] **Step 1: Check all dependency licenses**
+- [x] **Step 1: Check all dependency licenses**
 
 ```bash
 cd app && npx license-checker --summary 2>/dev/null || pnpm exec license-checker --summary
@@ -1574,8 +1574,8 @@ Alternatively, manually verify key deps:
 
 All must be compatible with MIT/Apache. Flag any GPL/AGPL/SSPL.
 
-- [ ] **Step 2: Add THIRD_PARTY_LICENSES.md if needed**
-- [ ] **Step 3: Commit**
+- [x] **Step 2: Add THIRD_PARTY_LICENSES.md if needed**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "chore: verify dependency license compatibility"
@@ -1588,7 +1588,7 @@ git commit -m "chore: verify dependency license compatibility"
 **Files:**
 - Create: `app/src/hooks/__tests__/use-model-worker.test.ts`
 
-- [ ] **Step 1: Install jsdom + @testing-library/react**
+- [x] **Step 1: Install jsdom + @testing-library/react**
 
 ```bash
 cd app && pnpm add -D @testing-library/react @testing-library/react-hooks jsdom
@@ -1599,7 +1599,7 @@ Add to vitest config in `vite.config.js`:
 test: { environment: 'jsdom' }
 ```
 
-- [ ] **Step 2: Write integration test**
+- [x] **Step 2: Write integration test**
 
 Test the useModelWorker hook lifecycle with a mock worker. Verify:
 - `initModel` sends correct message to worker
@@ -1609,13 +1609,13 @@ Test the useModelWorker hook lifecycle with a mock worker. Verify:
 - `generate` sends correct message
 - `dispose` is sent on cleanup
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 ```bash
 cd app && npx vitest run
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git commit -m "test: add integration tests for useModelWorker hook"
@@ -1631,13 +1631,13 @@ git commit -m "test: add integration tests for useModelWorker hook"
 - Create: `app/src/components/model-panel/__tests__/error-banner.test.tsx`
 - Create: `app/src/components/model-panel/__tests__/model-panel.test.tsx`
 
-- [ ] **Step 1: Install @testing-library/react + @testing-library/user-event**
+- [x] **Step 1: Install @testing-library/react + @testing-library/user-event**
 
 ```bash
 cd app && pnpm add -D @testing-library/react @testing-library/user-event
 ```
 
-- [ ] **Step 2: ParamsPanel tests** (`params-panel.test.tsx`)
+- [x] **Step 2: ParamsPanel tests** (`params-panel.test.tsx`)
 
 - Renders all dataset options from PRESETS
 - Renders n_embd/n_head/n_layer/block_size selects
@@ -1650,7 +1650,7 @@ cd app && pnpm add -D @testing-library/react @testing-library/user-event
 - Calls onParamsChange with correct payload on control changes
 - trainSteps select renders options [100, 200, 500, 1000, 2000]
 
-- [ ] **Step 3: InferencePanel tests** (`inference-panel.test.tsx`)
+- [x] **Step 3: InferencePanel tests** (`inference-panel.test.tsx`)
 
 - Empty state: shows placeholder message
 - With words: renders word grid with `role="list"` and `role="listitem"`
@@ -1658,13 +1658,13 @@ cd app && pnpm add -D @testing-library/react @testing-library/user-event
 - Shows temperature in footer when provided
 - Uses correct model color for word styling
 
-- [ ] **Step 4: ErrorBanner tests** (`error-banner.test.tsx`)
+- [x] **Step 4: ErrorBanner tests** (`error-banner.test.tsx`)
 
 - Returns null when message is null
 - Renders with `role="alert"` when message is provided
 - Displays the error message text
 
-- [ ] **Step 5: ModelPanel integration tests** (`model-panel.test.tsx`)
+- [x] **Step 5: ModelPanel integration tests** (`model-panel.test.tsx`)
 
 Mock `useModelWorker` hook. Verify:
 - Renders all three sub-panels (params, loss, inference)
@@ -1676,13 +1676,13 @@ Mock `useModelWorker` hook. Verify:
 - AlertDialog confirm calls initModel with new params
 - LR change calls setLr without initModel
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 ```bash
 cd app && npx vitest run
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git commit -m "test: add component tests for panels, error banner, model panel"
@@ -1697,13 +1697,13 @@ git commit -m "test: add component tests for panels, error banner, model panel"
 - Create: `app/e2e/compare-flow.spec.ts`
 - Create: `app/playwright.config.ts`
 
-- [ ] **Step 1: Install Playwright**
+- [x] **Step 1: Install Playwright**
 
 ```bash
 cd app && pnpm add -D @playwright/test && npx playwright install chromium
 ```
 
-- [ ] **Step 2: Configure Playwright** (`app/playwright.config.ts`)
+- [x] **Step 2: Configure Playwright** (`app/playwright.config.ts`)
 
 ```ts
 import { defineConfig } from '@playwright/test';
@@ -1723,7 +1723,7 @@ export default defineConfig({
 
 Add script to `package.json`: `"test:e2e": "playwright test"`
 
-- [ ] **Step 3: Solo flow E2E** (`solo-flow.spec.ts`)
+- [x] **Step 3: Solo flow E2E** (`solo-flow.spec.ts`)
 
 - Page loads, TopBar visible with "microgpt-lab" title
 - Solo mode active by default
@@ -1738,7 +1738,7 @@ Add script to `package.json`: `"test:e2e": "playwright test"`
 - Cancel dialog → params unchanged
 - Confirm dialog → loss curve clears, model re-inits
 
-- [ ] **Step 4: Compare flow E2E** (`compare-flow.spec.ts`)
+- [x] **Step 4: Compare flow E2E** (`compare-flow.spec.ts`)
 
 - Click "Compare" → two model panels appear side by side
 - Each panel has independent controls
@@ -1747,13 +1747,13 @@ Add script to `package.json`: `"test:e2e": "playwright test"`
 - Switch back to "Solo" → Model A state preserved (loss curve still visible)
 - Switch back to "Compare" → Model A still has data, Model B is fresh
 
-- [ ] **Step 5: Run E2E**
+- [x] **Step 5: Run E2E**
 
 ```bash
 cd app && pnpm test:e2e
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git commit -m "test: add Playwright E2E tests for Solo and Compare flows"
@@ -1765,14 +1765,14 @@ git commit -m "test: add Playwright E2E tests for Solo and Compare flows"
 
 > Renumbered from Task 37. Includes all test suites.
 
-- [ ] **Step 1: Run ALL checks**
+- [x] **Step 1: Run ALL checks**
 
 ```bash
 cd model-rs && cargo test --release && cargo fmt --check && cargo clippy -- -D warnings
 cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && npx jscpd src/ && npx vitest run && pnpm test:e2e
 ```
 
-- [ ] **Step 2: Verify zero eslint-disable comments**
+- [x] **Step 2: Verify zero eslint-disable comments**
 
 ```bash
 grep -r "eslint-disable" app/src/ | grep -v node_modules | grep -v __tests__
@@ -1780,11 +1780,11 @@ grep -r "eslint-disable" app/src/ | grep -v node_modules | grep -v __tests__
 
 Expected: 0 results (or only in shadcn/ui generated files).
 
-- [ ] **Step 3: Verify bundle size**
+- [x] **Step 3: Verify bundle size**
 
 Main chunk < 300KB gzipped.
 
-- [ ] **Step 4: Final commit**
+- [x] **Step 4: Final commit**
 
 ```bash
 git commit -m "chore: final quality pass — all gates green, zero suppressions"
@@ -1802,9 +1802,9 @@ git commit -m "chore: final quality pass — all gates green, zero suppressions"
 - Create: `app/src/components/error-boundary.tsx`
 - Modify: `app/src/App.tsx`
 
-- [ ] **Step 1: Create ErrorBoundary class component** — catches render errors, shows recovery UI
-- [ ] **Step 2: Wrap App content in ErrorBoundary**
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Create ErrorBoundary class component** — catches render errors, shows recovery UI
+- [x] **Step 2: Wrap App content in ErrorBoundary**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "feat: add React ErrorBoundary for crash recovery"
@@ -1818,9 +1818,9 @@ git commit -m "feat: add React ErrorBoundary for crash recovery"
 - Delete: `app/src/components/model-panel/loss-chart-options.ts`
 - Modify: `app/src/components/model-panel/loss-panel.tsx` — already has inline copy, keep it
 
-- [ ] **Step 1: Delete orphaned file**
-- [ ] **Step 2: Verify build**
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Delete orphaned file**
+- [x] **Step 2: Verify build**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "refactor: delete orphaned loss-chart-options.ts"
@@ -1834,8 +1834,8 @@ git commit -m "refactor: delete orphaned loss-chart-options.ts"
 - Modify: `app/src/lib/types.ts` — add `Preset` type
 - Modify: `app/src/data/presets.ts` — import from types.ts instead of defining locally
 
-- [ ] **Step 1: Move type, update imports**
-- [ ] **Step 2: Commit**
+- [x] **Step 1: Move type, update imports**
+- [x] **Step 2: Commit**
 
 ```bash
 git commit -m "refactor: move Preset type to types.ts per convention"
@@ -1848,8 +1848,8 @@ git commit -m "refactor: move Preset type to types.ts per convention"
 **Files:**
 - Modify: `app/src/workers/model-worker.ts`
 
-- [ ] **Step 1: Refactor isStepResult to use `in` narrowing without `as Record<>`**
-- [ ] **Step 2: Commit**
+- [x] **Step 1: Refactor isStepResult to use `in` narrowing without `as Record<>`**
+- [x] **Step 2: Commit**
 
 ```bash
 git commit -m "refactor: remove as casts in isStepResult type guard"
@@ -1863,9 +1863,9 @@ git commit -m "refactor: remove as casts in isStepResult type guard"
 - Modify: `app/src/hooks/use-loss-data.ts` — wrap returned ChartData in useMemo keyed on steps + borderColor
 - Modify: `app/src/components/model-panel/loss-panel.tsx` — remove `useMemo(() => getChartOptions(), [])`, resolve every render for theme reactivity
 
-- [ ] **Step 1: Memoize ChartData object properly** — deps: [lossValues, labels, borderColor]
-- [ ] **Step 2: Fix chartOptions to also resolve on every render** (or pass borderColor as dep)
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Memoize ChartData object properly** — deps: [lossValues, labels, borderColor]
+- [x] **Step 2: Fix chartOptions to also resolve on every render** (or pass borderColor as dep)
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "fix: proper memoization for Chart.js data and options"
@@ -1879,8 +1879,8 @@ git commit -m "fix: proper memoization for Chart.js data and options"
 - Modify: `app/src/components/top-bar.tsx` — add `aria-controls` + `id` linking
 - Modify: `app/src/App.tsx` — add `role="tabpanel"` + `id` on content area
 
-- [ ] **Step 1: Wire aria-controls/id on tabs and tabpanel**
-- [ ] **Step 2: Commit**
+- [x] **Step 1: Wire aria-controls/id on tabs and tabpanel**
+- [x] **Step 2: Commit**
 
 ```bash
 git commit -m "fix: complete ARIA tab pattern with tabpanel linkage"
@@ -1894,8 +1894,8 @@ git commit -m "fix: complete ARIA tab pattern with tabpanel linkage"
 - Modify: `app/src/lib/constants.ts` — add N_EMBD_OPTIONS, N_LAYER_OPTIONS, etc.
 - Modify: `app/src/components/model-panel/params-panel.tsx` — import from constants
 
-- [ ] **Step 1: Move constants, update imports**
-- [ ] **Step 2: Commit**
+- [x] **Step 1: Move constants, update imports**
+- [x] **Step 2: Commit**
 
 ```bash
 git commit -m "refactor: move param options to constants.ts"
@@ -1909,9 +1909,9 @@ git commit -m "refactor: move param options to constants.ts"
 - Modify: `app/src/lib/constants.ts`
 - Modify: `app/src/components/model-panel/model-panel.tsx`
 
-- [ ] **Step 1: Add DEFAULT_N_SAMPLES = 10 to constants.ts**
-- [ ] **Step 2: Use it in model-panel.tsx**
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Add DEFAULT_N_SAMPLES = 10 to constants.ts**
+- [x] **Step 2: Use it in model-panel.tsx**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "refactor: extract n_samples constant"
@@ -1924,8 +1924,8 @@ git commit -m "refactor: extract n_samples constant"
 **Files:**
 - Modify: `app/src/components/model-panel/model-panel.tsx`
 
-- [ ] **Step 1: Split mixed import into separate runtime and type imports**
-- [ ] **Step 2: Commit**
+- [x] **Step 1: Split mixed import into separate runtime and type imports**
+- [x] **Step 2: Commit**
 
 ```bash
 git commit -m "style: consistent type-only imports"
@@ -1935,17 +1935,17 @@ git commit -m "style: consistent type-only imports"
 
 ### Task 49: Mark all completed tasks in plan
 
-- [ ] **Step 1: Check all task checkboxes `[x]` for Tasks 1-48**
-- [ ] **Step 2: Commit**
+- [x] **Step 1: Check all task checkboxes `[x]` for Tasks 1-48**
+- [x] **Step 2: Commit**
 
 ---
 
 ### Task 50: Final quality gate (definitive)
 
-- [ ] **Step 1: Run ALL checks**: tsc, build, eslint, jscpd, vitest, playwright
-- [ ] **Step 2: Verify zero `as` casts outside ui/ and worker JSON.parse**
-- [ ] **Step 3: Verify zero orphaned files**
-- [ ] **Step 4: Commit**
+- [x] **Step 1: Run ALL checks**: tsc, build, eslint, jscpd, vitest, playwright
+- [x] **Step 2: Verify zero `as` casts outside ui/ and worker JSON.parse**
+- [x] **Step 3: Verify zero orphaned files**
+- [x] **Step 4: Commit**
 
 ```bash
 git commit -m "chore: chunk 6 complete — all audit findings fixed"
