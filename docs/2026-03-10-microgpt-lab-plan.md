@@ -1109,3 +1109,258 @@ Append `.superpowers/` to `.gitignore` if not already there.
 git add -A
 git commit -m "chore: final integration — all quality gates pass"
 ```
+
+---
+
+## Chunk 4: Phase 3 — Industry Standards Audit Fixes
+
+> **Context:** Post-implementation audit revealed 3 critical, 7 important, and 10 minor issues against industry standards. All must be fixed before the branch can be considered complete.
+
+### Task 19: Fix critical issues (C1, C2, C3)
+
+**Files:**
+- Modify: `app/src/hooks/use-model-worker.ts`
+- Modify: `app/src/components/model-panel/model-panel.tsx`
+- Modify: `app/src/workers/model-worker.ts`
+
+- [ ] **Step 1: C1 — Unbounded `steps` array growth**
+
+In `use-model-worker.ts`, the `steps` array grows without limit via `setSteps(prev => [...prev, item])` on every training step. This causes O(n²) copies, memory leaks, and re-render storms over sustained training sessions.
+
+Fix: Accumulate steps in a `useRef` buffer, flush to state at a throttled interval (e.g., every 100ms) or on `train_done`. Cap the array to a reasonable maximum (e.g., 5000 points) using a ring buffer or tail truncation.
+
+- [ ] **Step 2: C2 — Confirm dialog fires after `setParams`**
+
+In `model-panel.tsx`, `setParams(next)` is called on line 60 before the `window.confirm` check. If the user cancels, the UI shows new params but the model still has old ones — desync.
+
+Fix: Move `setParams(next)` after the confirm check. Only update state when the change is actually applied.
+
+- [ ] **Step 3: C3 — WASM `free()` not called on worker termination**
+
+In `model-worker.ts`, when the worker is terminated via `worker.terminate()`, `gpt.free()` is never called. WASM linear memory may leak.
+
+Fix: Add a `'dispose'` message type. In `use-model-worker.ts`, send `dispose` before `terminate()`. In the worker, call `gpt.free()` on dispose.
+
+- [ ] **Step 4: Verify build**
+
+Run: `cd app && npx tsc --noEmit && pnpm build`
+
+- [ ] **Step 5: Commit**
+
+```bash
+git commit -m "fix: critical — unbounded steps array, confirm desync, WASM free on dispose"
+```
+
+---
+
+### Task 20: Fix Chart.js CSS variable issue (I2)
+
+**Files:**
+- Modify: `app/src/hooks/use-loss-data.ts`
+
+- [ ] **Step 1: I2 — CSS custom properties not supported by Canvas 2D**
+
+`borderColor: var(--model-a)` is invalid for Canvas 2D context. Chart.js renders to `<canvas>`, not DOM.
+
+Fix: Resolve CSS variables at render time using `getComputedStyle(document.documentElement).getPropertyValue(...)`, or pass resolved color strings as props.
+
+- [ ] **Step 2: Verify the loss curve actually renders with correct color**
+
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "fix: resolve CSS vars for Chart.js canvas rendering"
+```
+
+---
+
+### Task 21: Error handling & resilience (I1, I4)
+
+**Files:**
+- Modify: `app/src/hooks/use-model-worker.ts`
+- Modify: `app/src/workers/model-worker.ts`
+- Modify: `app/src/components/model-panel/model-panel.tsx`
+
+- [ ] **Step 1: I1 — Surface error messages in UI**
+
+Add `errorMessage: string | null` state to `useModelWorker`. Set it on `'error'` responses. Display it in `ModelPanel` (e.g., a styled banner).
+
+- [ ] **Step 2: I4 — Validate worker messages**
+
+Add guards in the worker's `onmessage`: `n_steps > 0`, `temperature > 0`, `lr > 0`, config values are positive integers. Return an `'error'` response for invalid inputs.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "fix: surface worker errors in UI, validate worker messages"
+```
+
+---
+
+### Task 22: Accessibility (M2)
+
+**Files:**
+- Modify: `app/src/components/model-panel/params-panel.tsx`
+- Modify: `app/src/components/model-panel/loss-panel.tsx`
+- Modify: `app/src/components/model-panel/inference-panel.tsx`
+- Modify: `app/src/components/model-panel/model-panel.tsx`
+- Modify: `app/src/components/top-bar.tsx`
+
+- [ ] **Step 1: M2 — Add ARIA attributes**
+
+- Training status as `aria-live="polite"` region
+- `aria-label` on all custom interactive elements
+- `role="status"` on loss/step counters
+- `role="list"` on word grid, `role="listitem"` on word cards
+- Keyboard-navigable mode toggle (ensure Button handles this via Radix)
+
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "fix: add ARIA attributes for screen reader support"
+```
+
+---
+
+### Task 23: Responsive design (M3)
+
+**Files:**
+- Modify: `app/src/components/compare-view.tsx`
+- Modify: `app/src/components/solo-view.tsx`
+- Modify: `app/src/components/model-panel/model-panel.tsx`
+
+- [ ] **Step 1: M3 — Add responsive breakpoints**
+
+Compare mode: stack vertically on mobile (< 768px). Solo mode: panels wrap on narrow viewports. Use Tailwind responsive classes or CSS media queries.
+
+- [ ] **Step 2: Commit**
+
+```bash
+git commit -m "fix: responsive layout for mobile viewports"
+```
+
+---
+
+### Task 24: Code quality fixes (M1, M5, M6, M9, M10)
+
+**Files:**
+- Modify: `app/src/lib/types.ts` (M1)
+- Modify: `app/src/App.tsx` (M1)
+- Modify: `app/src/components/top-bar.tsx` (M1)
+- Modify: `app/src/components/model-panel/inference-panel.tsx` (M5)
+- Modify: `app/src/theme/tokens.css` (M6)
+- Modify: `app/src/components/model-panel/model-panel.tsx` (M9)
+- Modify: `model-rs/crates/microgpt-wasm/src/lib.rs` (M10)
+
+- [ ] **Step 1: M1 — Deduplicate `Mode` type to `types.ts`**
+- [ ] **Step 2: M5 — Fix fragile key prop** — use index only since words have no stable identity
+- [ ] **Step 3: M6 — Add OKLCH fallbacks** — `@supports` fallback with sRGB hex equivalents
+- [ ] **Step 4: M9 — Replace `window.confirm` with custom dialog** — use Radix AlertDialog
+- [ ] **Step 5: M10 — Make `train_step` return `Result`** — align with `train_step_traced` pattern
+
+- [ ] **Step 6: Verify build (Rust + Frontend)**
+
+```bash
+cd model-rs && cargo test --release && cargo clippy -- -D warnings
+cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0
+```
+
+- [ ] **Step 7: Commit**
+
+```bash
+git commit -m "fix: code quality — deduplicate types, OKLCH fallbacks, custom dialog, consistent Rust API"
+```
+
+---
+
+### Task 25: Performance optimizations (M4, M7, M8)
+
+**Files:**
+- Modify: `app/src/components/model-panel/model-panel.tsx` (M4)
+- Modify: `app/src/components/model-panel/params-panel.tsx` (M4)
+- Modify: `app/src/data/presets.ts` (M8)
+- Potentially modify: `app/src/components/model-panel/loss-panel.tsx` (M7)
+
+- [ ] **Step 1: M4 — Configurable training step count** — add a steps slider/input in params-panel (100/200/500/1000)
+- [ ] **Step 2: M8 — Lazy-load datasets** — use dynamic `import()` in presets, load on selection
+- [ ] **Step 3: M7 — Evaluate Chart.js replacement** — if bundle impact > 150KB gzipped, consider a lightweight SVG sparkline. Otherwise document the tradeoff and keep Chart.js.
+
+- [ ] **Step 4: Verify build + bundle size**
+
+```bash
+cd app && pnpm build 2>&1 | grep -i chunk
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git commit -m "perf: configurable steps, lazy datasets, evaluate chart bundle"
+```
+
+---
+
+### Task 26: Styling consistency (I7)
+
+**Files:**
+- Modify: `app/src/index.css`
+- Modify: `app/src/theme/tokens.css`
+- Modify: multiple component files
+
+- [ ] **Step 1: I7 — Unify styling approach**
+
+Extend Tailwind 4 theme with CSS custom properties using `@theme` block. Replace inline `style={{ background: 'var(--surface-0)' }}` with Tailwind classes like `bg-surface-0`. Apply consistently across all components.
+
+- [ ] **Step 2: Verify build**
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "refactor: unify styling — Tailwind theme integration, remove inline styles"
+```
+
+---
+
+### Task 27: Frontend unit tests (I5)
+
+**Files:**
+- Create: `app/src/lib/__tests__/validation.test.ts`
+- Create: `app/src/components/model-panel/__tests__/params-utils.test.ts`
+
+- [ ] **Step 1: Install Vitest**
+
+```bash
+cd app && pnpm add -D vitest
+```
+
+- [ ] **Step 2: Write tests for pure functions**
+
+- `validation.ts`: `validHeadCounts` edge cases
+- `params-utils.ts`: `posToLr`/`lrToPos` roundtrip, `formatLr` formatting
+
+- [ ] **Step 3: Run tests**
+
+```bash
+cd app && npx vitest run
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git commit -m "test: add unit tests for validation and params-utils"
+```
+
+---
+
+### Task 28: Final quality gate
+
+- [ ] **Step 1: Run all checks**
+
+```bash
+cd model-rs && cargo test --release && cargo fmt --check && cargo clippy -- -D warnings
+cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && npx jscpd src/ && npx vitest run
+```
+
+- [ ] **Step 2: Final commit**
+
+```bash
+git commit -m "chore: all industry audit fixes complete — quality gates green"
+```
