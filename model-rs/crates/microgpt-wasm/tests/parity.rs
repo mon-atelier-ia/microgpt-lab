@@ -248,7 +248,8 @@ fn forward_trace_rejects_oob_head_idx() {
 #[wasm_bindgen_test]
 fn train_step_returns_step_result() {
     let mut gpt = microgpt_wasm::WasmGpt::new(TEST_NAMES).unwrap();
-    let result: TrainStepResult = serde_wasm_bindgen::from_value(gpt.train_step()).unwrap();
+    let result: TrainStepResult =
+        serde_wasm_bindgen::from_value(gpt.train_step().unwrap()).unwrap();
     assert_eq!(result.step, 1);
     assert!(result.loss > 0.0, "initial loss should be positive");
     assert!(result.lr > 0.0, "lr should be positive");
@@ -259,15 +260,17 @@ fn train_step_returns_step_result() {
 fn train_reduces_loss() {
     let mut gpt = microgpt_wasm::WasmGpt::new(TEST_NAMES).unwrap();
 
-    let r1: TrainStepResult = serde_wasm_bindgen::from_value(gpt.train_step()).unwrap();
+    let r1: TrainStepResult =
+        serde_wasm_bindgen::from_value(gpt.train_step().unwrap()).unwrap();
     let loss_1 = r1.loss;
 
     // Train 50 more steps
     for _ in 0..50 {
-        gpt.train_step();
+        gpt.train_step().unwrap();
     }
 
-    let r_last: TrainStepResult = serde_wasm_bindgen::from_value(gpt.train_step()).unwrap();
+    let r_last: TrainStepResult =
+        serde_wasm_bindgen::from_value(gpt.train_step().unwrap()).unwrap();
     let loss_last = r_last.loss;
 
     assert!(
