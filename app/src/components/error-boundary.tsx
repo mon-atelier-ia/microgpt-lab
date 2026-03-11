@@ -2,18 +2,22 @@ import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 
 type Props = { children: ReactNode };
-type State = { error: Error | null };
+type State = { error: Error | null; resetKey: number };
 
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null };
+  state: State = { error: null, resetKey: 0 };
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { error };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info.componentStack);
   }
+
+  handleReset = () => {
+    this.setState((prev) => ({ error: null, resetKey: prev.resetKey + 1 }));
+  };
 
   render() {
     if (this.state.error) {
@@ -28,13 +32,14 @@ export class ErrorBoundary extends Component<Props, State> {
           </p>
           <button
             className="rounded-md bg-surface-1 px-4 py-2 text-sm hover:bg-surface-2"
-            onClick={() => this.setState({ error: null })}
+            onClick={this.handleReset}
           >
             Try again
           </button>
         </div>
       );
     }
-    return this.props.children;
+    // resetKey forces full child remount → workers re-initialize
+    return <div key={this.state.resetKey}>{this.props.children}</div>;
   }
 }

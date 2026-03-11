@@ -97,7 +97,7 @@ body::after {
 .panel-glow-a,
 .panel-glow-b {
   border: 1px solid color-mix(in oklch, var(--glow-muted), transparent 40%);
-  background: color-mix(in oklch, var(--glow-muted), transparent 85%);
+  background: color-mix(in oklch, var(--glow-muted), transparent 70%);
   box-shadow:
     0 0 30px -4px color-mix(in oklch, var(--glow-accent), transparent 75%),
     0 0 60px -8px color-mix(in oklch, var(--glow-muted), transparent 70%),

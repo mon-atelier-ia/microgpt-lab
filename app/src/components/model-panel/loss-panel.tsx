@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import type { ChartOptions, TooltipItem } from 'chart.js';
 import type { ColorVar, StepResult } from '../../lib/types';
 import { useLossData } from '../../hooks/use-loss-data';
@@ -44,8 +44,20 @@ type LossPanelProps = {
 export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
   const data = useLossData(steps, colorVar);
   const lastStep = steps[steps.length - 1];
-  const chartOptions = useMemo(() => buildChartOptions(), []);
   const hasData = steps.length > 0;
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const chartOptions = useMemo(() => {
+    const opts = buildChartOptions();
+    // Animate draw on first data appearance only, then disable for real-time perf
+    if (hasData && !hasAnimated) {
+      opts.animation = {
+        duration: 800,
+        easing: 'easeOutQuart',
+        onComplete: () => setHasAnimated(true),
+      };
+    }
+    return opts;
+  }, [hasData, hasAnimated]);
 
   return (
     <div

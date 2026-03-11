@@ -11,6 +11,8 @@ type InferencePanelProps = {
 export function InferencePanel({ words, colorVar, temperature, glowClass }: InferencePanelProps) {
   const primary = modelColor(colorVar);
   const muted = modelMuted(colorVar);
+  // Unique key per word set to force grid remount → re-trigger CSS stagger animations
+  const genKey = words.join('\0');
 
   return (
     <div
@@ -27,13 +29,14 @@ export function InferencePanel({ words, colorVar, temperature, glowClass }: Infe
         </div>
       ) : (
         <div
+          key={genKey}
           role="list"
           className="grid gap-2"
           style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(5rem, 1fr))' }}
         >
           {words.map((word, i) => (
             <div
-              key={i}
+              key={`${i}-${word}`}
               role="listitem"
               className="word-item rounded-md px-2 py-1.5 text-center font-mono text-sm font-semibold transition-all duration-200 hover:scale-105 hover:brightness-125"
               style={{
