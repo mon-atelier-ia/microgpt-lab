@@ -41,6 +41,15 @@ function validateField(value: number, name: string): boolean {
 
 let trainRemaining = 0;
 let busy = false;
+let pendingMsg: WorkerMessage | null = null;
+
+function flushPending() {
+  if (pendingMsg) {
+    const msg = pendingMsg;
+    pendingMsg = null;
+    dispatch(msg);
+  }
+}
 
 function handleTrain(n_steps: number) {
   const g = requireGpt();
@@ -78,6 +87,7 @@ function trainChunk() {
   } else {
     busy = false;
     post({ type: 'train_done' });
+    flushPending();
   }
 }
 
@@ -85,7 +95,8 @@ function handleGenerate(temperature: number, n_samples: number) {
   const g = requireGpt();
   if (!g) return;
   if (busy) {
-    post({ type: 'error', message: 'Model is busy — wait for current operation to finish' });
+    // Queue generate to run after current operation finishes
+    pendingMsg = { type: 'generate', temperature, n_samples };
     return;
   }
   busy = true;

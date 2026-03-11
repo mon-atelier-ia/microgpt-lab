@@ -2037,6 +2037,36 @@ git commit -m "feat: add EMA smoothing overlay on loss curve"
 git commit -m "style: complete visual overhaul — typography, color identity, atmosphere, animations"
 ```
 
+### Task 59: Bouton « Réinitialiser le modèle » (Solo + Compare)
+
+> **Contexte** : L'utilisateur doit pouvoir remettre un modèle à zéro (poids, steps, loss, mots générés) sans recharger la page. Utile pour relancer une expérience propre ou comparer des runs successifs.
+
+- [ ] **Step 1: Worker message** — Ajouter un message `reset` dans `WorkerMessage` (types.ts). Le worker reçoit `{ type: 'reset' }`, appelle `handleInit` avec les params courants pour réinstancier le modèle WASM from scratch.
+- [ ] **Step 2: Hook** — Exposer `resetModel()` dans `useModelWorker`. Clear steps, words, trainState → 'idle', puis envoyer `init` au worker avec les params actuels.
+- [ ] **Step 3: UI ParamsPanel** — Ajouter un bouton « Réinitialiser » (icône refresh) dans la barre d'actions, style ghost avec accent muted. Désactivé pendant l'entraînement (busy guard).
+- [ ] **Step 4: Confirm dialog** — Si `trainState === 'trained'`, afficher un AlertDialog de confirmation avant reset (même pattern que le changement d'architecture).
+- [ ] **Step 5: Solo + Compare** — Vérifier que le bouton fonctionne dans les deux modes. En Compare, chaque panel a son propre reset indépendant.
+- [ ] **Step 6: Tests** — Ajouter un test unitaire pour `resetModel()` dans use-model-worker.test.ts et un test composant pour le bouton.
+- [ ] **Step 7: Commit**
+
+```bash
+git commit -m "feat: add reset model button in Solo and Compare views"
+```
+
+### Task 60: Fix structural — WASM memory (OOM sur gros datasets)
+
+> **Contexte** : Le tensor autograd engine en WASM épuise la mémoire linéaire sur les gros datasets (~2600 steps sur dinosaures). L'allocateur WASM ne rend jamais la mémoire → fragmentation → OOM → trap `unreachable`. Actuellement catch côté worker avec message FR, mais le modèle est irrécupérable sans réinit.
+
+- [ ] **Step 1: Détacher le graph autograd entre steps** — Ajouter une méthode `Tensor::detach()` qui clear `children` sur tous les param tensors après `backward()` + `adam_step()`. Casse les Rc qui retiennent les intermédiaires du step précédent.
+- [ ] **Step 2: Profiler mémoire** — Ajouter un compteur d'allocations WASM (ou `memory.buffer.byteLength` côté JS) exposé dans le worker. Logger la consommation mémoire toutes les 100 steps pour valider le fix.
+- [ ] **Step 3: Tester 5000 steps sur dinosaures** — Vérifier que la mémoire reste stable et ne croît pas linéairement.
+- [ ] **Step 4: Optionnel — allocateur** — Si `detach()` ne suffit pas, évaluer le passage de `dlmalloc` (défaut wasm-pack) à `wee_alloc` (plus petit) ou un allocateur avec compaction.
+- [ ] **Step 5: Commit**
+
+```bash
+git commit -m "fix: prevent WASM OOM via autograd graph detach between training steps"
+```
+
 ### Task 58: Vérification post-déploiement
 
 - [ ] **Step 1: Redéployer sur Vercel**
