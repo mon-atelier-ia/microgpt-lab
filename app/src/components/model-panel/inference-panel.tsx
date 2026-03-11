@@ -1,9 +1,10 @@
 type InferencePanelProps = {
   words: string[];
   colorVar: 'a' | 'b';
+  temperature?: number;
 };
 
-export function InferencePanel({ words, colorVar }: InferencePanelProps) {
+export function InferencePanel({ words, colorVar, temperature }: InferencePanelProps) {
   const accentColor = `var(--model-${colorVar})`;
 
   return (
@@ -39,8 +40,11 @@ export function InferencePanel({ words, colorVar }: InferencePanelProps) {
         </div>
       )}
 
-      <div className="text-right text-xs" style={{ color: 'var(--text-muted)' }}>
-        {words.length} mot{words.length !== 1 ? 's' : ''}
+      <div className="flex justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+        {temperature !== undefined && <span>t={temperature.toFixed(2)}</span>}
+        <span className="ml-auto">
+          {words.length} mot{words.length !== 1 ? 's' : ''}
+        </span>
       </div>
     </div>
   );

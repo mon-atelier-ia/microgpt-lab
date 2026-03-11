@@ -4,7 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Slider } from '../ui/slider';
 import type { ModelParams, TrainState } from '../../lib/types';
 import { PRESETS } from '../../data/presets';
-import { validHeadCounts, posToLr, lrToPos, formatLr } from './params-utils';
+import { validHeadCounts } from '../../lib/validation';
+import { posToLr, lrToPos, formatLr } from './params-utils';
 
 export type ParamsPanelProps = {
   params: ModelParams;
@@ -112,7 +113,7 @@ type ArchGridProps = {
 };
 
 function ArchGrid({ params, disabled, onChange }: ArchGridProps) {
-  const heads = validHeadCounts(params.n_embd);
+  const heads = validHeadCounts(params.n_embd, [1, 2, 4, 8]);
   return (
     <div className="grid grid-cols-2 gap-2">
       <NumSelect
@@ -161,7 +162,7 @@ export function ParamsPanel({
   function update(patch: Partial<ModelParams>) {
     const next = { ...params, ...patch };
     if (patch.n_embd !== undefined) {
-      const nextHeads = validHeadCounts(patch.n_embd);
+      const nextHeads = validHeadCounts(patch.n_embd, [1, 2, 4, 8]);
       if (!nextHeads.includes(next.n_head)) {
         next.n_head = nextHeads[nextHeads.length - 1] ?? 1;
       }

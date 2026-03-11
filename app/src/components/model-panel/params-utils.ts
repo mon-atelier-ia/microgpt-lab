@@ -1,7 +1,3 @@
-export function validHeadCounts(n_embd: number): number[] {
-  return [1, 2, 4, 8].filter((h) => n_embd % h === 0 && h <= n_embd);
-}
-
 const LR_LOG_MIN = Math.log(0.001);
 const LR_LOG_MAX = Math.log(0.5);
 

@@ -6,15 +6,39 @@ import { ParamsPanel } from './params-panel';
 import { LossPanel } from './loss-panel';
 import { InferencePanel } from './inference-panel';
 
+type WorkerHandle = ReturnType<typeof useModelWorker>;
+
 export type ModelPanelProps = {
   colorVar: 'a' | 'b';
   layout: 'horizontal' | 'vertical';
-  workerHandle?: ReturnType<typeof useModelWorker>;
+  workerHandle?: WorkerHandle;
 };
 
 export function ModelPanel({ colorVar, layout, workerHandle }: ModelPanelProps) {
-  const ownWorker = useModelWorker();
-  const { trainState, steps, words, initModel, train, setLr, generate } = workerHandle ?? ownWorker;
+  if (workerHandle) {
+    return <ModelPanelInner colorVar={colorVar} layout={layout} handle={workerHandle} />;
+  }
+  return <ModelPanelWithOwnWorker colorVar={colorVar} layout={layout} />;
+}
+
+function ModelPanelWithOwnWorker(props: {
+  colorVar: 'a' | 'b';
+  layout: 'horizontal' | 'vertical';
+}) {
+  const handle = useModelWorker();
+  return <ModelPanelInner {...props} handle={handle} />;
+}
+
+function ModelPanelInner({
+  colorVar,
+  layout,
+  handle,
+}: {
+  colorVar: 'a' | 'b';
+  layout: 'horizontal' | 'vertical';
+  handle: WorkerHandle;
+}) {
+  const { trainState, steps, words, initModel, train, setLr, generate } = handle;
 
   const [params, setParams] = useState<ModelParams>({ ...DEFAULT_PARAMS });
 
@@ -36,6 +60,10 @@ export function ModelPanel({ colorVar, layout, workerHandle }: ModelPanelProps) 
     setParams(next);
 
     if (archChanged) {
+      if (trainState === 'trained') {
+        const ok = window.confirm('Changing this parameter will reset training. Continue?');
+        if (!ok) return;
+      }
       initModel(next);
     } else if (lrChanged) {
       setLr(next.lr);
@@ -68,7 +96,7 @@ export function ModelPanel({ colorVar, layout, workerHandle }: ModelPanelProps) 
         <LossPanel steps={steps} colorVar={colorVar} />
       </div>
       <div style={inferenceStyle}>
-        <InferencePanel words={words} colorVar={colorVar} />
+        <InferencePanel words={words} colorVar={colorVar} temperature={params.temperature} />
       </div>
     </div>
   );
