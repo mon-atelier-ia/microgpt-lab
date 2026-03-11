@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint . --max-warnings=0",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -29,6 +30,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.2",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
@@ -40,6 +44,7 @@
     "eslint-plugin-sonarjs": "^4.0.0",
     "globals": "^17.4.0",
     "jscpd": "^4.0.8",
+    "jsdom": "^28.1.0",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",

@@ -5,6 +5,10 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test-setup.ts'],
+  },
   assetsInclude: ['**/*.wasm'],
   resolve: {
     alias: {
