@@ -39,67 +39,23 @@ function validateField(value: number, name: string): boolean {
   return true;
 }
 
-let trainRemaining = 0;
-let busy = false;
-let pendingMsg: WorkerMessage | null = null;
-
-function flushPending() {
-  if (pendingMsg) {
-    const msg = pendingMsg;
-    pendingMsg = null;
-    dispatch(msg);
-  }
-}
-
 function handleTrain(n_steps: number) {
   const g = requireGpt();
   if (!g) return;
-  if (busy) {
-    post({ type: 'error', message: 'Model is busy — wait for current operation to finish' });
-    return;
-  }
-  trainRemaining = n_steps;
-  busy = true;
-  trainChunk();
-}
-
-function trainChunk() {
-  if (!gpt || trainRemaining <= 0) {
-    busy = false;
-    post({ type: 'train_done' });
-    return;
-  }
-  const chunkSize = Math.min(10, trainRemaining);
-  for (let i = 0; i < chunkSize; i++) {
-    const g = gpt;
+  for (let i = 0; i < n_steps; i++) {
     const raw = g.train_step();
     if (!isStepResult(raw)) {
       post({ type: 'error', message: 'Unexpected train_step result' });
-      trainRemaining = 0;
-      busy = false;
       return;
     }
     post({ type: 'step', data: raw });
-    trainRemaining--;
   }
-  if (trainRemaining > 0) {
-    setTimeout(trainChunk, 0);
-  } else {
-    busy = false;
-    post({ type: 'train_done' });
-    flushPending();
-  }
+  post({ type: 'train_done' });
 }
 
 function handleGenerate(temperature: number, n_samples: number) {
   const g = requireGpt();
   if (!g) return;
-  if (busy) {
-    // Queue generate to run after current operation finishes
-    pendingMsg = { type: 'generate', temperature, n_samples };
-    return;
-  }
-  busy = true;
   const rawVocab: unknown = JSON.parse(g.vocab_tokens());
   if (!Array.isArray(rawVocab) || rawVocab.some((t) => typeof t !== 'string')) {
     post({ type: 'error', message: 'Invalid vocab format from WASM' });
@@ -124,7 +80,6 @@ function handleGenerate(temperature: number, n_samples: number) {
     }
     if (word.length > 0) words.push(word);
   }
-  busy = false;
   post({ type: 'generated', words });
 }
 
@@ -197,7 +152,7 @@ async function dispatch(msg: WorkerMessage) {
       return;
     case 'set_lr':
       if (!validateField(msg.lr, 'lr')) return;
-      if (gpt && !busy) gpt.set_lr(msg.lr);
+      if (gpt) gpt.set_lr(msg.lr);
       return;
     case 'generate':
       if (!validateField(msg.temperature, 'temperature')) return;
@@ -216,8 +171,6 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   try {
     await dispatch(e.data);
   } catch (err) {
-    busy = false;
-    trainRemaining = 0;
     const raw = err instanceof Error ? err.message : String(err);
     const message =
       raw === 'unreachable' || raw.includes('RuntimeError')
