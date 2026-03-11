@@ -1,10 +1,7 @@
 import { useMemo } from 'react';
 import type { StepResult } from '../lib/types';
 import type { ChartData } from 'chart.js';
-
-function resolveVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
-}
+import { resolveVar } from '../lib/utils';
 
 export function useLossData(
   steps: StepResult[],

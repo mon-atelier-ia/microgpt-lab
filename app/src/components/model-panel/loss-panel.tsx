@@ -12,14 +12,9 @@ import {
 import { Line } from 'react-chartjs-2';
 import type { StepResult } from '../../lib/types';
 import { useLossData } from '../../hooks/use-loss-data';
+import { resolveVar } from '../../lib/utils';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-/* resolved at runtime for chart.js which needs actual color strings */
-
-function resolveVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
-}
 
 function getChartOptions() {
   const textMuted = resolveVar('--text-muted');
