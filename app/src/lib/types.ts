@@ -1,3 +1,5 @@
+export type Mode = 'solo' | 'compare';
+
 export type ModelParams = {
   datasetId: string;
   n_embd: number;
@@ -6,6 +8,7 @@ export type ModelParams = {
   block_size: number;
   lr: number;
   temperature: number;
+  trainSteps: number;
 };
 
 export type StepResult = {
@@ -39,4 +42,5 @@ export const DEFAULT_PARAMS: ModelParams = {
   block_size: 16,
   lr: 0.01,
   temperature: 0.8,
+  trainSteps: 200,
 };

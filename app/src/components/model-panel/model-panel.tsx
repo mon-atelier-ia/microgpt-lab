@@ -5,6 +5,16 @@ import { useModelWorker } from '../../hooks/use-model-worker';
 import { ParamsPanel } from './params-panel';
 import { LossPanel } from './loss-panel';
 import { InferencePanel } from './inference-panel';
+import { ErrorBanner } from './error-banner';
+import { Button } from '../ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 
 type WorkerHandle = ReturnType<typeof useModelWorker>;
 
@@ -38,9 +48,10 @@ function ModelPanelInner({
   layout: 'horizontal' | 'vertical';
   handle: WorkerHandle;
 }) {
-  const { trainState, steps, words, initModel, train, setLr, generate } = handle;
+  const { trainState, steps, words, errorMessage, initModel, train, setLr, generate } = handle;
 
   const [params, setParams] = useState<ModelParams>({ ...DEFAULT_PARAMS });
+  const [pendingArch, setPendingArch] = useState<ModelParams | null>(null);
 
   // Auto-init on mount with default params
   useEffect(() => {
@@ -57,11 +68,11 @@ function ModelPanelInner({
       next.n_layer !== params.n_layer ||
       next.block_size !== params.block_size;
 
+    if (archChanged && trainState === 'trained') {
+      setPendingArch(next);
+      return;
+    }
     if (archChanged) {
-      if (trainState === 'trained') {
-        const ok = window.confirm('Changing this parameter will reset training. Continue?');
-        if (!ok) return;
-      }
       setParams(next);
       initModel(next);
     } else {
@@ -72,34 +83,61 @@ function ModelPanelInner({
     }
   }
 
+  function confirmArchChange() {
+    if (pendingArch) {
+      setParams(pendingArch);
+      initModel(pendingArch);
+      setPendingArch(null);
+    }
+  }
+
   const isHorizontal = layout === 'horizontal';
 
-  const containerStyle = isHorizontal
-    ? { display: 'flex', flexDirection: 'row' as const, gap: '0.5rem', minWidth: 0 }
-    : { display: 'flex', flexDirection: 'column' as const, gap: '0.5rem' };
-
-  const paramsStyle = isHorizontal ? { flex: '0 0 40%', minWidth: 0 } : { flex: '0 0 35%' };
-  const lossStyle = isHorizontal ? { flex: '0 0 25%', minWidth: 0 } : { flex: '0 0 25%' };
-  const inferenceStyle = isHorizontal ? { flex: '1 1 35%', minWidth: 0 } : { flex: '1 1 40%' };
+  const containerClass = isHorizontal ? 'flex flex-row gap-2 min-w-0' : 'flex flex-col gap-2';
 
   return (
-    <div style={containerStyle}>
-      <div style={paramsStyle}>
+    <div className={containerClass}>
+      <ErrorBanner message={errorMessage} />
+      <div className={isHorizontal ? 'flex-[0_0_40%] min-w-0' : 'flex-[0_0_35%]'}>
         <ParamsPanel
           params={params}
           onParamsChange={handleParamsChange}
-          onTrain={() => train(200)}
+          onTrain={() => train(params.trainSteps)}
           onGenerate={() => generate(params.temperature, 10)}
           trainState={trainState}
           colorVar={colorVar}
         />
       </div>
-      <div style={lossStyle}>
+      <div className={isHorizontal ? 'flex-[0_0_25%] min-w-0' : 'flex-[0_0_25%]'}>
         <LossPanel steps={steps} colorVar={colorVar} />
       </div>
-      <div style={inferenceStyle}>
+      <div className={isHorizontal ? 'flex-[1_1_35%] min-w-0' : 'flex-[1_1_40%]'}>
         <InferencePanel words={words} colorVar={colorVar} temperature={params.temperature} />
       </div>
+
+      <AlertDialog
+        open={pendingArch !== null}
+        onOpenChange={(open) => !open && setPendingArch(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle className="text-sm font-semibold">Reset training?</AlertDialogTitle>
+          <AlertDialogDescription className="mt-2 text-xs text-text-secondary">
+            Changing architecture parameters will reset all training progress.
+          </AlertDialogDescription>
+          <div className="mt-4 flex justify-end gap-2">
+            <AlertDialogCancel asChild>
+              <Button size="sm" variant="ghost">
+                Cancel
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button size="sm" onClick={confirmArchChange} className="bg-error text-surface-0">
+                Reset &amp; apply
+              </Button>
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

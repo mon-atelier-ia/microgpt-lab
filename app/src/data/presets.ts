@@ -1,13 +1,8 @@
-import { prenomsSimple } from './prenoms-simple';
-import { babyNames } from './baby-names';
-import { dinosaures } from './dinosaures';
-import { pokemonFr } from './pokemon-fr';
-
 export type Preset = {
   id: string;
   name: string;
   description: string;
-  data: string[];
+  load: () => Promise<string[]>;
 };
 
 export const PRESETS: Preset[] = [
@@ -15,24 +10,24 @@ export const PRESETS: Preset[] = [
     id: 'prenoms-simple',
     name: 'Prénoms FR',
     description: '~50 prénoms français courants',
-    data: prenomsSimple,
+    load: () => import('./prenoms-simple').then((m) => m.prenomsSimple),
   },
   {
     id: 'baby-names',
     name: 'Baby Names EN',
     description: '~4500 English baby names',
-    data: babyNames,
+    load: () => import('./baby-names').then((m) => m.babyNames),
   },
   {
     id: 'dinosaures',
     name: 'Dinosaures',
     description: '~100 noms de dinosaures',
-    data: dinosaures,
+    load: () => import('./dinosaures').then((m) => m.dinosaures),
   },
   {
     id: 'pokemon-fr',
     name: 'Pokémon FR',
     description: '~150 noms de Pokémon en français',
-    data: pokemonFr,
+    load: () => import('./pokemon-fr').then((m) => m.pokemonFr),
   },
 ];

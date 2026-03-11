@@ -90,28 +90,74 @@ function sampleFromProbs(probs: Float64Array): number {
   return probs.length - 1;
 }
 
+function isPositiveFinite(v: number): boolean {
+  return Number.isFinite(v) && v > 0;
+}
+
+function validateConfig(c: {
+  n_embd: number;
+  n_head: number;
+  n_layer: number;
+  block_size: number;
+}): string | null {
+  if (
+    !isPositiveFinite(c.n_embd) ||
+    !isPositiveFinite(c.n_head) ||
+    !isPositiveFinite(c.n_layer) ||
+    !isPositiveFinite(c.block_size)
+  ) {
+    return `Invalid config: n_embd=${c.n_embd} n_head=${c.n_head} n_layer=${c.n_layer} block_size=${c.block_size}`;
+  }
+  if (c.n_embd % c.n_head !== 0) {
+    return `n_embd (${c.n_embd}) must be divisible by n_head (${c.n_head})`;
+  }
+  return null;
+}
+
+async function dispatch(msg: WorkerMessage) {
+  switch (msg.type) {
+    case 'init': {
+      const err = validateConfig(msg.config);
+      if (err) {
+        post({ type: 'error', message: err });
+        return;
+      }
+      await handleInit(msg.datasetText, msg.config);
+      return;
+    }
+    case 'train':
+      if (!isPositiveFinite(msg.n_steps)) {
+        post({ type: 'error', message: `Invalid n_steps: ${msg.n_steps}` });
+        return;
+      }
+      handleTrain(msg.n_steps);
+      return;
+    case 'set_lr':
+      if (!isPositiveFinite(msg.lr)) {
+        post({ type: 'error', message: `Invalid lr: ${msg.lr}` });
+        return;
+      }
+      if (gpt) gpt.set_lr(msg.lr);
+      return;
+    case 'generate':
+      if (!isPositiveFinite(msg.temperature)) {
+        post({ type: 'error', message: `Invalid temperature: ${msg.temperature}` });
+        return;
+      }
+      handleGenerate(msg.temperature, msg.n_samples);
+      return;
+    case 'dispose':
+      if (gpt) {
+        gpt.free();
+        gpt = null;
+      }
+      return;
+  }
+}
+
 self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   try {
-    switch (e.data.type) {
-      case 'init':
-        await handleInit(e.data.datasetText, e.data.config);
-        break;
-      case 'train':
-        handleTrain(e.data.n_steps);
-        break;
-      case 'set_lr':
-        if (gpt) gpt.set_lr(e.data.lr);
-        break;
-      case 'generate':
-        handleGenerate(e.data.temperature, e.data.n_samples);
-        break;
-      case 'dispose':
-        if (gpt) {
-          gpt.free();
-          gpt = null;
-        }
-        break;
-    }
+    await dispatch(e.data);
   } catch (err) {
     post({ type: 'error', message: err instanceof Error ? err.message : String(err) });
   }

@@ -1,6 +1,5 @@
 import { Button } from './ui/button';
-
-export type Mode = 'solo' | 'compare';
+import type { Mode } from '../lib/types';
 
 export type TopBarProps = {
   mode: Mode;
@@ -11,20 +10,13 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
   return (
     <header
       aria-label="microgpt-lab"
-      style={{
-        background: 'var(--surface-1)',
-        color: 'var(--text-primary)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0.75rem 1rem',
-        borderBottom: '1px solid oklch(0.25 0.01 260)',
-      }}
+      className="flex items-center justify-between bg-surface-1 text-text-primary px-4 py-3"
+      style={{ borderBottom: '1px solid oklch(0.25 0.01 260)' }}
     >
-      <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.01em' }}>
+      <span className="text-lg font-bold" style={{ letterSpacing: '-0.01em' }}>
         microgpt-lab
       </span>
-      <div role="tablist" style={{ display: 'flex', gap: '0.5rem' }}>
+      <div role="tablist" className="flex gap-2">
         <Button
           size="sm"
           role="tab"

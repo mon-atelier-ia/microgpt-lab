@@ -1,2 +1,17 @@
 @import 'tailwindcss';
 @import './theme/tokens.css';
+
+@theme {
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-model-a: var(--model-a);
+  --color-model-a-accent: var(--model-a-accent);
+  --color-model-b: var(--model-b);
+  --color-model-b-accent: var(--model-b-accent);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+}

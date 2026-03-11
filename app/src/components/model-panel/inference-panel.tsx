@@ -8,20 +8,11 @@ export function InferencePanel({ words, colorVar, temperature }: InferencePanelP
   const accentColor = `var(--model-${colorVar})`;
 
   return (
-    <div
-      aria-label="Generated words"
-      className="flex flex-col gap-3 p-4"
-      style={{ background: 'var(--surface-1)', borderRadius: '0.5rem' }}
-    >
-      <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-        Mots générés
-      </span>
+    <div aria-label="Generated words" className="flex flex-col gap-3 rounded-lg bg-surface-1 p-4">
+      <span className="text-xs font-medium text-text-secondary">Mots générés</span>
 
       {words.length === 0 ? (
-        <div
-          className="flex flex-1 items-center justify-center py-8 text-xs"
-          style={{ color: 'var(--text-muted)' }}
-        >
+        <div className="flex flex-1 items-center justify-center py-8 text-xs text-text-muted">
           Générez des mots après l&apos;entraînement
         </div>
       ) : (
@@ -34,8 +25,8 @@ export function InferencePanel({ words, colorVar, temperature }: InferencePanelP
             <div
               key={i}
               role="listitem"
-              className="rounded px-2 py-1 text-center text-sm font-medium"
-              style={{ background: 'var(--surface-2)', color: accentColor }}
+              className="rounded bg-surface-2 px-2 py-1 text-center text-sm font-medium"
+              style={{ color: accentColor }}
             >
               {word}
             </div>
@@ -43,11 +34,7 @@ export function InferencePanel({ words, colorVar, temperature }: InferencePanelP
         </div>
       )}
 
-      <div
-        role="status"
-        className="flex justify-between text-xs"
-        style={{ color: 'var(--text-muted)' }}
-      >
+      <div role="status" className="flex justify-between text-xs text-text-muted">
         {temperature !== undefined && <span>t={temperature.toFixed(2)}</span>}
         <span className="ml-auto">
           {words.length} mot{words.length !== 1 ? 's' : ''}

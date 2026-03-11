@@ -120,7 +120,7 @@ export function useModelWorker() {
   }, []);
 
   const initModel = useCallback(
-    (params: ModelParams) => {
+    async (params: ModelParams) => {
       const preset = PRESETS.find((p) => p.id === params.datasetId);
       if (!preset) return;
       clearBuffer();
@@ -128,7 +128,8 @@ export function useModelWorker() {
       setWords([]);
       setTrainState('idle');
       setErrorMessage(null);
-      send({ type: 'init', datasetText: preset.data.join('\n'), config: params });
+      const data = await preset.load();
+      send({ type: 'init', datasetText: data.join('\n'), config: params });
     },
     [send, clearBuffer],
   );

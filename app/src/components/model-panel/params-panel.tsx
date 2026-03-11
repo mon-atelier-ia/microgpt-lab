@@ -19,16 +19,14 @@ export type ParamsPanelProps = {
 const N_EMBD_OPTIONS = [8, 16, 32] as const;
 const N_LAYER_OPTIONS = [1, 2, 4] as const;
 const BLOCK_SIZE_OPTIONS = [8, 16, 32, 64] as const;
-const TEXT_SECONDARY = 'var(--text-secondary)';
+const TRAIN_STEPS_OPTIONS = [100, 200, 500, 1000, 2000] as const;
 
 type FieldProps = { label: string; children: ReactNode };
 
 function Field({ label, children }: FieldProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs" style={{ color: TEXT_SECONDARY }}>
-        {label}
-      </label>
+      <label className="text-xs text-text-secondary">{label}</label>
       {children}
     </div>
   );
@@ -87,9 +85,7 @@ function LabeledSlider({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs" style={{ color: TEXT_SECONDARY }}>
-          {label}
-        </span>
+        <span className="text-xs text-text-secondary">{label}</span>
         <span className="font-mono text-xs" style={{ color: accentColor }}>
           {display}
         </span>
@@ -208,6 +204,14 @@ export function ParamsPanel({
         step={0.01}
         value={lrToPos(params.lr)}
         onValueChange={(pos) => update({ lr: posToLr(pos) })}
+        disabled={isTraining}
+      />
+
+      <NumSelect
+        label="Training steps"
+        value={params.trainSteps}
+        options={TRAIN_STEPS_OPTIONS}
+        onChange={(v) => update({ trainSteps: v })}
         disabled={isTraining}
       />
 

@@ -15,8 +15,7 @@ import { useLossData } from '../../hooks/use-loss-data';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const TEXT_MUTED = 'var(--text-muted)';
-const TEXT_SECONDARY = 'var(--text-secondary)';
+/* resolved at runtime for chart.js which needs actual color strings */
 
 function resolveVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
@@ -61,21 +60,13 @@ export function LossPanel({ steps, colorVar }: LossPanelProps) {
   const chartOptions = getChartOptions();
 
   return (
-    <div
-      aria-label="Loss curve"
-      className="flex flex-col gap-2 p-4"
-      style={{ background: 'var(--surface-1)', borderRadius: '0.5rem' }}
-    >
+    <div aria-label="Loss curve" className="flex flex-col gap-2 rounded-lg bg-surface-1 p-4">
       <div role="status" className="flex items-center justify-between">
-        <span className="text-xs font-medium" style={{ color: TEXT_SECONDARY }}>
-          Loss curve
-        </span>
+        <span className="text-xs font-medium text-text-secondary">Loss curve</span>
         <div className="flex items-center gap-3">
           {lastStep && (
             <>
-              <span className="font-mono text-xs" style={{ color: TEXT_MUTED }}>
-                step {lastStep.step}
-              </span>
+              <span className="font-mono text-xs text-text-muted">step {lastStep.step}</span>
               <span
                 className="font-mono text-xs font-semibold"
                 style={{ color: `var(--model-${colorVar})` }}
@@ -84,21 +75,14 @@ export function LossPanel({ steps, colorVar }: LossPanelProps) {
               </span>
             </>
           )}
-          {!lastStep && (
-            <span className="text-xs" style={{ color: TEXT_MUTED }}>
-              — pas encore entraîné
-            </span>
-          )}
+          {!lastStep && <span className="text-xs text-text-muted">— pas encore entraîné</span>}
         </div>
       </div>
       <div className="relative h-40">
         {steps.length > 0 ? (
           <Line data={data} options={chartOptions} />
         ) : (
-          <div
-            className="flex h-full items-center justify-center text-xs"
-            style={{ color: TEXT_MUTED }}
-          >
+          <div className="flex h-full items-center justify-center text-xs text-text-muted">
             Entraînez le modèle pour voir la courbe de perte
           </div>
         )}
