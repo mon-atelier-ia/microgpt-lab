@@ -55,9 +55,14 @@ function trainChunk() {
   }
   const chunkSize = Math.min(10, trainRemaining);
   for (let i = 0; i < chunkSize; i++) {
-    // train_step returns { step, loss, word, lr } as any from WASM
-    const result = gpt.train_step() as { step: number; loss: number; word: string; lr: number };
-    post({ type: 'step', data: result });
+    const g = gpt;
+    const raw = g.train_step();
+    if (!isStepResult(raw)) {
+      post({ type: 'error', message: 'Unexpected train_step result' });
+      trainRemaining = 0;
+      return;
+    }
+    post({ type: 'step', data: raw });
     trainRemaining--;
   }
   if (trainRemaining > 0) {
@@ -104,6 +109,21 @@ function sampleFromProbs(probs: Float64Array): number {
 
 function isPositiveFinite(v: number): boolean {
   return Number.isFinite(v) && v > 0;
+}
+
+function isStepResult(v: unknown): v is { step: number; loss: number; word: string; lr: number } {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    'step' in v &&
+    typeof (v as Record<string, unknown>).step === 'number' &&
+    'loss' in v &&
+    typeof (v as Record<string, unknown>).loss === 'number' &&
+    'word' in v &&
+    typeof (v as Record<string, unknown>).word === 'string' &&
+    'lr' in v &&
+    typeof (v as Record<string, unknown>).lr === 'number'
+  );
 }
 
 function validateConfig(c: {
