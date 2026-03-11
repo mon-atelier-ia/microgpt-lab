@@ -18,6 +18,7 @@ export function App() {
           className="p-4"
           role="tabpanel"
           id="main-tabpanel"
+          tabIndex={0}
           aria-labelledby={mode === 'solo' ? 'tab-solo' : 'tab-compare'}
         >
           {mode === 'solo' ? (

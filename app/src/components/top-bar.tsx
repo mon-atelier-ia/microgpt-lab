@@ -1,3 +1,5 @@
+import type { KeyboardEvent } from 'react';
+import { useCallback, useRef } from 'react';
 import { cn } from '../lib/utils';
 import type { Mode } from '../lib/types';
 
@@ -12,6 +14,25 @@ const TABS: { key: Mode; label: string }[] = [
 ];
 
 export function TopBar({ mode, onModeChange }: TopBarProps) {
+  const tablistRef = useRef<HTMLDivElement>(null);
+
+  const handleTabKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const currentIdx = TABS.findIndex((t) => t.key === mode);
+      const nextIdx =
+        e.key === 'ArrowRight'
+          ? (currentIdx + 1) % TABS.length
+          : (currentIdx - 1 + TABS.length) % TABS.length;
+      const nextTab = TABS[nextIdx];
+      onModeChange(nextTab.key);
+      const btn = tablistRef.current?.querySelector<HTMLButtonElement>(`#tab-${nextTab.key}`);
+      btn?.focus();
+    },
+    [mode, onModeChange],
+  );
+
   return (
     <header
       aria-label="microgpt-lab"
@@ -35,7 +56,13 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
         </span>
       </div>
 
-      <div role="tablist" aria-label="View mode" className="flex gap-1">
+      <div
+        role="tablist"
+        aria-label="View mode"
+        className="flex gap-1"
+        onKeyDown={handleTabKeyDown}
+        ref={tablistRef}
+      >
         {TABS.map(({ key, label }) => (
           <button
             key={key}
@@ -43,6 +70,7 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
             id={`tab-${key}`}
             aria-selected={mode === key}
             aria-controls="main-tabpanel"
+            tabIndex={mode === key ? 0 : -1}
             onClick={() => onModeChange(key)}
             className={cn(
               'relative rounded-md px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-wider transition-colors duration-200',

@@ -16,7 +16,8 @@ export function InferencePanel({ words, colorVar, temperature, glowClass }: Infe
 
   return (
     <div
-      aria-label="Generated words"
+      role="region"
+      aria-label="Mots générés"
       className={cn('flex flex-col gap-3 rounded-lg p-4 panel-surface', glowClass)}
     >
       <span className="instrument-header text-xs font-semibold uppercase tracking-wider text-text-secondary">
