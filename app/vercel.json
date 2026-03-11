@@ -4,6 +4,15 @@
   "framework": "vite",
   "headers": [
     {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self'"
+        }
+      ]
+    },
+    {
       "source": "/assets/(.*).wasm",
       "headers": [
         { "key": "Content-Type", "value": "application/wasm" },
