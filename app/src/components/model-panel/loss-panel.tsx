@@ -1,25 +1,14 @@
-import { useMemo } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  type TooltipItem,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { lazy, Suspense, useMemo } from 'react';
+import type { ChartOptions, TooltipItem } from 'chart.js';
 import type { ColorVar, StepResult } from '../../lib/types';
 import { useLossData } from '../../hooks/use-loss-data';
 import { modelColor, resolveVar } from '../../lib/utils';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+const LossChart = lazy(() => import('./loss-chart').then((m) => ({ default: m.LossChart })));
 
 const GRID_COLOR = 'rgba(255,255,255,0.05)';
 
-function getChartOptions() {
+function getChartOptions(): ChartOptions<'line'> {
   const textMuted = resolveVar('--text-muted');
   return {
     animation: false as const,
@@ -78,7 +67,15 @@ export function LossPanel({ steps, colorVar }: LossPanelProps) {
       </div>
       <div className="relative h-40">
         {steps.length > 0 ? (
-          <Line data={data} options={chartOptions} />
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center text-xs text-text-muted">
+                Chargement du graphique…
+              </div>
+            }
+          >
+            <LossChart data={data} chartOptions={chartOptions} />
+          </Suspense>
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-text-muted">
             Entraînez le modèle pour voir la courbe de perte

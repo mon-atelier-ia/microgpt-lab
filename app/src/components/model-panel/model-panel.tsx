@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ColorVar, ModelParams } from '../../lib/types';
 import { DEFAULT_PARAMS } from '../../lib/constants';
 import { isArchChange } from '../../lib/validation';
@@ -46,12 +46,15 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
 
   const [params, setParams] = useState<ModelParams>({ ...DEFAULT_PARAMS });
   const [pendingArch, setPendingArch] = useState<ModelParams | null>(null);
+  const initialized = useRef(false);
 
   // Auto-init on mount with default params
   useEffect(() => {
-    initModel(params);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!initialized.current) {
+      initialized.current = true;
+      initModel(params);
+    }
+  }, [initModel, params]);
 
   function handleParamsChange(next: ModelParams) {
     const lrChanged = next.lr !== params.lr;
