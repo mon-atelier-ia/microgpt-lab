@@ -229,6 +229,8 @@ export function ParamsPanel({
           onClick={onTrain}
           disabled={isTraining}
           style={trainBtnStyle}
+          aria-label="Training status"
+          aria-live="polite"
         >
           {isTraining ? 'Entraînement…' : 'Entraîner'}
         </Button>

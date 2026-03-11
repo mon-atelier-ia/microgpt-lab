@@ -10,6 +10,7 @@ export type TopBarProps = {
 export function TopBar({ mode, onModeChange }: TopBarProps) {
   return (
     <header
+      aria-label="microgpt-lab"
       style={{
         background: 'var(--surface-1)',
         color: 'var(--text-primary)',
@@ -23,9 +24,11 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
       <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.01em' }}>
         microgpt-lab
       </span>
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div role="tablist" style={{ display: 'flex', gap: '0.5rem' }}>
         <Button
           size="sm"
+          role="tab"
+          aria-selected={mode === 'solo'}
           variant={mode === 'solo' ? 'default' : 'ghost'}
           onClick={() => onModeChange('solo')}
         >
@@ -33,6 +36,8 @@ export function TopBar({ mode, onModeChange }: TopBarProps) {
         </Button>
         <Button
           size="sm"
+          role="tab"
+          aria-selected={mode === 'compare'}
           variant={mode === 'compare' ? 'default' : 'ghost'}
           onClick={() => onModeChange('compare')}
         >

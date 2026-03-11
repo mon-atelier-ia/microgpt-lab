@@ -9,6 +9,7 @@ export function InferencePanel({ words, colorVar, temperature }: InferencePanelP
 
   return (
     <div
+      aria-label="Generated words"
       className="flex flex-col gap-3 p-4"
       style={{ background: 'var(--surface-1)', borderRadius: '0.5rem' }}
     >
@@ -25,12 +26,14 @@ export function InferencePanel({ words, colorVar, temperature }: InferencePanelP
         </div>
       ) : (
         <div
+          role="list"
           className="grid gap-2"
           style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(5rem, 1fr))' }}
         >
           {words.map((word, i) => (
             <div
-              key={`${word}-${i}`}
+              key={i}
+              role="listitem"
               className="rounded px-2 py-1 text-center text-sm font-medium"
               style={{ background: 'var(--surface-2)', color: accentColor }}
             >
@@ -40,7 +43,11 @@ export function InferencePanel({ words, colorVar, temperature }: InferencePanelP
         </div>
       )}
 
-      <div className="flex justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+      <div
+        role="status"
+        className="flex justify-between text-xs"
+        style={{ color: 'var(--text-muted)' }}
+      >
         {temperature !== undefined && <span>t={temperature.toFixed(2)}</span>}
         <span className="ml-auto">
           {words.length} mot{words.length !== 1 ? 's' : ''}
