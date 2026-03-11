@@ -100,8 +100,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         handleTrain(e.data.n_steps);
         break;
       case 'set_lr':
-        // set_lr is not exposed in the current WASM API; LR changes require reinit
-        console.warn('[model-worker] set_lr not implemented in WASM — reinit to change LR');
+        if (gpt) gpt.set_lr(e.data.lr);
         break;
       case 'generate':
         handleGenerate(e.data.temperature, e.data.n_samples);

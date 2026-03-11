@@ -18,6 +18,10 @@ export class WasmGpt {
      */
     config(): any;
     /**
+     * Return the current learning rate.
+     */
+    current_lr(): number;
+    /**
      * Full forward trace at query_pos for head_idx.
      * Returns a JS object with all intermediate vectors for Ch4 animation.
      */
@@ -50,6 +54,10 @@ export class WasmGpt {
      * Reset model weights for streaming re-training.
      */
     reset_training(): void;
+    /**
+     * Set the learning rate for subsequent training steps.
+     */
+    set_lr(lr: number): void;
     /**
      * Batch-train the model for `n_steps` without capturing trace data.
      * Uses tensor engine (~100× faster than scalar).
@@ -99,6 +107,7 @@ export interface InitOutput {
     readonly wasmgpt_bos: (a: number) => number;
     readonly wasmgpt_compute_probs: (a: number, b: number, c: number, d: number) => [number, number, number, number];
     readonly wasmgpt_config: (a: number) => any;
+    readonly wasmgpt_current_lr: (a: number) => number;
     readonly wasmgpt_forward_trace: (a: number, b: number, c: number, d: number, e: number) => [number, number, number];
     readonly wasmgpt_forward_with_grads: (a: number, b: number, c: number, d: number) => [number, number, number];
     readonly wasmgpt_lm_head_row: (a: number, b: number) => [number, number, number, number];
@@ -106,6 +115,7 @@ export interface InitOutput {
     readonly wasmgpt_new_with_config: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
     readonly wasmgpt_reset: (a: number, b: number, c: number) => [number, number];
     readonly wasmgpt_reset_training: (a: number) => void;
+    readonly wasmgpt_set_lr: (a: number, b: number) => void;
     readonly wasmgpt_train: (a: number, b: number) => void;
     readonly wasmgpt_train_step: (a: number) => any;
     readonly wasmgpt_train_step_traced: (a: number) => [number, number, number];

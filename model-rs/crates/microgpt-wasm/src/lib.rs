@@ -534,13 +534,6 @@ impl WasmGpt {
         self.weights_dirty = false;
         Ok(())
     }
-}
-
-impl WasmGpt {
-    /// Return the ModelConfig this instance was built with.
-    pub fn model_config(&self) -> ModelConfig {
-        self.mc
-    }
 
     /// Set the learning rate for subsequent training steps.
     pub fn set_lr(&mut self, lr: f64) {
@@ -550,6 +543,13 @@ impl WasmGpt {
     /// Return the current learning rate.
     pub fn current_lr(&self) -> f64 {
         self.tc.lr
+    }
+}
+
+impl WasmGpt {
+    /// Return the ModelConfig this instance was built with.
+    pub fn model_config(&self) -> ModelConfig {
+        self.mc
     }
 
     /// Sync tensor → scalar only when needed (lazy).

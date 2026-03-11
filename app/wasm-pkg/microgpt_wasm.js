@@ -53,6 +53,14 @@ export class WasmGpt {
         return ret;
     }
     /**
+     * Return the current learning rate.
+     * @returns {number}
+     */
+    current_lr() {
+        const ret = wasm.wasmgpt_current_lr(this.__wbg_ptr);
+        return ret;
+    }
+    /**
      * Full forward trace at query_pos for head_idx.
      * Returns a JS object with all intermediate vectors for Ch4 animation.
      * @param {Uint32Array} token_ids
@@ -152,6 +160,13 @@ export class WasmGpt {
      */
     reset_training() {
         wasm.wasmgpt_reset_training(this.__wbg_ptr);
+    }
+    /**
+     * Set the learning rate for subsequent training steps.
+     * @param {number} lr
+     */
+    set_lr(lr) {
+        wasm.wasmgpt_set_lr(this.__wbg_ptr, lr);
     }
     /**
      * Batch-train the model for `n_steps` without capturing trace data.
