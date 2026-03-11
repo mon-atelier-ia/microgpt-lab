@@ -1073,7 +1073,7 @@ git commit -m "chore: add Vercel config with WASM headers"
 
 ### Task 17: Frontend design polish pass
 
-- [x] **Step 1: Invoke frontend-design skill**
+- [ ] **Step 1: Invoke frontend-design skill** ⚠️ JAMAIS EXÉCUTÉ — reporté à Task 57
 
 Use the `frontend-design` skill to review and polish:
 - OKLCH palette finalization (tetradric harmony)
@@ -1950,3 +1950,96 @@ git commit -m "style: consistent type-only imports"
 ```bash
 git commit -m "chore: chunk 6 complete — all audit findings fixed"
 ```
+
+---
+
+## Chunk 7: Bug Fixes — Conformité Design Spec
+
+> **Constat post-déploiement (2026-03-11)** : l'app déployée sur Vercel présente des non-conformités critiques par rapport au design spec (`docs/2026-03-10-microgpt-lab-design.md`). Les paramètres d'architecture (n_embd, n_head, n_layer, block_size) s'affichent et se modifient dans l'UI mais ne sont potentiellement pas propagés au WASM worker via `new_with_config()`. Le mode Compare est donc inutile si les deux colonnes créent des modèles identiques. Le layout ne respecte pas les ratios du spec.
+
+### Task 51: Audit complet UI vs Design Spec
+
+- [x] **Step 1: Vérifier que le changement de n_embd/n_head/n_layer/block_size appelle `new_with_config()` dans le worker** — ✅ OK
+- [x] **Step 2: Vérifier que le bouton "Entraîner" utilise les params actuels du panneau (pas les defaults)** — ✅ OK
+- [x] **Step 3: Vérifier l'indépendance des states A/B en mode Compare** — ✅ OK
+- [x] **Step 4: Documenter tous les écarts trouvés** — voir ci-dessous
+
+**Résultat audit (2026-03-11):**
+- ✅ Params modifiables et propagés au worker via `new_with_config()`
+- ✅ Dialogue de reset sur changement d'architecture
+- ✅ States A/B indépendants en Compare (workers séparés, loss différentes)
+- ✅ Layout ratios conformes (40/25/35 Solo, 35/25/40 Compare)
+- ❌ State Solo non préservé quand on switch vers Compare (spec: "Mode switch preserves Model A state")
+- ❌ favicon.ico 404
+
+### Task 52: Fix — Préservation du state Model A lors du switch Solo → Compare
+
+**Spec:** "Mode switch preserves Model A state; Compare adds Model B."
+
+**Files:**
+- Modify: `app/src/App.tsx` ou state management
+
+- [ ] **Step 1: Lift Model A state pour qu'il persiste entre Solo et Compare**
+- [ ] **Step 2: Vérifier que les params, la loss curve et les mots générés de A sont préservés**
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "fix: preserve Model A state across Solo/Compare mode switch"
+```
+
+### Task 55: Add favicon
+
+**Files:**
+- Create: `app/public/favicon.ico` (or `favicon.svg`)
+- Modify: `index.html` if needed
+
+- [ ] **Step 1: Generate/add a minimal favicon**
+- [ ] **Step 2: Verify no 404 on deployed site**
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "chore: add favicon"
+```
+
+### Task 56: EMA smoothing sur la loss curve (style TensorBoard)
+
+**Files:**
+- Modify: `app/src/components/model-panel/loss-chart.tsx` (ou équivalent)
+- Modify: `app/src/lib/utils.ts` ou nouveau helper
+
+- [ ] **Step 1: Implémenter calcul EMA (α ≈ 0.1) sur les données de loss**
+- [ ] **Step 2: Ajouter une seconde série Chart.js (EMA) en overlay sur la loss brute**
+- [ ] **Step 3: Loss brute en trait fin semi-transparent, EMA en trait épais — couleur OKLCH cohérente avec le modèle (A/B)**
+- [ ] **Step 4: Commit**
+
+```bash
+git commit -m "feat: add EMA smoothing overlay on loss curve"
+```
+
+### Task 57: REFONTE VISUELLE — Tenir les promesses du design spec
+
+> **Contexte** : La Task 17 "frontend-design polish pass" a été marquée complète sans exécution réelle. Le skill `frontend-design` n'a jamais été invoqué. L'UI livrée est un template shadcn/ui brut sans personnalité. Cette task corrige la fraude.
+
+**Promesses non tenues à honorer :**
+
+- [ ] **Step 1: Typography** — Charger des web fonts distinctives (display + mono). Pas de Inter/Roboto/Arial. Configurer dans Tailwind.
+- [ ] **Step 2: Identité couleur A/B** — Les panels doivent **baigner** dans leur couleur. Border glow, header tint, fond subtilement teinté. "Instantly distinguishable at a glance."
+- [ ] **Step 3: Élévation visible** — Augmenter les jumps de lightness (8-10% au lieu de 4%). Ajouter shadows ou border glow sur les panels élevés.
+- [ ] **Step 4: Atmosphère** — Ajouter un élément de fond distinctif (grid pattern, dot matrix, gradient mesh subtil). L'app doit avoir une identité "lab/playground".
+- [ ] **Step 5: Loss curve polish** — Glow effect sur la ligne, animation de tracé.
+- [ ] **Step 6: Word grid polish** — Staggered fade-in sur apparition des mots, hover effects.
+- [ ] **Step 7: Header** — Logo avec accent, tabs avec indicator animé au lieu du style par défaut.
+- [ ] **Step 8: Micro-interactions** — Transitions sur les boutons, hover states distinctifs, feedback visuel sur entraînement.
+- [ ] **Step 9: Invoquer le skill `frontend-design` pour validation** — cette fois pour de vrai.
+- [ ] **Step 10: Commit**
+
+```bash
+git commit -m "style: complete visual overhaul — typography, color identity, atmosphere, animations"
+```
+
+### Task 58: Vérification post-déploiement
+
+- [ ] **Step 1: Redéployer sur Vercel**
+- [ ] **Step 2: Tests visuels sur l'URL de production** (ne JAMAIS valider un déploiement sans vérification visuelle)
+- [ ] **Step 3: Tester le flow complet : changer params → entraîner → générer, en Solo ET Compare**
+- [ ] **Step 4: Vérifier que A et B produisent des résultats différents si params différents**
