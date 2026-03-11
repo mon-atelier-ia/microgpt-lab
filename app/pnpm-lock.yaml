@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/geist':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/geist-mono':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -473,6 +479,12 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@fontsource/geist-mono@5.2.7':
+    resolution: {integrity: sha512-xVPVFISJg/K0VVd+aQN0Y7X/sw9hUcJPyDWFJ5GpyU3bHELhoRsJkPSRSHXW32mOi0xZCUQDOaPj1sqIFJ1FGg==}
+
+  '@fontsource/geist@5.2.8':
+    resolution: {integrity: sha512-pI54klK6vz8fVpAVyV+iODGLEzw73cs1XJqV9PIXgW8MYMmBcwK6lKKaWqJrNHwEx8ppz9cuhussb6arXQ/PVQ==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2879,6 +2891,10 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@fontsource/geist-mono@5.2.7': {}
+
+  '@fontsource/geist@5.2.8': {}
 
   '@humanfs/core@0.19.1': {}
 
