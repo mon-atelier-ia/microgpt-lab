@@ -5,7 +5,7 @@ mod training_trace;
 use std::collections::HashMap;
 
 use microgpt_rs::config::{ModelConfig, TrainConfig};
-use microgpt_rs::data::{build_vocab, tokenize, Vocab};
+use microgpt_rs::data::{Vocab, build_vocab, tokenize};
 use microgpt_rs::forward::{forward, new_kv_cache};
 use microgpt_rs::model::Model;
 use microgpt_rs::ops::softmax;
@@ -17,7 +17,7 @@ use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
 use training_trace::{
-    build_param_options, capture_step, MatrixKind, TraceOptimizer, TraceStepParam, TrackedParam,
+    MatrixKind, TraceOptimizer, TraceStepParam, TrackedParam, build_param_options, capture_step,
 };
 
 /// Install panic hook once so Rust panics show readable stack traces
@@ -73,6 +73,7 @@ pub struct WasmGpt {
     rng: Rng,
     docs: Vec<String>,
     tc: TrainConfig,
+    mc: ModelConfig,
     step_count: usize,
     /// Shuffled order for training (reset each epoch).
     train_order: Vec<usize>,
@@ -89,7 +90,9 @@ impl WasmGpt {
     pub fn new(names_text: &str) -> Result<WasmGpt, JsError> {
         let docs = parse_docs(names_text);
         if docs.is_empty() {
-            return Err(JsError::new("WasmGpt: names_text is empty — provide at least one name"));
+            return Err(JsError::new(
+                "WasmGpt: names_text is empty — provide at least one name",
+            ));
         }
         let doc_refs: Vec<&str> = docs.iter().map(|s| s.as_str()).collect();
         let vocab = build_vocab(&doc_refs);
@@ -109,6 +112,55 @@ impl WasmGpt {
             rng,
             docs,
             tc,
+            mc,
+            step_count: 0,
+            train_order,
+            tracked,
+            weights_dirty: false,
+        })
+    }
+
+    /// Create model with custom hyperparameters.
+    /// Returns an error if `n_embd` is not divisible by `n_head`.
+    pub fn new_with_config(
+        names_text: &str,
+        n_embd: usize,
+        n_head: usize,
+        n_layer: usize,
+        block_size: usize,
+    ) -> Result<WasmGpt, JsError> {
+        if n_embd % n_head != 0 {
+            return Err(JsError::new(&format!(
+                "n_embd ({n_embd}) must be divisible by n_head ({n_head})"
+            )));
+        }
+        let docs = parse_docs(names_text);
+        if docs.is_empty() {
+            return Err(JsError::new("new_with_config: names_text is empty"));
+        }
+        let doc_refs: Vec<&str> = docs.iter().map(|s| s.as_str()).collect();
+        let vocab = build_vocab(&doc_refs);
+        let mc = ModelConfig {
+            n_embd,
+            n_head,
+            n_layer,
+            block_size,
+        };
+        let tc = TrainConfig::default();
+        let mut rng = Rng::new(42);
+        let model = Model::new(vocab.size(), &mut rng, mc, &tc);
+        let train_order = Self::shuffled_order(docs.len(), &mut rng);
+        let (_, tracked) = build_param_options(&vocab.tokens);
+        let mut rng_t = Rng::new(42);
+        let tensor_model = TensorModel::new(vocab.size(), &mut rng_t, mc, &tc);
+        Ok(WasmGpt {
+            model,
+            tensor_model,
+            vocab,
+            rng,
+            docs,
+            tc,
+            mc,
             step_count: 0,
             train_order,
             tracked,
@@ -144,7 +196,11 @@ impl WasmGpt {
 
     /// Forward pass on prefix, return probs as Float64Array.
     /// Direct plug-in for useInferenceEngine's ComputeProbs type.
-    pub fn compute_probs(&mut self, prefix_ids: &[u32], temperature: f64) -> Result<Vec<f64>, JsError> {
+    pub fn compute_probs(
+        &mut self,
+        prefix_ids: &[u32],
+        temperature: f64,
+    ) -> Result<Vec<f64>, JsError> {
         self.ensure_scalar_synced();
         if prefix_ids.is_empty() {
             return Err(JsError::new("compute_probs: prefix_ids must not be empty"));
@@ -309,7 +365,7 @@ impl WasmGpt {
 
     /// Run one training step using tensor engine.
     /// Returns JS object: { step, loss, word, lr }.
-    pub fn train_step(&mut self) -> JsValue {
+    pub fn train_step(&mut self) -> Result<JsValue, JsError> {
         let epoch_idx = self.step_count % self.docs.len();
         if epoch_idx == 0 {
             self.train_order = Self::shuffled_order(self.docs.len(), &mut self.rng);
@@ -334,7 +390,7 @@ impl WasmGpt {
             word: doc,
             lr: lr_t,
         })
-        .unwrap_or(JsValue::NULL)
+        .map_err(|e| JsError::new(&format!("train_step serialization failed: {e}")))
     }
 
     // ── Ch6: Traced training step (streaming) ──────────────────────
@@ -440,22 +496,12 @@ impl WasmGpt {
     /// Reset model weights for streaming re-training.
     pub fn reset_training(&mut self) {
         self.rng = Rng::new(42);
-        self.model = Model::new(
-            self.vocab.size(),
-            &mut self.rng,
-            ModelConfig::default(),
-            &self.tc,
-        );
+        self.model = Model::new(self.vocab.size(), &mut self.rng, self.mc, &self.tc);
         // Advance rng past the constructor's shuffled_order call.
         let _ = Self::shuffled_order(self.docs.len(), &mut self.rng);
         // Recreate tensor model with same seed.
         let mut rng_t = Rng::new(42);
-        self.tensor_model = TensorModel::new(
-            self.vocab.size(),
-            &mut rng_t,
-            ModelConfig::default(),
-            &self.tc,
-        );
+        self.tensor_model = TensorModel::new(self.vocab.size(), &mut rng_t, self.mc, &self.tc);
         self.step_count = 0;
         self.train_order = Self::shuffled_order(self.docs.len(), &mut self.rng);
         let (_, tracked) = build_param_options(&self.vocab.tokens);
@@ -467,25 +513,17 @@ impl WasmGpt {
     pub fn reset(&mut self, names_text: &str) -> Result<(), JsError> {
         let docs = parse_docs(names_text);
         if docs.is_empty() {
-            return Err(JsError::new("reset: names_text is empty — provide at least one name"));
+            return Err(JsError::new(
+                "reset: names_text is empty — provide at least one name",
+            ));
         }
         let doc_refs: Vec<&str> = docs.iter().map(|s| s.as_str()).collect();
         self.vocab = build_vocab(&doc_refs);
-        self.model = Model::new(
-            self.vocab.size(),
-            &mut self.rng,
-            ModelConfig::default(),
-            &self.tc,
-        );
+        self.model = Model::new(self.vocab.size(), &mut self.rng, self.mc, &self.tc);
         // Tensor model with fresh RNG (same seed as scalar model's rng state
         // won't match, but that's fine — reset() starts fresh training anyway).
         let mut rng_t = Rng::new(self.rng.next_u64());
-        self.tensor_model = TensorModel::new(
-            self.vocab.size(),
-            &mut rng_t,
-            ModelConfig::default(),
-            &self.tc,
-        );
+        self.tensor_model = TensorModel::new(self.vocab.size(), &mut rng_t, self.mc, &self.tc);
         // Sync so both models have identical weights.
         Self::sync_weights(&self.tensor_model, &self.model);
         self.train_order = Self::shuffled_order(docs.len(), &mut self.rng);
@@ -496,9 +534,24 @@ impl WasmGpt {
         self.weights_dirty = false;
         Ok(())
     }
+
+    /// Set the learning rate for subsequent training steps.
+    pub fn set_lr(&mut self, lr: f64) {
+        self.tc.lr = lr;
+    }
+
+    /// Return the current learning rate.
+    pub fn current_lr(&self) -> f64 {
+        self.tc.lr
+    }
 }
 
 impl WasmGpt {
+    /// Return the ModelConfig this instance was built with.
+    pub fn model_config(&self) -> ModelConfig {
+        self.mc
+    }
+
     /// Sync tensor → scalar only when needed (lazy).
     fn ensure_scalar_synced(&mut self) {
         if self.weights_dirty {

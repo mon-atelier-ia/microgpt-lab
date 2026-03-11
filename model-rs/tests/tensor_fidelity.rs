@@ -5,8 +5,8 @@ use microgpt_rs::data::{build_vocab, tokenize};
 use microgpt_rs::model::Model;
 use microgpt_rs::rng::Rng;
 use microgpt_rs::tensor_model::TensorModel;
-use microgpt_rs::train::train_step;
 use microgpt_rs::tensor_train::tensor_train_step;
+use microgpt_rs::train::train_step;
 
 fn small_dataset() -> Vec<&'static str> {
     vec!["emma", "olivia", "liam", "noah"]

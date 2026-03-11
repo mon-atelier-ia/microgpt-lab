@@ -29,8 +29,8 @@ fn layer_by_layer_grad_check() {
     let tensor = TensorModel::new(vocab.size(), &mut rng_t, mc, &tc);
 
     // === SCALAR FORWARD (manually, step by step) ===
-    use microgpt_rs::value::Value;
     use microgpt_rs::ops::{linear, rmsnorm, softmax};
+    use microgpt_rs::value::Value;
 
     let tok_emb = &scalar.sd.wte[token_id];
     let pos_emb = &scalar.sd.wpe[0];
@@ -53,9 +53,12 @@ fn layer_by_layer_grad_check() {
         let sq_h = &sq[hs..hs + head_dim];
         let sk_h = &sk[hs..hs + head_dim];
         // dot product
-        let dot = sq_h.iter().zip(sk_h)
+        let dot = sq_h
+            .iter()
+            .zip(sk_h)
             .map(|(qi, ki)| qi.mul(ki))
-            .reduce(|a, b| a.add(&b)).unwrap()
+            .reduce(|a, b| a.add(&b))
+            .unwrap()
             .mul_f64(1.0 / scale);
         let attn_w = softmax(&[dot]); // [1.0]
         for j in 0..head_dim {
@@ -90,24 +93,49 @@ fn layer_by_layer_grad_check() {
     let t_wpe_grads = tensor.sd.wpe.row_grad(0);
 
     // Also compare Wo grads (deep in the network)
-    let s_wo_grads: Vec<f64> = scalar.sd.layers[0].attn_wo[0].iter().map(|v| v.grad()).collect();
+    let s_wo_grads: Vec<f64> = scalar.sd.layers[0].attn_wo[0]
+        .iter()
+        .map(|v| v.grad())
+        .collect();
     let t_wo_grads = tensor.sd.layers[0].attn_wo.row_grad(0);
-    let max_wo: f64 = s_wo_grads.iter().zip(&t_wo_grads).map(|(a, b)| (a - b).abs()).fold(0.0, f64::max);
+    let max_wo: f64 = s_wo_grads
+        .iter()
+        .zip(&t_wo_grads)
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0, f64::max);
     println!("Max attn_wo[0] grad diff: {max_wo:.2e}");
 
     // Compare Wv grads
-    let s_wv_grads: Vec<f64> = scalar.sd.layers[0].attn_wv[0].iter().map(|v| v.grad()).collect();
+    let s_wv_grads: Vec<f64> = scalar.sd.layers[0].attn_wv[0]
+        .iter()
+        .map(|v| v.grad())
+        .collect();
     let t_wv_grads = tensor.sd.layers[0].attn_wv.row_grad(0);
-    let max_wv: f64 = s_wv_grads.iter().zip(&t_wv_grads).map(|(a, b)| (a - b).abs()).fold(0.0, f64::max);
+    let max_wv: f64 = s_wv_grads
+        .iter()
+        .zip(&t_wv_grads)
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0, f64::max);
     println!("Max attn_wv[0] grad diff: {max_wv:.2e}");
 
     // Compare Wk grads
-    let s_wk_grads: Vec<f64> = scalar.sd.layers[0].attn_wk[0].iter().map(|v| v.grad()).collect();
+    let s_wk_grads: Vec<f64> = scalar.sd.layers[0].attn_wk[0]
+        .iter()
+        .map(|v| v.grad())
+        .collect();
     let t_wk_grads = tensor.sd.layers[0].attn_wk.row_grad(0);
-    let max_wk: f64 = s_wk_grads.iter().zip(&t_wk_grads).map(|(a, b)| (a - b).abs()).fold(0.0, f64::max);
+    let max_wk: f64 = s_wk_grads
+        .iter()
+        .zip(&t_wk_grads)
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0, f64::max);
     println!("Max attn_wk[0] grad diff: {max_wk:.2e}");
 
-    let max_wpe: f64 = s_wpe_grads.iter().zip(&t_wpe_grads).map(|(a, b)| (a - b).abs()).fold(0.0, f64::max);
+    let max_wpe: f64 = s_wpe_grads
+        .iter()
+        .zip(&t_wpe_grads)
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0, f64::max);
     println!("Max wpe[0] grad diff: {max_wpe:.2e}");
     println!("Scalar wpe[0] grad[0..4]: {:?}", &s_wpe_grads[..4]);
     println!("Tensor wpe[0] grad[0..4]: {:?}", &t_wpe_grads[..4]);

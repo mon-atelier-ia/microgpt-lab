@@ -288,11 +288,45 @@ fn reset_changes_vocab() {
     gpt.reset("xyz\nwww").unwrap();
     let tokens_after = gpt.vocab_tokens();
 
-    assert_ne!(tokens_before, tokens_after, "vocab should change after reset");
+    assert_ne!(
+        tokens_before, tokens_after,
+        "vocab should change after reset"
+    );
 }
 
 #[wasm_bindgen_test]
 fn reset_rejects_empty() {
     let mut gpt = microgpt_wasm::WasmGpt::new(TEST_NAMES).unwrap();
     assert!(gpt.reset("").is_err());
+}
+
+// ---------------------------------------------------------------------------
+// new_with_config — configurable constructor
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_new_with_config_custom_params() {
+    let gpt = microgpt_wasm::WasmGpt::new_with_config("alice\nbob\ncharlie", 8, 2, 1, 8)
+        .expect("should create with custom config");
+    assert_eq!(gpt.model_config().n_embd, 8);
+    assert_eq!(gpt.model_config().n_head, 2);
+    assert_eq!(gpt.model_config().n_layer, 1);
+    assert_eq!(gpt.model_config().block_size, 8);
+}
+
+#[test]
+fn test_new_with_config_invalid_head_dim() {
+    let result = microgpt_wasm::WasmGpt::new_with_config("alice\nbob", 8, 3, 1, 16);
+    assert!(result.is_err(), "n_embd=8, n_head=3 should fail (8%3!=0)");
+}
+
+// ---------------------------------------------------------------------------
+// set_lr / current_lr
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_set_lr() {
+    let mut gpt = microgpt_wasm::WasmGpt::new("alice\nbob\ncharlie").expect("create");
+    gpt.set_lr(0.05);
+    assert!((gpt.current_lr() - 0.05).abs() < 1e-10);
 }

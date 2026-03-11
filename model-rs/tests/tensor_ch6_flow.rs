@@ -40,7 +40,10 @@ fn ch6_flow_no_panic() {
     let mut tensor_model2 = TensorModel::new(vocab.size(), &mut rng_t3, mc, &tc);
 
     // training_meta: capture_step reads from scalar model
-    let _wte0 = model2.sd.wte[0].iter().map(|v| v.data()).collect::<Vec<f64>>();
+    let _wte0 = model2.sd.wte[0]
+        .iter()
+        .map(|v| v.data())
+        .collect::<Vec<f64>>();
 
     // train_step_traced flow × 5 steps
     let mut step_count = 0;
@@ -56,14 +59,22 @@ fn ch6_flow_no_panic() {
         let doc = &docs[epoch_idx];
         let tokens = tokenize(doc, &vocab, mc.block_size);
         let n = mc.block_size.min(tokens.len().saturating_sub(1));
-        if n == 0 { step_count += 1; continue; }
+        if n == 0 {
+            step_count += 1;
+            continue;
+        }
 
         let (mut keys, mut vals) = new_tensor_kv_cache(mc.n_layer);
         let mut losses: Vec<Tensor> = Vec::with_capacity(n);
         for pos_id in 0..n {
             let probs = tensor_forward_probs(
-                tokens[pos_id], pos_id, &mut keys, &mut vals,
-                &tensor_model2.sd, mc.n_head, mc.n_embd,
+                tokens[pos_id],
+                pos_id,
+                &mut keys,
+                &mut vals,
+                &tensor_model2.sd,
+                mc.n_head,
+                mc.n_embd,
             );
             losses.push(probs.nll_loss(tokens[pos_id + 1]));
         }
@@ -94,8 +105,10 @@ fn ch6_flow_no_panic() {
         let wte_after = tensor_model2.sd.wte.row(0);
 
         step_count += 1;
-        println!("Step {step_count}: loss={loss_val:.4}, wte_grad[0]={:.4e}, wte_after[0]={:.4e}",
-            wte_grad[0], wte_after[0]);
+        println!(
+            "Step {step_count}: loss={loss_val:.4}, wte_grad[0]={:.4e}, wte_after[0]={:.4e}",
+            wte_grad[0], wte_after[0]
+        );
     }
     assert!(step_count == 5);
 }

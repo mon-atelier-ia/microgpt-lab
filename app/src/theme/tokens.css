@@ -1,0 +1,38 @@
+:root {
+  /* Fallbacks for browsers without OKLCH */
+  --surface-0: #1f1f24;
+  --surface-1: #28282e;
+  --surface-2: #333339;
+  --model-a: #3b8edb;
+  --model-a-accent: #2e6fb3;
+  --model-a-muted: #2a4566;
+  --model-b: #d4943a;
+  --model-b-accent: #b07a30;
+  --model-b-muted: #665030;
+  --success: #3dba6e;
+  --error: #d94a3a;
+  --text-primary: #ebebed;
+  --text-secondary: #a0a0a5;
+  --text-muted: #6b6b70;
+  --border-subtle: #3a3a40;
+}
+
+@supports (color: oklch(0 0 0)) {
+  :root {
+    --surface-0: oklch(0.13 0.01 260);
+    --surface-1: oklch(0.17 0.01 260);
+    --surface-2: oklch(0.21 0.015 260);
+    --model-a: oklch(0.65 0.15 220);
+    --model-a-accent: oklch(0.55 0.12 235);
+    --model-a-muted: oklch(0.35 0.06 220);
+    --model-b: oklch(0.7 0.15 40);
+    --model-b-accent: oklch(0.6 0.12 55);
+    --model-b-muted: oklch(0.35 0.06 40);
+    --success: oklch(0.65 0.15 145);
+    --error: oklch(0.6 0.18 25);
+    --text-primary: oklch(0.93 0.01 260);
+    --text-secondary: oklch(0.65 0.01 260);
+    --text-muted: oklch(0.45 0.01 260);
+    --border-subtle: oklch(0.25 0.01 260);
+  }
+}

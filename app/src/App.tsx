@@ -1,7 +1,32 @@
-export default function App() {
+import { useState } from 'react';
+import { TopBar } from './components/top-bar';
+import { SoloView } from './components/solo-view';
+import { CompareView } from './components/compare-view';
+import { useModelWorker } from './hooks/use-model-worker';
+import { ErrorBoundary } from './components/error-boundary';
+import type { Mode } from './lib/types';
+
+export function App() {
+  const [mode, setMode] = useState<Mode>('solo');
+  const modelA = useModelWorker();
+
   return (
-    <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
-      <h1 className="text-4xl font-bold">microgpt-lab</h1>
-    </div>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-surface-0 text-text-primary">
+        <TopBar mode={mode} onModeChange={setMode} />
+        <main
+          className="p-4"
+          role="tabpanel"
+          id="main-tabpanel"
+          aria-labelledby={mode === 'solo' ? 'tab-solo' : 'tab-compare'}
+        >
+          {mode === 'solo' ? (
+            <SoloView workerHandle={modelA} />
+          ) : (
+            <CompareView workerHandleA={modelA} />
+          )}
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 }

@@ -50,7 +50,12 @@ impl TensorModel {
             })
             .collect();
 
-        let sd = TensorStateDict { wte, wpe, lm_head, layers };
+        let sd = TensorStateDict {
+            wte,
+            wpe,
+            lm_head,
+            layers,
+        };
 
         // Build flat param list in same order as scalar Model::params()
         let params = Self::collect_params(&sd);
@@ -104,11 +109,7 @@ impl TensorModel {
 
     /// Collect all parameter tensors in deterministic order (same as scalar engine).
     fn collect_params(sd: &TensorStateDict) -> Vec<Tensor> {
-        let mut ps = vec![
-            sd.wte.clone(),
-            sd.wpe.clone(),
-            sd.lm_head.clone(),
-        ];
+        let mut ps = vec![sd.wte.clone(), sd.wpe.clone(), sd.lm_head.clone()];
         for l in &sd.layers {
             ps.push(l.attn_wq.clone());
             ps.push(l.attn_wk.clone());

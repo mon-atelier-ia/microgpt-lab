@@ -1,6 +1,13 @@
 /* @ts-self-types="./microgpt_wasm.d.ts" */
 
 export class WasmGpt {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(WasmGpt.prototype);
+        obj.__wbg_ptr = ptr;
+        WasmGptFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -43,6 +50,14 @@ export class WasmGpt {
      */
     config() {
         const ret = wasm.wasmgpt_config(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * Return the current learning rate.
+     * @returns {number}
+     */
+    current_lr() {
+        const ret = wasm.wasmgpt_current_lr(this.__wbg_ptr);
         return ret;
     }
     /**
@@ -110,6 +125,25 @@ export class WasmGpt {
         return this;
     }
     /**
+     * Create model with custom hyperparameters.
+     * Returns an error if `n_embd` is not divisible by `n_head`.
+     * @param {string} names_text
+     * @param {number} n_embd
+     * @param {number} n_head
+     * @param {number} n_layer
+     * @param {number} block_size
+     * @returns {WasmGpt}
+     */
+    static new_with_config(names_text, n_embd, n_head, n_layer, block_size) {
+        const ptr0 = passStringToWasm0(names_text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.wasmgpt_new_with_config(ptr0, len0, n_embd, n_head, n_layer, block_size);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return WasmGpt.__wrap(ret[0]);
+    }
+    /**
      * Reset model with new dataset.
      * @param {string} names_text
      */
@@ -128,6 +162,13 @@ export class WasmGpt {
         wasm.wasmgpt_reset_training(this.__wbg_ptr);
     }
     /**
+     * Set the learning rate for subsequent training steps.
+     * @param {number} lr
+     */
+    set_lr(lr) {
+        wasm.wasmgpt_set_lr(this.__wbg_ptr, lr);
+    }
+    /**
      * Batch-train the model for `n_steps` without capturing trace data.
      * Uses tensor engine (~100× faster than scalar).
      * After this call, the model is trained and ready for inference/forward_trace.
@@ -143,7 +184,10 @@ export class WasmGpt {
      */
     train_step() {
         const ret = wasm.wasmgpt_train_step(this.__wbg_ptr);
-        return ret;
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return takeFromExternrefTable0(ret[0]);
     }
     /**
      * Run one training step with full gradient + parameter capture.

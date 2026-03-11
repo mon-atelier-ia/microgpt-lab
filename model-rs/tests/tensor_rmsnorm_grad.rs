@@ -1,6 +1,6 @@
+use microgpt_rs::ops::rmsnorm as scalar_rmsnorm;
 use microgpt_rs::tensor::{Shape, Tensor};
 use microgpt_rs::value::Value;
-use microgpt_rs::ops::rmsnorm as scalar_rmsnorm;
 
 #[test]
 fn rmsnorm_backward_matches_scalar() {
@@ -28,20 +28,23 @@ fn rmsnorm_backward_matches_scalar() {
 
     for (i, (s, t)) in s_grads.iter().zip(&t_grads).enumerate() {
         let diff = (s - t).abs();
-        assert!(diff < 1e-12, "rmsnorm grad[{i}]: scalar={s} tensor={t} diff={diff}");
+        assert!(
+            diff < 1e-12,
+            "rmsnorm grad[{i}]: scalar={s} tensor={t} diff={diff}"
+        );
     }
 }
 
 #[test]
 fn rmsnorm_then_linear_backward() {
     let x_data = vec![0.5, -0.3, 0.8, -0.1];
-    let w_data = vec![0.1, 0.2, 0.3, 0.4,
-                      0.5, 0.6, 0.7, 0.8];
+    let w_data = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
     // w is [2, 4]
 
     // Scalar: rmsnorm(x) then linear
     let s_x: Vec<Value> = x_data.iter().map(|&v| Value::new(v)).collect();
-    let s_w: Vec<Vec<Value>> = w_data.chunks(4)
+    let s_w: Vec<Vec<Value>> = w_data
+        .chunks(4)
         .map(|row| row.iter().map(|&v| Value::new(v)).collect())
         .collect();
     let s_normed = scalar_rmsnorm(&s_x);

@@ -153,7 +153,11 @@ pub(crate) fn capture_step(
         params.insert(
             tp.id.clone(),
             TraceStepParam {
-                grad: if has_grads { row_grads(row) } else { vec![0.0; row.len()] },
+                grad: if has_grads {
+                    row_grads(row)
+                } else {
+                    vec![0.0; row.len()]
+                },
                 after: row_data(row),
             },
         );
@@ -166,4 +170,3 @@ pub(crate) fn capture_step(
         params,
     }
 }
-

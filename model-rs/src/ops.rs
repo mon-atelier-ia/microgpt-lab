@@ -19,10 +19,7 @@ pub fn softmax(logits: &[Value]) -> Vec<Value> {
         .iter()
         .map(|v| v.data())
         .fold(f64::NEG_INFINITY, f64::max);
-    let exps: Vec<Value> = logits
-        .iter()
-        .map(|v| v.sub_f64(max_val).exp())
-        .collect();
+    let exps: Vec<Value> = logits.iter().map(|v| v.sub_f64(max_val).exp()).collect();
     let total = exps.iter().skip(1).fold(exps[0].clone(), |a, b| a.add(b));
     exps.iter().map(|e| e.div(&total)).collect()
 }

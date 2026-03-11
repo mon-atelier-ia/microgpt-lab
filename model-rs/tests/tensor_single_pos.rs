@@ -29,7 +29,15 @@ fn single_position_grads_match() {
     let mut rng_t = Rng::new(42);
     let tensor_model = TensorModel::new(vocab.size(), &mut rng_t, mc, &tc);
     let (mut tk, mut tv) = new_tensor_kv_cache(mc.n_layer);
-    let t_probs = tensor_forward_probs(tokens[0], 0, &mut tk, &mut tv, &tensor_model.sd, mc.n_head, mc.n_embd);
+    let t_probs = tensor_forward_probs(
+        tokens[0],
+        0,
+        &mut tk,
+        &mut tv,
+        &tensor_model.sd,
+        mc.n_head,
+        mc.n_embd,
+    );
     let t_loss = t_probs.nll_loss(tokens[1]);
     t_loss.backward();
 
@@ -47,7 +55,13 @@ fn single_position_grads_match() {
         t_flat.extend_from_slice(&p.grad());
     }
 
-    assert_eq!(s_flat.len(), t_flat.len(), "Param count mismatch: {} vs {}", s_flat.len(), t_flat.len());
+    assert_eq!(
+        s_flat.len(),
+        t_flat.len(),
+        "Param count mismatch: {} vs {}",
+        s_flat.len(),
+        t_flat.len()
+    );
 
     let mut max_diff = 0.0_f64;
     let mut max_idx = 0;
@@ -63,5 +77,8 @@ fn single_position_grads_match() {
     println!("  scalar: {}", s_flat[max_idx]);
     println!("  tensor: {}", t_flat[max_idx]);
 
-    assert!(max_diff < 1e-12, "Gradients diverge: max_diff={max_diff} at idx={max_idx}");
+    assert!(
+        max_diff < 1e-12,
+        "Gradients diverge: max_diff={max_diff} at idx={max_idx}"
+    );
 }

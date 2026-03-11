@@ -126,7 +126,10 @@ impl Value {
     /// Division: `self / other`.  ∂(a/b)/∂a = 1/b, ∂(a/b)/∂b = -a/b².
     pub fn div(&self, o: &Value) -> Value {
         let (a, b) = (self.data(), o.data());
-        Value::with_children(a / b, vec![(self.clone(), 1.0 / b), (o.clone(), -a / (b * b))])
+        Value::with_children(
+            a / b,
+            vec![(self.clone(), 1.0 / b), (o.clone(), -a / (b * b))],
+        )
     }
 
     /// Scalar multiplication: `self * s`.

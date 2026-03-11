@@ -3,11 +3,11 @@
 use microgpt_rs::config::{ModelConfig, TrainConfig};
 use microgpt_rs::data::{build_vocab, tokenize};
 use microgpt_rs::model::Model;
+use microgpt_rs::ops::{linear, rmsnorm, softmax};
 use microgpt_rs::rng::Rng;
 use microgpt_rs::tensor::{Shape, Tensor};
 use microgpt_rs::tensor_model::TensorModel;
 use microgpt_rs::value::Value;
-use microgpt_rs::ops::{linear, rmsnorm, softmax};
 
 #[test]
 fn attention_only_grads_match() {
@@ -28,7 +28,11 @@ fn attention_only_grads_match() {
 
     // === SCALAR: embed → rmsnorm → rmsnorm → QKV → attention → sum ===
     let lw = &sm.sd.layers[0];
-    let sx: Vec<Value> = sm.sd.wte[tid].iter().zip(&sm.sd.wpe[0]).map(|(t, p)| t.add(p)).collect();
+    let sx: Vec<Value> = sm.sd.wte[tid]
+        .iter()
+        .zip(&sm.sd.wpe[0])
+        .map(|(t, p)| t.add(p))
+        .collect();
     let sx = rmsnorm(&sx);
     let sx = rmsnorm(&sx);
     let sq = linear(&sx, &lw.attn_wq);
@@ -41,9 +45,12 @@ fn attention_only_grads_match() {
         let hs = h * head_dim;
         let sq_h = &sq[hs..hs + head_dim];
         let sk_h = &sk[hs..hs + head_dim];
-        let dot = sq_h.iter().zip(sk_h)
+        let dot = sq_h
+            .iter()
+            .zip(sk_h)
             .map(|(qi, ki)| qi.mul(ki))
-            .reduce(|a, b| a.add(&b)).unwrap()
+            .reduce(|a, b| a.add(&b))
+            .unwrap()
             .mul_f64(1.0 / scale);
         let attn_w = softmax(&[dot]);
         for j in 0..head_dim {
@@ -52,7 +59,10 @@ fn attention_only_grads_match() {
     }
 
     // Simple loss: sum of attention output
-    let s_loss = sx_attn.iter().skip(1).fold(sx_attn[0].clone(), |a, b| a.add(b));
+    let s_loss = sx_attn
+        .iter()
+        .skip(1)
+        .fold(sx_attn[0].clone(), |a, b| a.add(b));
     s_loss.backward();
     let s_wpe: Vec<f64> = sm.sd.wpe[0].iter().map(|v| v.grad()).collect();
     let s_wv0: Vec<f64> = lw.attn_wv[0].iter().map(|v| v.grad()).collect();
@@ -91,8 +101,16 @@ fn attention_only_grads_match() {
     let t_wpe = tm.sd.wpe.row_grad(0);
     let t_wv0 = tlw.attn_wv.row_grad(0);
 
-    let max_wpe: f64 = s_wpe.iter().zip(&t_wpe).map(|(a, b)| (a - b).abs()).fold(0.0, f64::max);
-    let max_wv: f64 = s_wv0.iter().zip(&t_wv0).map(|(a, b)| (a - b).abs()).fold(0.0, f64::max);
+    let max_wpe: f64 = s_wpe
+        .iter()
+        .zip(&t_wpe)
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0, f64::max);
+    let max_wv: f64 = s_wv0
+        .iter()
+        .zip(&t_wv0)
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0, f64::max);
     println!("Attention-only max wpe diff: {max_wpe:.2e}");
     println!("Attention-only max wv diff: {max_wv:.2e}");
     println!("Scalar wpe[0..4]: {:?}", &s_wpe[..4]);
