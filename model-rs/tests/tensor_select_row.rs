@@ -20,7 +20,11 @@ fn select_row_gradient_flows() {
 
     // Grad should be [0,0, 1,1, 0,0] — only row 1 gets gradient
     let mg = m.grad();
-    assert_eq!(mg, vec![0.0, 0.0, 1.0, 1.0, 0.0, 0.0], "select_row grad: {mg:?}");
+    assert_eq!(
+        mg,
+        vec![0.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+        "select_row grad: {mg:?}"
+    );
 }
 
 #[test]
@@ -29,7 +33,7 @@ fn two_select_rows_accumulate() {
 
     let r0 = m.select_row(0); // [1, 2]
     let r1 = m.select_row(1); // [3, 4]
-    let sum = r0.add(&r1);    // [4, 6]
+    let sum = r0.add(&r1); // [4, 6]
 
     // Dot with [1, 1] → 10
     let ones = Tensor::new(vec![1.0, 1.0], Shape(1, 2));
@@ -38,5 +42,9 @@ fn two_select_rows_accumulate() {
 
     let mg = m.grad();
     // Row 0 and row 1 should each get grad [1, 1], row 2 = [0, 0]
-    assert_eq!(mg, vec![1.0, 1.0, 1.0, 1.0, 0.0, 0.0], "two rows grad: {mg:?}");
+    assert_eq!(
+        mg,
+        vec![1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+        "two rows grad: {mg:?}"
+    );
 }

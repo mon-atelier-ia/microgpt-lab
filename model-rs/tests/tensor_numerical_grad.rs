@@ -9,7 +9,9 @@ use microgpt_rs::tensor_model::TensorModel;
 
 fn compute_loss(model: &TensorModel, tokens: &[usize], mc: &ModelConfig) -> f64 {
     let (mut keys, mut vals) = new_tensor_kv_cache(mc.n_layer);
-    let probs = tensor_forward_probs(tokens[0], 0, &mut keys, &mut vals, &model.sd, mc.n_head, mc.n_embd);
+    let probs = tensor_forward_probs(
+        tokens[0], 0, &mut keys, &mut vals, &model.sd, mc.n_head, mc.n_embd,
+    );
     let target = tokens[1];
     let p = probs.data()[target];
     -(p.ln())
@@ -28,7 +30,9 @@ fn wpe_numerical_gradient_check() {
 
     // Analytical gradient
     let (mut keys, mut vals) = new_tensor_kv_cache(mc.n_layer);
-    let probs = tensor_forward_probs(tokens[0], 0, &mut keys, &mut vals, &model.sd, mc.n_head, mc.n_embd);
+    let probs = tensor_forward_probs(
+        tokens[0], 0, &mut keys, &mut vals, &model.sd, mc.n_head, mc.n_embd,
+    );
     let loss = probs.nll_loss(tokens[1]);
     loss.backward();
     let analytical_grad = model.sd.wpe.row_grad(0);
@@ -57,8 +61,14 @@ fn wpe_numerical_gradient_check() {
         let numerical = (loss_plus - loss_minus) / (2.0 * eps);
         let analytical = analytical_grad[dim];
         let diff = (numerical - analytical).abs();
-        let rel = if analytical.abs() > 1e-8 { diff / analytical.abs() } else { diff };
+        let rel = if analytical.abs() > 1e-8 {
+            diff / analytical.abs()
+        } else {
+            diff
+        };
 
-        println!("wpe[0][{dim}]: analytical={analytical:.8e} numerical={numerical:.8e} diff={diff:.2e} rel={rel:.2e}");
+        println!(
+            "wpe[0][{dim}]: analytical={analytical:.8e} numerical={numerical:.8e} diff={diff:.2e} rel={rel:.2e}"
+        );
     }
 }

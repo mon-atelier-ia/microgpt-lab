@@ -9,6 +9,7 @@ export const wasmgpt_forward_trace: (a: number, b: number, c: number, d: number,
 export const wasmgpt_forward_with_grads: (a: number, b: number, c: number, d: number) => [number, number, number];
 export const wasmgpt_lm_head_row: (a: number, b: number) => [number, number, number, number];
 export const wasmgpt_new: (a: number, b: number) => [number, number, number];
+export const wasmgpt_new_with_config: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
 export const wasmgpt_reset: (a: number, b: number, c: number) => [number, number];
 export const wasmgpt_reset_training: (a: number) => void;
 export const wasmgpt_train: (a: number, b: number) => void;

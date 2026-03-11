@@ -1,22 +1,24 @@
+use microgpt_rs::ops::rmsnorm as scalar_rmsnorm;
 use microgpt_rs::tensor::{Shape, Tensor};
 use microgpt_rs::value::Value;
-use microgpt_rs::ops::rmsnorm as scalar_rmsnorm;
 
 #[test]
 fn select_row_add_rmsnorm_backward() {
     let n_embd = 4;
 
     let wte_data = vec![
-        0.1, 0.2, 0.3, 0.4,  // row 0
+        0.1, 0.2, 0.3, 0.4, // row 0
         0.5, -0.3, 0.8, -0.1, // row 1
     ];
     let wpe_data = vec![
-        -0.1, 0.15, -0.05, 0.2,  // row 0
+        -0.1, 0.15, -0.05, 0.2, // row 0
     ];
 
     // === SCALAR ===
-    let s_wte: Vec<Vec<Value>> = wte_data.chunks(n_embd)
-        .map(|r| r.iter().map(|&v| Value::new(v)).collect()).collect();
+    let s_wte: Vec<Vec<Value>> = wte_data
+        .chunks(n_embd)
+        .map(|r| r.iter().map(|&v| Value::new(v)).collect())
+        .collect();
     let s_wpe: Vec<Value> = wpe_data.iter().map(|&v| Value::new(v)).collect();
 
     let s_x: Vec<Value> = s_wte[1].iter().zip(&s_wpe).map(|(t, p)| t.add(p)).collect();

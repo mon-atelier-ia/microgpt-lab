@@ -30,7 +30,15 @@ fn single_token_logits_match() {
 
     // Tensor forward
     let (mut tk, mut tv) = new_tensor_kv_cache(mc.n_layer);
-    let t_logits = tensor_forward(tokens[0], 0, &mut tk, &mut tv, &tensor_model.sd, mc.n_head, mc.n_embd);
+    let t_logits = tensor_forward(
+        tokens[0],
+        0,
+        &mut tk,
+        &mut tv,
+        &tensor_model.sd,
+        mc.n_head,
+        mc.n_embd,
+    );
     let t_vals = t_logits.data();
 
     println!("Scalar logits: {:?}", &s_vals[..5]);

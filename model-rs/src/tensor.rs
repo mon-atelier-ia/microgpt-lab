@@ -60,7 +60,11 @@ enum GradFn {
     /// C = A[:, start..start+len]. Column slice of a row vector.
     SelectCols { start: usize, _full_cols: usize },
     /// C = A[row_idx, :]. Single row from a matrix.
-    SelectRow { row_idx: usize, _total_rows: usize, cols: usize },
+    SelectRow {
+        row_idx: usize,
+        _total_rows: usize,
+        cols: usize,
+    },
     /// C = stack(rows). Gradient splits back to each row.
     StackRows { _n_rows: usize, cols: usize },
     /// C = cat(tensors, dim=1). Gradient splits back to each tensor.
@@ -97,7 +101,11 @@ impl Tensor {
         })))
     }
 
-    fn with_children(data: Vec<f64>, shape: Shape, children: Vec<(Tensor, Option<GradFn>)>) -> Self {
+    fn with_children(
+        data: Vec<f64>,
+        shape: Shape,
+        children: Vec<(Tensor, Option<GradFn>)>,
+    ) -> Self {
         let n = data.len();
         Tensor(Rc::new(RefCell::new(TensorInner {
             data,
@@ -196,15 +204,22 @@ impl Tensor {
             }
         }
 
-        Tensor::with_children(out, Shape(m, n), vec![
-            (self.clone(), Some(GradFn::MatMul {
-                lhs_data: a.data.clone(),
-                lhs_shape: a.shape,
-                rhs_data: b.data.clone(),
-                rhs_shape: b.shape,
-            })),
-            (rhs.clone(), None), // rhs grad computed inside MatMul handler
-        ])
+        Tensor::with_children(
+            out,
+            Shape(m, n),
+            vec![
+                (
+                    self.clone(),
+                    Some(GradFn::MatMul {
+                        lhs_data: a.data.clone(),
+                        lhs_shape: a.shape,
+                        rhs_data: b.data.clone(),
+                        rhs_shape: b.shape,
+                    }),
+                ),
+                (rhs.clone(), None), // rhs grad computed inside MatMul handler
+            ],
+        )
     }
 
     /// Matrix multiply with transposed RHS: `self @ rhs^T`.
@@ -230,15 +245,22 @@ impl Tensor {
             }
         }
 
-        Tensor::with_children(out, Shape(m, n), vec![
-            (self.clone(), Some(GradFn::MatMulRhsT {
-                lhs_data: a.data.clone(),
-                lhs_shape: a.shape,
-                rhs_data: b.data.clone(),
-                rhs_shape: b.shape,
-            })),
-            (rhs.clone(), None),
-        ])
+        Tensor::with_children(
+            out,
+            Shape(m, n),
+            vec![
+                (
+                    self.clone(),
+                    Some(GradFn::MatMulRhsT {
+                        lhs_data: a.data.clone(),
+                        lhs_shape: a.shape,
+                        rhs_data: b.data.clone(),
+                        rhs_shape: b.shape,
+                    }),
+                ),
+                (rhs.clone(), None),
+            ],
+        )
     }
 
     /// Select a single row from a `[R, C]` matrix, returning `[1, C]`.
@@ -248,9 +270,18 @@ impl Tensor {
         let cols = inner.shape.1;
         let start = row_idx * cols;
         let out: Vec<f64> = inner.data[start..start + cols].to_vec();
-        Tensor::with_children(out, Shape(1, cols), vec![
-            (self.clone(), Some(GradFn::SelectRow { row_idx, _total_rows: inner.shape.0, cols })),
-        ])
+        Tensor::with_children(
+            out,
+            Shape(1, cols),
+            vec![(
+                self.clone(),
+                Some(GradFn::SelectRow {
+                    row_idx,
+                    _total_rows: inner.shape.0,
+                    cols,
+                }),
+            )],
+        )
     }
 
     /// Select a contiguous column range from a `[1, N]` row vector.
@@ -260,9 +291,17 @@ impl Tensor {
         assert_eq!(inner.shape.0, 1, "select_cols: expected row vector");
         let out: Vec<f64> = inner.data[start..end].to_vec();
         let len = end - start;
-        Tensor::with_children(out, Shape(1, len), vec![
-            (self.clone(), Some(GradFn::SelectCols { start, _full_cols: inner.shape.1 })),
-        ])
+        Tensor::with_children(
+            out,
+            Shape(1, len),
+            vec![(
+                self.clone(),
+                Some(GradFn::SelectCols {
+                    start,
+                    _full_cols: inner.shape.1,
+                }),
+            )],
+        )
     }
 
     /// Elementwise add: `self + rhs` (same shape).
@@ -271,10 +310,14 @@ impl Tensor {
         let b = rhs.0.borrow();
         assert_eq!(a.shape, b.shape, "add: shape mismatch");
         let out: Vec<f64> = a.data.iter().zip(&b.data).map(|(x, y)| x + y).collect();
-        Tensor::with_children(out, a.shape, vec![
-            (self.clone(), Some(GradFn::Add)),
-            (rhs.clone(), None), // both get grad directly
-        ])
+        Tensor::with_children(
+            out,
+            a.shape,
+            vec![
+                (self.clone(), Some(GradFn::Add)),
+                (rhs.clone(), None), // both get grad directly
+            ],
+        )
     }
 
     /// Elementwise ReLU.
@@ -282,9 +325,11 @@ impl Tensor {
         let inner = self.0.borrow();
         let mask: Vec<bool> = inner.data.iter().map(|&x| x > 0.0).collect();
         let out: Vec<f64> = inner.data.iter().map(|&x| x.max(0.0)).collect();
-        Tensor::with_children(out, inner.shape, vec![
-            (self.clone(), Some(GradFn::ReLU { mask })),
-        ])
+        Tensor::with_children(
+            out,
+            inner.shape,
+            vec![(self.clone(), Some(GradFn::ReLU { mask }))],
+        )
     }
 
     /// RMS layer normalization (no learnable scale/bias).
@@ -294,12 +339,17 @@ impl Tensor {
         let ms: f64 = inner.data.iter().map(|x| x * x).sum::<f64>() / n;
         let inv_rms = (ms + 1e-5_f64).powf(-0.5);
         let out: Vec<f64> = inner.data.iter().map(|&x| x * inv_rms).collect();
-        Tensor::with_children(out, inner.shape, vec![
-            (self.clone(), Some(GradFn::RmsNorm {
-                x: inner.data.clone(),
-                inv_rms,
-            })),
-        ])
+        Tensor::with_children(
+            out,
+            inner.shape,
+            vec![(
+                self.clone(),
+                Some(GradFn::RmsNorm {
+                    x: inner.data.clone(),
+                    inv_rms,
+                }),
+            )],
+        )
     }
 
     /// Numerically stable softmax (over the full flat data — works for 1D vectors).
@@ -309,9 +359,11 @@ impl Tensor {
         let exps: Vec<f64> = inner.data.iter().map(|&x| (x - max_val).exp()).collect();
         let total: f64 = exps.iter().sum();
         let probs: Vec<f64> = exps.iter().map(|&e| e / total).collect();
-        Tensor::with_children(probs.clone(), inner.shape, vec![
-            (self.clone(), Some(GradFn::Softmax { probs })),
-        ])
+        Tensor::with_children(
+            probs.clone(),
+            inner.shape,
+            vec![(self.clone(), Some(GradFn::Softmax { probs }))],
+        )
     }
 
     /// Negative log-likelihood loss: `-log(self[target])`.
@@ -320,21 +372,28 @@ impl Tensor {
         let inner = self.0.borrow();
         let p = inner.data[target];
         let loss = -(p.ln());
-        Tensor::with_children(vec![loss], Shape(1, 1), vec![
-            (self.clone(), Some(GradFn::NllLoss {
-                probs: inner.data.clone(),
-                target,
-            })),
-        ])
+        Tensor::with_children(
+            vec![loss],
+            Shape(1, 1),
+            vec![(
+                self.clone(),
+                Some(GradFn::NllLoss {
+                    probs: inner.data.clone(),
+                    target,
+                }),
+            )],
+        )
     }
 
     /// Scalar multiply: `self * s`.
     pub fn scale(&self, s: f64) -> Tensor {
         let inner = self.0.borrow();
         let out: Vec<f64> = inner.data.iter().map(|&x| x * s).collect();
-        Tensor::with_children(out, inner.shape, vec![
-            (self.clone(), Some(GradFn::Scale(s))),
-        ])
+        Tensor::with_children(
+            out,
+            inner.shape,
+            vec![(self.clone(), Some(GradFn::Scale(s)))],
+        )
     }
 
     /// Stack multiple `[1, D]` row vectors into a `[N, D]` matrix.
@@ -353,7 +412,13 @@ impl Tensor {
             .enumerate()
             .map(|(i, t)| {
                 if i == 0 {
-                    (t.clone(), Some(GradFn::StackRows { _n_rows: n, cols: d }))
+                    (
+                        t.clone(),
+                        Some(GradFn::StackRows {
+                            _n_rows: n,
+                            cols: d,
+                        }),
+                    )
                 } else {
                     (t.clone(), None)
                 }
@@ -378,7 +443,12 @@ impl Tensor {
             .enumerate()
             .map(|(i, t)| {
                 if i == 0 {
-                    (t.clone(), Some(GradFn::CatCols { col_sizes: col_sizes.clone() }))
+                    (
+                        t.clone(),
+                        Some(GradFn::CatCols {
+                            col_sizes: col_sizes.clone(),
+                        }),
+                    )
                 } else {
                     (t.clone(), None)
                 }
@@ -418,12 +488,12 @@ impl Tensor {
         ) {
             let ptr = Rc::as_ptr(&v.0);
             if visited.insert(ptr) {
-                let children: Vec<Tensor> = v.0
-                    .borrow()
-                    .children
-                    .iter()
-                    .map(|(c, _)| c.clone())
-                    .collect();
+                let children: Vec<Tensor> =
+                    v.0.borrow()
+                        .children
+                        .iter()
+                        .map(|(c, _)| c.clone())
+                        .collect();
                 for child in &children {
                     build(child, topo, visited);
                 }
@@ -448,7 +518,18 @@ impl Tensor {
 
             match children.as_slice() {
                 // MatMul: children[0] = lhs, children[1] = rhs
-                [(lhs, Some(GradFn::MatMul { lhs_data, lhs_shape, rhs_data, rhs_shape })), (rhs, None)] => {
+                [
+                    (
+                        lhs,
+                        Some(GradFn::MatMul {
+                            lhs_data,
+                            lhs_shape,
+                            rhs_data,
+                            rhs_shape,
+                        }),
+                    ),
+                    (rhs, None),
+                ] => {
                     let Shape(m, k) = *lhs_shape;
                     let Shape(_, n) = *rhs_shape;
 
@@ -484,7 +565,18 @@ impl Tensor {
                 // MatMulRhsT: C = A @ B^T. A:[M,K], B:[N,K], C:[M,N]
                 // grad_A = grad_C @ B : [M,N] @ [N,K] = [M,K]
                 // grad_B = grad_C^T @ A : [N,M] @ [M,K] = [N,K]
-                [(lhs, Some(GradFn::MatMulRhsT { lhs_data, lhs_shape, rhs_data, rhs_shape })), (rhs, None)] => {
+                [
+                    (
+                        lhs,
+                        Some(GradFn::MatMulRhsT {
+                            lhs_data,
+                            lhs_shape,
+                            rhs_data,
+                            rhs_shape,
+                        }),
+                    ),
+                    (rhs, None),
+                ] => {
                     let Shape(m, k) = *lhs_shape;
                     let Shape(n, _) = *rhs_shape;
 
@@ -571,7 +663,16 @@ impl Tensor {
                 }
 
                 // SelectRow: scatter grad back to the correct row
-                [(child, Some(GradFn::SelectRow { row_idx, _total_rows: _, cols }))] => {
+                [
+                    (
+                        child,
+                        Some(GradFn::SelectRow {
+                            row_idx,
+                            _total_rows: _,
+                            cols,
+                        }),
+                    ),
+                ] => {
                     let offset = row_idx * cols;
                     let mut ci = child.0.borrow_mut();
                     for (i, &vg) in v_grad.iter().enumerate() {
@@ -580,7 +681,15 @@ impl Tensor {
                 }
 
                 // SelectCols: scatter grad back to original positions
-                [(child, Some(GradFn::SelectCols { start, _full_cols: _ }))] => {
+                [
+                    (
+                        child,
+                        Some(GradFn::SelectCols {
+                            start,
+                            _full_cols: _,
+                        }),
+                    ),
+                ] => {
                     let mut ci = child.0.borrow_mut();
                     for (i, &vg) in v_grad.iter().enumerate() {
                         ci.grad[start + i] += vg;
@@ -596,7 +705,9 @@ impl Tensor {
                 }
 
                 // StackRows: split grad [N,D] back to N children of [1,D]
-                _ if !children.is_empty() && matches!(&children[0].1, Some(GradFn::StackRows { .. })) => {
+                _ if !children.is_empty()
+                    && matches!(&children[0].1, Some(GradFn::StackRows { .. })) =>
+                {
                     if let Some(GradFn::StackRows { _n_rows: _, cols }) = &children[0].1 {
                         let d = *cols;
                         for (i, (child, _)) in children.iter().enumerate() {
@@ -609,7 +720,9 @@ impl Tensor {
                 }
 
                 // CatCols: split grad [1, sum(Di)] back to children
-                _ if !children.is_empty() && matches!(&children[0].1, Some(GradFn::CatCols { .. })) => {
+                _ if !children.is_empty()
+                    && matches!(&children[0].1, Some(GradFn::CatCols { .. })) =>
+                {
                     if let Some(GradFn::CatCols { col_sizes }) = &children[0].1 {
                         let mut offset = 0;
                         for (i, (child, _)) in children.iter().enumerate() {
@@ -640,4 +753,3 @@ impl Tensor {
         }
     }
 }
-

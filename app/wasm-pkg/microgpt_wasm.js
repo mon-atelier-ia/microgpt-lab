@@ -1,6 +1,13 @@
 /* @ts-self-types="./microgpt_wasm.d.ts" */
 
 export class WasmGpt {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(WasmGpt.prototype);
+        obj.__wbg_ptr = ptr;
+        WasmGptFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -108,6 +115,25 @@ export class WasmGpt {
         this.__wbg_ptr = ret[0] >>> 0;
         WasmGptFinalization.register(this, this.__wbg_ptr, this);
         return this;
+    }
+    /**
+     * Create model with custom hyperparameters.
+     * Returns an error if `n_embd` is not divisible by `n_head`.
+     * @param {string} names_text
+     * @param {number} n_embd
+     * @param {number} n_head
+     * @param {number} n_layer
+     * @param {number} block_size
+     * @returns {WasmGpt}
+     */
+    static new_with_config(names_text, n_embd, n_head, n_layer, block_size) {
+        const ptr0 = passStringToWasm0(names_text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.wasmgpt_new_with_config(ptr0, len0, n_embd, n_head, n_layer, block_size);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return WasmGpt.__wrap(ret[0]);
     }
     /**
      * Reset model with new dataset.

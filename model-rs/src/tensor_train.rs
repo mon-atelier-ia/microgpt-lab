@@ -28,8 +28,7 @@ pub fn tensor_train_step(
         let token_id = tokens[pos_id];
         let target_id = tokens[pos_id + 1];
         let probs = tensor_forward_probs(
-            token_id, pos_id, &mut keys, &mut vals,
-            &model.sd, cfg.n_head, cfg.n_embd,
+            token_id, pos_id, &mut keys, &mut vals, &model.sd, cfg.n_head, cfg.n_embd,
         );
         losses.push(probs.nll_loss(target_id));
     }

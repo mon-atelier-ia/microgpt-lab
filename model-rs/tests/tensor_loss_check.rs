@@ -28,7 +28,9 @@ fn loss_before_backward_matches() {
         let target = tokens[pos + 1];
         s_losses.push(probs[target].log().neg());
     }
-    let s_loss = s_losses.iter().skip(1)
+    let s_loss = s_losses
+        .iter()
+        .skip(1)
         .fold(s_losses[0].clone(), |a, b| a.add(b))
         .mul_f64(1.0 / n as f64);
     let s_val = s_loss.data();
@@ -39,7 +41,15 @@ fn loss_before_backward_matches() {
     let (mut tk, mut tv) = new_tensor_kv_cache(mc.n_layer);
     let mut t_losses = Vec::new();
     for pos in 0..n {
-        let probs = tensor_forward_probs(tokens[pos], pos, &mut tk, &mut tv, &tensor_model.sd, mc.n_head, mc.n_embd);
+        let probs = tensor_forward_probs(
+            tokens[pos],
+            pos,
+            &mut tk,
+            &mut tv,
+            &tensor_model.sd,
+            mc.n_head,
+            mc.n_embd,
+        );
         let target = tokens[pos + 1];
         t_losses.push(probs.nll_loss(target));
     }
@@ -59,5 +69,8 @@ fn loss_before_backward_matches() {
     }
 
     let diff = (s_val - t_val).abs();
-    assert!(diff < 1e-12, "Loss differs: scalar={s_val} tensor={t_val} diff={diff}");
+    assert!(
+        diff < 1e-12,
+        "Loss differs: scalar={s_val} tensor={t_val} diff={diff}"
+    );
 }

@@ -1,6 +1,6 @@
+use microgpt_rs::ops::{linear as scalar_linear, rmsnorm as scalar_rmsnorm};
 use microgpt_rs::tensor::{Shape, Tensor};
 use microgpt_rs::value::Value;
-use microgpt_rs::ops::{linear as scalar_linear, rmsnorm as scalar_rmsnorm};
 
 /// Minimal test: embed + rmsnorm + linear + loss, compare scalar vs tensor gradients.
 #[test]
@@ -10,21 +10,31 @@ fn embed_rmsnorm_linear_grads() {
     let token_id = 1;
 
     // Weight data (deterministic)
-    let wte_data: Vec<f64> = (0..vocab_size * n_embd).map(|i| (i as f64 * 0.1) - 0.5).collect();
+    let wte_data: Vec<f64> = (0..vocab_size * n_embd)
+        .map(|i| (i as f64 * 0.1) - 0.5)
+        .collect();
     let wpe_data: Vec<f64> = (0..n_embd).map(|i| (i as f64 * 0.05) - 0.1).collect();
-    let w_data: Vec<f64> = (0..vocab_size * n_embd).map(|i| (i as f64 * 0.07) - 0.3).collect();
+    let w_data: Vec<f64> = (0..vocab_size * n_embd)
+        .map(|i| (i as f64 * 0.07) - 0.3)
+        .collect();
 
     // === SCALAR ===
-    let s_wte: Vec<Vec<Value>> = wte_data.chunks(n_embd)
+    let s_wte: Vec<Vec<Value>> = wte_data
+        .chunks(n_embd)
         .map(|row| row.iter().map(|&v| Value::new(v)).collect())
         .collect();
     let s_wpe: Vec<Value> = wpe_data.iter().map(|&v| Value::new(v)).collect();
-    let s_w: Vec<Vec<Value>> = w_data.chunks(n_embd)
+    let s_w: Vec<Vec<Value>> = w_data
+        .chunks(n_embd)
         .map(|row| row.iter().map(|&v| Value::new(v)).collect())
         .collect();
 
     // x = wte[token_id] + wpe
-    let s_x: Vec<Value> = s_wte[token_id].iter().zip(&s_wpe).map(|(t, p)| t.add(p)).collect();
+    let s_x: Vec<Value> = s_wte[token_id]
+        .iter()
+        .zip(&s_wpe)
+        .map(|(t, p)| t.add(p))
+        .collect();
     let s_xn = scalar_rmsnorm(&s_x);
     let s_logits = scalar_linear(&s_xn, &s_w);
     let s_probs = microgpt_rs::ops::softmax(&s_logits);
@@ -58,6 +68,9 @@ fn embed_rmsnorm_linear_grads() {
 
     for (i, (s, t)) in s_wpe_grads.iter().zip(&t_wpe_grads).enumerate() {
         let diff = (s - t).abs();
-        assert!(diff < 1e-12, "wpe grad[{i}]: scalar={s} tensor={t} diff={diff}");
+        assert!(
+            diff < 1e-12,
+            "wpe grad[{i}]: scalar={s} tensor={t} diff={diff}"
+        );
     }
 }

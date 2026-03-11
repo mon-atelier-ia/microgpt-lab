@@ -1,7 +1,7 @@
+use microgpt_rs::ops::linear as scalar_linear;
 /// Test attention layer backward by comparing gradients on simple inputs.
 use microgpt_rs::tensor::{Shape, Tensor};
 use microgpt_rs::value::Value;
-use microgpt_rs::ops::linear as scalar_linear;
 
 #[test]
 fn attention_backward_simple() {
@@ -10,23 +10,25 @@ fn attention_backward_simple() {
     let _head_dim = 2;
 
     // Simple weight matrices [4x4] for Q, K, V, O
-    let wq_data = vec![0.1, 0.2, 0.3, 0.4,
-                       0.5, 0.6, 0.7, 0.8,
-                       0.1, -0.1, 0.2, -0.2,
-                       0.3, -0.3, 0.4, -0.4];
-    let wo_data = vec![0.05, 0.1, 0.15, 0.2,
-                       0.25, 0.3, 0.35, 0.4,
-                       0.1, 0.2, 0.3, 0.4,
-                       0.5, 0.6, 0.7, 0.8];
+    let wq_data = vec![
+        0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.1, -0.1, 0.2, -0.2, 0.3, -0.3, 0.4, -0.4,
+    ];
+    let wo_data = vec![
+        0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,
+    ];
 
     let x_data = vec![0.5, -0.3, 0.8, -0.1];
 
     // === SCALAR ===
     let s_x: Vec<Value> = x_data.iter().map(|&v| Value::new(v)).collect();
-    let s_wq: Vec<Vec<Value>> = wq_data.chunks(n_embd)
-        .map(|r| r.iter().map(|&v| Value::new(v)).collect()).collect();
-    let s_wo: Vec<Vec<Value>> = wo_data.chunks(n_embd)
-        .map(|r| r.iter().map(|&v| Value::new(v)).collect()).collect();
+    let s_wq: Vec<Vec<Value>> = wq_data
+        .chunks(n_embd)
+        .map(|r| r.iter().map(|&v| Value::new(v)).collect())
+        .collect();
+    let s_wo: Vec<Vec<Value>> = wo_data
+        .chunks(n_embd)
+        .map(|r| r.iter().map(|&v| Value::new(v)).collect())
+        .collect();
 
     // Self-attention with 1 position: Q=K=V=linear(x, W)
     let s_q = scalar_linear(&s_x, &s_wq);

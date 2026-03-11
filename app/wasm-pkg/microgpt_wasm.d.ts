@@ -38,6 +38,11 @@ export class WasmGpt {
      */
     constructor(names_text: string);
     /**
+     * Create model with custom hyperparameters.
+     * Returns an error if `n_embd` is not divisible by `n_head`.
+     */
+    static new_with_config(names_text: string, n_embd: number, n_head: number, n_layer: number, block_size: number): WasmGpt;
+    /**
      * Reset model with new dataset.
      */
     reset(names_text: string): void;
@@ -98,6 +103,7 @@ export interface InitOutput {
     readonly wasmgpt_forward_with_grads: (a: number, b: number, c: number, d: number) => [number, number, number];
     readonly wasmgpt_lm_head_row: (a: number, b: number) => [number, number, number, number];
     readonly wasmgpt_new: (a: number, b: number) => [number, number, number];
+    readonly wasmgpt_new_with_config: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number];
     readonly wasmgpt_reset: (a: number, b: number, c: number) => [number, number];
     readonly wasmgpt_reset_training: (a: number) => void;
     readonly wasmgpt_train: (a: number, b: number) => void;

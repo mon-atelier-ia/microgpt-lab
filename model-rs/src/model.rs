@@ -147,9 +147,8 @@ impl Model {
             self.v_buf[i] = tc.beta2 * self.v_buf[i] + (1.0 - tc.beta2) * g * g;
             let m_hat = self.m_buf[i] / (1.0 - tc.beta1.powf(step1));
             let v_hat = self.v_buf[i] / (1.0 - tc.beta2.powf(step1));
-            self.params_flat[i].set_data(
-                self.params_flat[i].data() - lr_t * m_hat / (v_hat.sqrt() + tc.eps),
-            );
+            self.params_flat[i]
+                .set_data(self.params_flat[i].data() - lr_t * m_hat / (v_hat.sqrt() + tc.eps));
             self.params_flat[i].zero_grad();
         }
     }
