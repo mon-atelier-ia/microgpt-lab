@@ -205,6 +205,13 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   try {
     await dispatch(e.data);
   } catch (err) {
-    post({ type: 'error', message: err instanceof Error ? err.message : String(err) });
+    busy = false;
+    trainRemaining = 0;
+    const raw = err instanceof Error ? err.message : String(err);
+    const message =
+      raw === 'unreachable' || raw.includes('RuntimeError')
+        ? 'Le modèle WASM a planté (mémoire insuffisante ou panic interne). Réinitialisez le modèle.'
+        : raw;
+    post({ type: 'error', message });
   }
 };
