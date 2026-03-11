@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import type { ChartOptions, TooltipItem } from 'chart.js';
 import type { ColorVar, StepResult } from '../../lib/types';
 import { useLossData } from '../../hooks/use-loss-data';
-import { modelColor, resolveVar } from '../../lib/utils';
+import { cn, modelAccent, resolveVar } from '../../lib/utils';
 
 const LossChart = lazy(() => import('./loss-chart').then((m) => ({ default: m.LossChart })));
 
@@ -39,34 +39,46 @@ function getChartOptions(): ChartOptions<'line'> {
 type LossPanelProps = {
   steps: StepResult[];
   colorVar: ColorVar;
+  glowClass?: string;
 };
 
-export function LossPanel({ steps, colorVar }: LossPanelProps) {
+export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
   const data = useLossData(steps, colorVar);
   const lastStep = steps[steps.length - 1];
   const chartOptions = getChartOptions();
+  const hasData = steps.length > 0;
 
   return (
-    <div aria-label="Loss curve" className="flex flex-col gap-2 rounded-lg bg-surface-1 p-4">
+    <div
+      aria-label="Loss curve"
+      className={cn('flex flex-col gap-2 rounded-lg p-4 panel-surface', glowClass)}
+    >
       <div role="status" className="flex items-center justify-between">
-        <span className="text-xs font-medium text-text-secondary">Loss curve</span>
+        <span className="instrument-header text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          Loss curve
+        </span>
         <div className="flex items-center gap-3">
           {lastStep && (
             <>
               <span className="font-mono text-xs text-text-muted">step {lastStep.step}</span>
               <span
-                className="font-mono text-xs font-semibold"
-                style={{ color: modelColor(colorVar) }}
+                className="font-mono text-xs font-bold"
+                style={{ color: modelAccent(colorVar) }}
               >
                 {lastStep.loss.toFixed(4)}
               </span>
             </>
           )}
-          {!lastStep && <span className="text-xs text-text-muted">— pas encore entraîné</span>}
+          {!lastStep && (
+            <span className="flex items-center gap-1.5 text-xs text-text-muted">
+              <span className="status-dot bg-text-muted" />
+              en attente
+            </span>
+          )}
         </div>
       </div>
       <div className="relative h-40">
-        {steps.length > 0 ? (
+        {hasData ? (
           <Suspense
             fallback={
               <div className="flex h-full items-center justify-center text-xs text-text-muted">
@@ -78,7 +90,7 @@ export function LossPanel({ steps, colorVar }: LossPanelProps) {
           </Suspense>
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-text-muted">
-            Entraînez le modèle pour voir la courbe de perte
+            Entraînez le modèle pour voir la courbe
           </div>
         )}
       </div>

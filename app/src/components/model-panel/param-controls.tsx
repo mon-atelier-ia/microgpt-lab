@@ -1,13 +1,15 @@
+import type { CSSProperties, ReactNode } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Slider } from '../ui/slider';
-import type { ReactNode } from 'react';
 
 type FieldProps = { label: string; children: ReactNode };
 
 export function Field({ label, children }: FieldProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs text-text-secondary">{label}</label>
+      <label className="text-xs font-medium uppercase tracking-wider text-text-secondary">
+        {label}
+      </label>
       {children}
     </div>
   );
@@ -25,12 +27,12 @@ export function NumSelect({ label, value, options, onChange, disabled }: NumSele
   return (
     <Field label={label}>
       <Select value={String(value)} onValueChange={(v) => onChange(Number(v))} disabled={disabled}>
-        <SelectTrigger className="h-8 text-xs">
+        <SelectTrigger className="h-8 font-mono text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {options.map((o) => (
-            <SelectItem key={o} value={String(o)} className="text-xs">
+            <SelectItem key={o} value={String(o)} className="font-mono text-xs">
               {o}
             </SelectItem>
           ))}
@@ -44,6 +46,7 @@ export type LabeledSliderProps = {
   label: string;
   display: string;
   accentColor: string;
+  mutedColor?: string;
   min: number;
   max: number;
   step: number;
@@ -56,6 +59,7 @@ export function LabeledSlider({
   label,
   display,
   accentColor,
+  mutedColor,
   min,
   max,
   step,
@@ -63,11 +67,18 @@ export function LabeledSlider({
   onValueChange,
   disabled,
 }: LabeledSliderProps) {
+  const sliderStyle: CSSProperties = {
+    '--slider-range': accentColor,
+    '--slider-track': mutedColor,
+  } as CSSProperties;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-text-secondary">{label}</span>
-        <span className="font-mono text-xs" style={{ color: accentColor }}>
+        <span className="text-xs font-medium uppercase tracking-wider text-text-secondary">
+          {label}
+        </span>
+        <span className="font-mono text-xs font-semibold" style={{ color: accentColor }}>
           {display}
         </span>
       </div>
@@ -78,6 +89,7 @@ export function LabeledSlider({
         value={[value]}
         onValueChange={([v]) => onValueChange(v ?? value)}
         disabled={disabled}
+        style={sliderStyle}
       />
     </div>
   );

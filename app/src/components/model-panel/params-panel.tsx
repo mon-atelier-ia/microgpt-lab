@@ -11,7 +11,7 @@ import {
   HEAD_OPTIONS,
 } from '../../lib/constants';
 import { validHeadCounts } from '../../lib/validation';
-import { modelColor } from '../../lib/utils';
+import { cn, modelColor, modelAccent, modelMuted } from '../../lib/utils';
 import { posToLr, lrToPos, formatLr } from './params-utils';
 import { Field, NumSelect, LabeledSlider } from './param-controls';
 
@@ -22,6 +22,7 @@ export type ParamsPanelProps = {
   onGenerate: () => void;
   trainState: TrainState;
   colorVar: ColorVar;
+  glowClass?: string;
 };
 
 type ArchGridProps = {
@@ -29,6 +30,51 @@ type ArchGridProps = {
   disabled: boolean;
   onChange: (patch: Partial<ModelParams>) => void;
 };
+
+type ActionButtonsProps = {
+  onTrain: () => void;
+  onGenerate: () => void;
+  isTraining: boolean;
+  trainBtnStyle: CSSProperties;
+  genBtnStyle: CSSProperties;
+};
+
+function ActionButtons({
+  onTrain,
+  onGenerate,
+  isTraining,
+  trainBtnStyle,
+  genBtnStyle,
+}: ActionButtonsProps) {
+  return (
+    <div className="flex gap-2 pt-2">
+      <Button
+        size="sm"
+        className={cn(
+          'flex-1 font-semibold uppercase tracking-wider transition-shadow',
+          isTraining && 'training-pulse',
+        )}
+        onClick={onTrain}
+        disabled={isTraining}
+        style={trainBtnStyle}
+        aria-label="Training status"
+        aria-live="polite"
+      >
+        {isTraining ? 'Entraînement…' : 'Entraîner'}
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="flex-1 font-semibold uppercase tracking-wider"
+        onClick={onGenerate}
+        disabled={isTraining}
+        style={genBtnStyle}
+      >
+        Générer
+      </Button>
+    </div>
+  );
+}
 
 function ArchGrid({ params, disabled, onChange }: ArchGridProps) {
   const heads = validHeadCounts(params.n_embd, [...HEAD_OPTIONS]);
@@ -73,8 +119,11 @@ export function ParamsPanel({
   onGenerate,
   trainState,
   colorVar,
+  glowClass,
 }: ParamsPanelProps) {
-  const accentColor = modelColor(colorVar);
+  const primary = modelColor(colorVar);
+  const accent = modelAccent(colorVar);
+  const muted = modelMuted(colorVar);
   const isTraining = trainState === 'training';
 
   function update(patch: Partial<ModelParams>) {
@@ -88,11 +137,15 @@ export function ParamsPanel({
     onParamsChange(next);
   }
 
-  const trainBtnStyle: CSSProperties = { backgroundColor: accentColor, color: 'var(--surface-0)' };
+  const trainBtnStyle: CSSProperties = { backgroundColor: accent, color: 'var(--surface-0)' };
+  const genBtnStyle: CSSProperties = { borderColor: muted, color: primary };
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: accentColor }}>
+    <div className={cn('flex flex-col gap-4 rounded-lg p-4 panel-surface', glowClass)}>
+      <h2
+        className="instrument-header text-sm font-bold uppercase tracking-widest"
+        style={{ color: primary }}
+      >
         Modèle {colorVar.toUpperCase()}
       </h2>
 
@@ -102,7 +155,7 @@ export function ParamsPanel({
           onValueChange={(v) => update({ datasetId: v })}
           disabled={isTraining}
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="h-8 font-mono text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -120,7 +173,8 @@ export function ParamsPanel({
       <LabeledSlider
         label="Learning rate"
         display={formatLr(params.lr)}
-        accentColor={accentColor}
+        accentColor={accent}
+        mutedColor={muted}
         min={0}
         max={1}
         step={0.01}
@@ -140,7 +194,8 @@ export function ParamsPanel({
       <LabeledSlider
         label="Température"
         display={params.temperature.toFixed(2)}
-        accentColor={accentColor}
+        accentColor={accent}
+        mutedColor={muted}
         min={0.1}
         max={2.0}
         step={0.05}
@@ -148,28 +203,13 @@ export function ParamsPanel({
         onValueChange={(t) => update({ temperature: t })}
       />
 
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          className="flex-1"
-          onClick={onTrain}
-          disabled={isTraining}
-          style={trainBtnStyle}
-          aria-label="Training status"
-          aria-live="polite"
-        >
-          {isTraining ? 'Entraînement…' : 'Entraîner'}
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1"
-          onClick={onGenerate}
-          disabled={isTraining}
-        >
-          Générer
-        </Button>
-      </div>
+      <ActionButtons
+        onTrain={onTrain}
+        onGenerate={onGenerate}
+        isTraining={isTraining}
+        trainBtnStyle={trainBtnStyle}
+        genBtnStyle={genBtnStyle}
+      />
     </div>
   );
 }

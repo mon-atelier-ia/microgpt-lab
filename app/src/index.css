@@ -1,17 +1,226 @@
+@import '@fontsource/geist/400.css';
+@import '@fontsource/geist/500.css';
+@import '@fontsource/geist/600.css';
+@import '@fontsource/geist/700.css';
+@import '@fontsource/geist-mono/400.css';
+@import '@fontsource/geist-mono/500.css';
+@import '@fontsource/geist-mono/600.css';
+@import '@fontsource/geist-mono/700.css';
 @import 'tailwindcss';
 @import './theme/tokens.css';
 
 @theme {
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  /* ── Project tokens ─────────────────────────────────── */
   --color-surface-0: var(--surface-0);
   --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
   --color-model-a: var(--model-a);
   --color-model-a-accent: var(--model-a-accent);
+  --color-model-a-muted: var(--model-a-muted);
   --color-model-b: var(--model-b);
   --color-model-b-accent: var(--model-b-accent);
+  --color-model-b-muted: var(--model-b-muted);
   --color-success: var(--success);
   --color-error: var(--error);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
+
+  /* ── shadcn/ui compatibility tokens ─────────────────── */
+  --color-background: var(--surface-0);
+  --color-foreground: var(--text-primary);
+  --color-primary: var(--text-primary);
+  --color-primary-foreground: var(--surface-0);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--text-primary);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--text-primary);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: var(--surface-0);
+  --color-border: var(--border-subtle);
+  --color-input: var(--border-subtle);
+  --color-ring: var(--model-a);
+  --color-popover: var(--surface-2);
+  --color-popover-foreground: var(--text-primary);
+}
+
+/* ── Lab grid background + grain texture ───────────── */
+body {
+  background-color: var(--surface-0);
+  background-image:
+    radial-gradient(circle at 50% 0%, oklch(0.18 0.03 220 / 0.4), transparent 60%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 59px,
+      oklch(0.2 0.005 260 / 0.3) 59px,
+      oklch(0.2 0.005 260 / 0.3) 60px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 59px,
+      oklch(0.2 0.005 260 / 0.3) 59px,
+      oklch(0.2 0.005 260 / 0.3) 60px
+    );
+}
+
+/* Noise grain overlay for lab texture */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ── Panel glow — territorial color identity ─────────── */
+.panel-glow-a {
+  border: 1px solid color-mix(in oklch, var(--model-a-muted), transparent 40%);
+  background: color-mix(in oklch, var(--model-a-muted), transparent 85%);
+  box-shadow:
+    0 0 30px -4px color-mix(in oklch, var(--model-a-accent), transparent 75%),
+    0 0 60px -8px color-mix(in oklch, var(--model-a-muted), transparent 70%),
+    inset 0 1px 0 0 color-mix(in oklch, var(--model-a-muted), transparent 80%);
+}
+
+.panel-glow-b {
+  border: 1px solid color-mix(in oklch, var(--model-b-muted), transparent 40%);
+  background: color-mix(in oklch, var(--model-b-muted), transparent 85%);
+  box-shadow:
+    0 0 30px -4px color-mix(in oklch, var(--model-b-accent), transparent 75%),
+    0 0 60px -8px color-mix(in oklch, var(--model-b-muted), transparent 70%),
+    inset 0 1px 0 0 color-mix(in oklch, var(--model-b-muted), transparent 80%);
+}
+
+/* ── Color-aware slider — uses CSS vars set by parent ── */
+.slider-colored .slider-track {
+  background: var(--slider-track, var(--surface-2));
+}
+
+.slider-colored .slider-range {
+  background: var(--slider-range, var(--model-a));
+}
+
+.slider-colored .slider-thumb {
+  border-color: var(--slider-range, var(--model-a));
+  background: var(--surface-0);
+}
+
+.slider-colored .slider-thumb:hover {
+  background: var(--slider-range, var(--model-a));
+}
+
+.slider-colored .slider-thumb:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--slider-range, var(--model-a)), transparent 60%);
+}
+
+/* ── Word appearance stagger ─────────────────────────── */
+@keyframes word-appear {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.word-item {
+  animation: word-appear 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Tab indicator ───────────────────────────────────── */
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 1px;
+  transform-origin: center;
+  animation: tab-scale 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes tab-scale {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* ── Train button pulse while training ───────────────── */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px -2px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 20px -2px currentColor;
+  }
+}
+
+.training-pulse {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+/* ── Status dot animation ────────────────────────────── */
+@keyframes status-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.status-dot-active {
+  animation: status-blink 1s ease-in-out infinite;
+}
+
+/* ── Smooth panel transitions ────────────────────────── */
+.panel-surface {
+  transition:
+    box-shadow 0.4s ease,
+    border-color 0.4s ease,
+    background-color 0.4s ease;
+}
+
+/* ── Instrument header bar ───────────────────────────── */
+.instrument-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.instrument-header::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  border-radius: 1px;
+  background: currentColor;
+  flex-shrink: 0;
 }

@@ -1,4 +1,4 @@
-import { Button } from './ui/button';
+import { cn } from '../lib/utils';
 import type { Mode } from '../lib/types';
 
 export type TopBarProps = {
@@ -6,40 +6,57 @@ export type TopBarProps = {
   onModeChange: (mode: Mode) => void;
 };
 
+const TABS: { key: Mode; label: string }[] = [
+  { key: 'solo', label: 'Solo' },
+  { key: 'compare', label: 'Compare' },
+];
+
 export function TopBar({ mode, onModeChange }: TopBarProps) {
   return (
     <header
       aria-label="microgpt-lab"
-      className="flex items-center justify-between bg-surface-1 text-text-primary px-4 py-3"
-      style={{ borderBottom: '1px solid var(--border-subtle)' }}
+      className="flex items-center justify-between px-5 py-3"
+      style={{
+        backgroundColor: 'var(--surface-1)',
+        borderBottom: '1px solid var(--border-subtle)',
+      }}
     >
-      <span className="text-lg font-bold" style={{ letterSpacing: '-0.01em' }}>
-        microgpt-lab
-      </span>
-      <div role="tablist" className="flex gap-2">
-        <Button
-          size="sm"
-          role="tab"
-          id="tab-solo"
-          aria-selected={mode === 'solo'}
-          aria-controls="main-tabpanel"
-          variant={mode === 'solo' ? 'default' : 'ghost'}
-          onClick={() => onModeChange('solo')}
+      <div className="flex items-baseline gap-0.5 select-none">
+        <span className="text-lg font-bold tracking-tight" style={{ color: 'var(--model-a)' }}>
+          micro
+        </span>
+        <span className="text-lg font-bold tracking-tight text-text-primary">gpt</span>
+        <span className="text-lg font-extralight tracking-tight text-text-muted">-lab</span>
+        <span
+          className="ml-2 rounded-sm px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-widest text-text-muted"
+          style={{ backgroundColor: 'var(--surface-2)' }}
         >
-          Solo
-        </Button>
-        <Button
-          size="sm"
-          role="tab"
-          id="tab-compare"
-          aria-selected={mode === 'compare'}
-          aria-controls="main-tabpanel"
-          variant={mode === 'compare' ? 'default' : 'ghost'}
-          onClick={() => onModeChange('compare')}
-        >
-          Compare
-        </Button>
+          v1
+        </span>
       </div>
+
+      <nav role="tablist" className="flex gap-1">
+        {TABS.map(({ key, label }) => (
+          <button
+            key={key}
+            role="tab"
+            id={`tab-${key}`}
+            aria-selected={mode === key}
+            aria-controls="main-tabpanel"
+            onClick={() => onModeChange(key)}
+            className={cn(
+              'relative rounded-md px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-wider transition-colors duration-200',
+              'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+              mode === key ? 'text-text-primary' : 'text-text-muted hover:text-text-secondary',
+            )}
+          >
+            {label}
+            {mode === key && (
+              <span className="tab-indicator" style={{ background: 'var(--model-a)' }} />
+            )}
+          </button>
+        ))}
+      </nav>
     </header>
   );
 }
