@@ -180,7 +180,6 @@ export function ParamsPanel({
         step={0.01}
         value={lrToPos(params.lr)}
         onValueChange={(pos) => update({ lr: posToLr(pos) })}
-        disabled={isTraining}
       />
 
       <NumSelect

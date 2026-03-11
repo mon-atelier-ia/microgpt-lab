@@ -1,8 +1,8 @@
 :root {
   /* sRGB fallbacks for browsers without OKLCH */
   --surface-0: #141418;
-  --surface-1: #1e1e24;
-  --surface-2: #2c2c36;
+  --surface-1: #222230;
+  --surface-2: #33334a;
   --model-a: #3b8edb;
   --model-a-accent: #2e6fb3;
   --model-a-muted: #1a3050;
@@ -19,10 +19,10 @@
 
 @supports (color: oklch(0 0 0)) {
   :root {
-    /* Surface elevation: 6% lightness jumps — visible depth */
+    /* Surface elevation: 8% lightness jumps — visible depth */
     --surface-0: oklch(0.12 0.01 260);
-    --surface-1: oklch(0.18 0.012 260);
-    --surface-2: oklch(0.24 0.015 260);
+    --surface-1: oklch(0.2 0.012 260);
+    --surface-2: oklch(0.28 0.015 260);
 
     /* Model A: hue 220 (blue) + accent at H+15° = 235 */
     --model-a: oklch(0.65 0.15 220);
