@@ -158,3 +158,5 @@ export function useModelWorker() {
 
   return { trainState, steps, words, errorMessage, initModel, train, setLr, generate };
 }
+
+export type WorkerHandle = ReturnType<typeof useModelWorker>;

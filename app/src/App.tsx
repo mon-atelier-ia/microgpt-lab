@@ -5,7 +5,7 @@ import { CompareView } from './components/compare-view';
 import { useModelWorker } from './hooks/use-model-worker';
 import type { Mode } from './lib/types';
 
-export default function App() {
+export function App() {
   const [mode, setMode] = useState<Mode>('solo');
   const modelA = useModelWorker();
 

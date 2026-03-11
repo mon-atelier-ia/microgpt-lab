@@ -1,8 +1,8 @@
-import { useModelWorker } from '../hooks/use-model-worker';
+import { useModelWorker, type WorkerHandle } from '../hooks/use-model-worker';
 import { ModelPanel } from './model-panel/model-panel';
 
 export type CompareViewProps = {
-  workerHandleA: ReturnType<typeof useModelWorker>;
+  workerHandleA: WorkerHandle;
 };
 
 export function CompareView({ workerHandleA }: CompareViewProps) {

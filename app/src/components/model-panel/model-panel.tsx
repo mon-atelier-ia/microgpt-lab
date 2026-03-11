@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { ColorVar, ModelParams } from '../../lib/types';
-import { DEFAULT_PARAMS } from '../../lib/types';
+import { DEFAULT_PARAMS } from '../../lib/constants';
 import { isArchChange } from '../../lib/validation';
-import { useModelWorker } from '../../hooks/use-model-worker';
+import { useModelWorker, type WorkerHandle } from '../../hooks/use-model-worker';
 import { ParamsPanel } from './params-panel';
 import { LossPanel } from './loss-panel';
 import { InferencePanel } from './inference-panel';
@@ -17,8 +17,6 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 
-type WorkerHandle = ReturnType<typeof useModelWorker>;
-
 export type ModelPanelProps = {
   colorVar: ColorVar;
   layout: 'horizontal' | 'vertical';
@@ -32,20 +30,18 @@ export function ModelPanel({ colorVar, layout, workerHandle }: ModelPanelProps) 
   return <ModelPanelWithOwnWorker colorVar={colorVar} layout={layout} />;
 }
 
-function ModelPanelWithOwnWorker(props: { colorVar: ColorVar; layout: 'horizontal' | 'vertical' }) {
+type ModelPanelInnerProps = {
+  colorVar: ColorVar;
+  layout: 'horizontal' | 'vertical';
+  handle: WorkerHandle;
+};
+
+function ModelPanelWithOwnWorker(props: Omit<ModelPanelInnerProps, 'handle'>) {
   const handle = useModelWorker();
   return <ModelPanelInner {...props} handle={handle} />;
 }
 
-function ModelPanelInner({
-  colorVar,
-  layout,
-  handle,
-}: {
-  colorVar: ColorVar;
-  layout: 'horizontal' | 'vertical';
-  handle: WorkerHandle;
-}) {
+function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
   const { trainState, steps, words, errorMessage, initModel, train, setLr, generate } = handle;
 
   const [params, setParams] = useState<ModelParams>({ ...DEFAULT_PARAMS });

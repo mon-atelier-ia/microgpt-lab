@@ -1,8 +1,8 @@
-import { useModelWorker } from '../hooks/use-model-worker';
+import { type WorkerHandle } from '../hooks/use-model-worker';
 import { ModelPanel } from './model-panel/model-panel';
 
 export type SoloViewProps = {
-  workerHandle: ReturnType<typeof useModelWorker>;
+  workerHandle: WorkerHandle;
 };
 
 export function SoloView({ workerHandle }: SoloViewProps) {
