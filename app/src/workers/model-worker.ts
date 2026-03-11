@@ -23,13 +23,27 @@ async function handleInit(
   post({ type: 'ready' });
 }
 
+function requireGpt(): WasmGpt | null {
+  if (!gpt) {
+    post({ type: 'error', message: 'Model not initialized' });
+    return null;
+  }
+  return gpt;
+}
+
+function validateField(value: number, name: string): boolean {
+  if (!isPositiveFinite(value)) {
+    post({ type: 'error', message: `Invalid ${name}: ${value}` });
+    return false;
+  }
+  return true;
+}
+
 let trainRemaining = 0;
 
 function handleTrain(n_steps: number) {
-  if (!gpt) {
-    post({ type: 'error', message: 'Model not initialized' });
-    return;
-  }
+  const g = requireGpt();
+  if (!g) return;
   trainRemaining = n_steps;
   trainChunk();
 }
@@ -54,19 +68,17 @@ function trainChunk() {
 }
 
 function handleGenerate(temperature: number, n_samples: number) {
-  if (!gpt) {
-    post({ type: 'error', message: 'Model not initialized' });
-    return;
-  }
-  const vocab = JSON.parse(gpt.vocab_tokens()) as string[];
-  const bos = gpt.bos();
+  const g = requireGpt();
+  if (!g) return;
+  const vocab = JSON.parse(g.vocab_tokens()) as string[];
+  const bos = g.bos();
   const words: string[] = [];
 
   for (let s = 0; s < n_samples; s++) {
     let prefix = new Uint32Array([bos]);
     let word = '';
     for (let t = 0; t < 20; t++) {
-      const probs = gpt.compute_probs(prefix, temperature);
+      const probs = g.compute_probs(prefix, temperature);
       const token = sampleFromProbs(probs);
       if (token === bos) break;
       word += vocab[token];
@@ -126,24 +138,15 @@ async function dispatch(msg: WorkerMessage) {
       return;
     }
     case 'train':
-      if (!isPositiveFinite(msg.n_steps)) {
-        post({ type: 'error', message: `Invalid n_steps: ${msg.n_steps}` });
-        return;
-      }
+      if (!validateField(msg.n_steps, 'n_steps')) return;
       handleTrain(msg.n_steps);
       return;
     case 'set_lr':
-      if (!isPositiveFinite(msg.lr)) {
-        post({ type: 'error', message: `Invalid lr: ${msg.lr}` });
-        return;
-      }
+      if (!validateField(msg.lr, 'lr')) return;
       if (gpt) gpt.set_lr(msg.lr);
       return;
     case 'generate':
-      if (!isPositiveFinite(msg.temperature)) {
-        post({ type: 'error', message: `Invalid temperature: ${msg.temperature}` });
-        return;
-      }
+      if (!validateField(msg.temperature, 'temperature')) return;
       handleGenerate(msg.temperature, msg.n_samples);
       return;
     case 'dispose':

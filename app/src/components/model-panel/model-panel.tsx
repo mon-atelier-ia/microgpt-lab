@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { ModelParams } from '../../lib/types';
+import type { ColorVar, ModelParams } from '../../lib/types';
 import { DEFAULT_PARAMS } from '../../lib/types';
+import { isArchChange } from '../../lib/validation';
 import { useModelWorker } from '../../hooks/use-model-worker';
 import { ParamsPanel } from './params-panel';
 import { LossPanel } from './loss-panel';
@@ -19,7 +20,7 @@ import {
 type WorkerHandle = ReturnType<typeof useModelWorker>;
 
 export type ModelPanelProps = {
-  colorVar: 'a' | 'b';
+  colorVar: ColorVar;
   layout: 'horizontal' | 'vertical';
   workerHandle?: WorkerHandle;
 };
@@ -31,10 +32,7 @@ export function ModelPanel({ colorVar, layout, workerHandle }: ModelPanelProps) 
   return <ModelPanelWithOwnWorker colorVar={colorVar} layout={layout} />;
 }
 
-function ModelPanelWithOwnWorker(props: {
-  colorVar: 'a' | 'b';
-  layout: 'horizontal' | 'vertical';
-}) {
+function ModelPanelWithOwnWorker(props: { colorVar: ColorVar; layout: 'horizontal' | 'vertical' }) {
   const handle = useModelWorker();
   return <ModelPanelInner {...props} handle={handle} />;
 }
@@ -44,7 +42,7 @@ function ModelPanelInner({
   layout,
   handle,
 }: {
-  colorVar: 'a' | 'b';
+  colorVar: ColorVar;
   layout: 'horizontal' | 'vertical';
   handle: WorkerHandle;
 }) {
@@ -61,12 +59,7 @@ function ModelPanelInner({
 
   function handleParamsChange(next: ModelParams) {
     const lrChanged = next.lr !== params.lr;
-    const archChanged =
-      next.datasetId !== params.datasetId ||
-      next.n_embd !== params.n_embd ||
-      next.n_head !== params.n_head ||
-      next.n_layer !== params.n_layer ||
-      next.block_size !== params.block_size;
+    const archChanged = isArchChange(params, next);
 
     if (archChanged && trainState === 'trained') {
       setPendingArch(next);

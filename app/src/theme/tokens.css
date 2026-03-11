@@ -14,6 +14,7 @@
   --text-primary: #ebebed;
   --text-secondary: #a0a0a5;
   --text-muted: #6b6b70;
+  --border-subtle: #3a3a40;
 }
 
 @supports (color: oklch(0 0 0)) {
@@ -32,5 +33,6 @@
     --text-primary: oklch(0.93 0.01 260);
     --text-secondary: oklch(0.65 0.01 260);
     --text-muted: oklch(0.45 0.01 260);
+    --border-subtle: oklch(0.25 0.01 260);
   }
 }

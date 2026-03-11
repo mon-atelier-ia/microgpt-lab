@@ -1,11 +1,14 @@
+import type { ColorVar } from '../../lib/types';
+import { modelColor } from '../../lib/utils';
+
 type InferencePanelProps = {
   words: string[];
-  colorVar: 'a' | 'b';
+  colorVar: ColorVar;
   temperature?: number;
 };
 
 export function InferencePanel({ words, colorVar, temperature }: InferencePanelProps) {
-  const accentColor = `var(--model-${colorVar})`;
+  const accentColor = modelColor(colorVar);
 
   return (
     <div aria-label="Generated words" className="flex flex-col gap-3 rounded-lg bg-surface-1 p-4">

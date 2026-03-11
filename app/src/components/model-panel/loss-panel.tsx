@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,11 +11,13 @@ import {
   type TooltipItem,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import type { StepResult } from '../../lib/types';
+import type { ColorVar, StepResult } from '../../lib/types';
 import { useLossData } from '../../hooks/use-loss-data';
-import { resolveVar } from '../../lib/utils';
+import { modelColor, resolveVar } from '../../lib/utils';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+
+const GRID_COLOR = 'rgba(255,255,255,0.05)';
 
 function getChartOptions() {
   const textMuted = resolveVar('--text-muted');
@@ -34,11 +37,11 @@ function getChartOptions() {
     scales: {
       x: {
         ticks: { color: textMuted, maxTicksLimit: 6 },
-        grid: { color: 'rgba(255,255,255,0.05)' },
+        grid: { color: GRID_COLOR },
       },
       y: {
         ticks: { color: textMuted },
-        grid: { color: 'rgba(255,255,255,0.05)' },
+        grid: { color: GRID_COLOR },
       },
     },
   };
@@ -46,13 +49,13 @@ function getChartOptions() {
 
 type LossPanelProps = {
   steps: StepResult[];
-  colorVar: 'a' | 'b';
+  colorVar: ColorVar;
 };
 
 export function LossPanel({ steps, colorVar }: LossPanelProps) {
   const data = useLossData(steps, colorVar);
   const lastStep = steps[steps.length - 1];
-  const chartOptions = getChartOptions();
+  const chartOptions = useMemo(() => getChartOptions(), []);
 
   return (
     <div aria-label="Loss curve" className="flex flex-col gap-2 rounded-lg bg-surface-1 p-4">
@@ -64,7 +67,7 @@ export function LossPanel({ steps, colorVar }: LossPanelProps) {
               <span className="font-mono text-xs text-text-muted">step {lastStep.step}</span>
               <span
                 className="font-mono text-xs font-semibold"
-                style={{ color: `var(--model-${colorVar})` }}
+                style={{ color: modelColor(colorVar) }}
               >
                 {lastStep.loss.toFixed(4)}
               </span>

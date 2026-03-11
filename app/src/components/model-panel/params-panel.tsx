@@ -1,11 +1,12 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties } from 'react';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Slider } from '../ui/slider';
-import type { ModelParams, TrainState } from '../../lib/types';
+import type { ColorVar, ModelParams, TrainState } from '../../lib/types';
 import { PRESETS } from '../../data/presets';
 import { validHeadCounts } from '../../lib/validation';
+import { modelColor } from '../../lib/utils';
 import { posToLr, lrToPos, formatLr } from './params-utils';
+import { Field, NumSelect, LabeledSlider } from './param-controls';
 
 export type ParamsPanelProps = {
   params: ModelParams;
@@ -13,94 +14,14 @@ export type ParamsPanelProps = {
   onTrain: () => void;
   onGenerate: () => void;
   trainState: TrainState;
-  colorVar: 'a' | 'b';
+  colorVar: ColorVar;
 };
 
 const N_EMBD_OPTIONS = [8, 16, 32] as const;
 const N_LAYER_OPTIONS = [1, 2, 4] as const;
 const BLOCK_SIZE_OPTIONS = [8, 16, 32, 64] as const;
 const TRAIN_STEPS_OPTIONS = [100, 200, 500, 1000, 2000] as const;
-
-type FieldProps = { label: string; children: ReactNode };
-
-function Field({ label, children }: FieldProps) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs text-text-secondary">{label}</label>
-      {children}
-    </div>
-  );
-}
-
-type NumSelectProps = {
-  label: string;
-  value: number;
-  options: readonly number[];
-  onChange: (v: number) => void;
-  disabled: boolean;
-};
-
-function NumSelect({ label, value, options, onChange, disabled }: NumSelectProps) {
-  return (
-    <Field label={label}>
-      <Select value={String(value)} onValueChange={(v) => onChange(Number(v))} disabled={disabled}>
-        <SelectTrigger className="h-8 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o} value={String(o)} className="text-xs">
-              {o}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Field>
-  );
-}
-
-type LabeledSliderProps = {
-  label: string;
-  display: string;
-  accentColor: string;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onValueChange: (v: number) => void;
-  disabled?: boolean;
-};
-
-function LabeledSlider({
-  label,
-  display,
-  accentColor,
-  min,
-  max,
-  step,
-  value,
-  onValueChange,
-  disabled,
-}: LabeledSliderProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-text-secondary">{label}</span>
-        <span className="font-mono text-xs" style={{ color: accentColor }}>
-          {display}
-        </span>
-      </div>
-      <Slider
-        min={min}
-        max={max}
-        step={step}
-        value={[value]}
-        onValueChange={([v]) => onValueChange(v ?? value)}
-        disabled={disabled}
-      />
-    </div>
-  );
-}
+const HEAD_OPTIONS = [1, 2, 4, 8] as const;
 
 type ArchGridProps = {
   params: ModelParams;
@@ -109,7 +30,7 @@ type ArchGridProps = {
 };
 
 function ArchGrid({ params, disabled, onChange }: ArchGridProps) {
-  const heads = validHeadCounts(params.n_embd, [1, 2, 4, 8]);
+  const heads = validHeadCounts(params.n_embd, [...HEAD_OPTIONS]);
   return (
     <div className="grid grid-cols-2 gap-2">
       <NumSelect
@@ -152,13 +73,13 @@ export function ParamsPanel({
   trainState,
   colorVar,
 }: ParamsPanelProps) {
-  const accentColor = `var(--model-${colorVar})`;
+  const accentColor = modelColor(colorVar);
   const isTraining = trainState === 'training';
 
   function update(patch: Partial<ModelParams>) {
     const next = { ...params, ...patch };
     if (patch.n_embd !== undefined) {
-      const nextHeads = validHeadCounts(patch.n_embd, [1, 2, 4, 8]);
+      const nextHeads = validHeadCounts(patch.n_embd, [...HEAD_OPTIONS]);
       if (!nextHeads.includes(next.n_head)) {
         next.n_head = nextHeads[nextHeads.length - 1] ?? 1;
       }

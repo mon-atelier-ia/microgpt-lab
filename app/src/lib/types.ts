@@ -1,5 +1,7 @@
 export type Mode = 'solo' | 'compare';
 
+export type ColorVar = 'a' | 'b';
+
 export type ModelParams = {
   datasetId: string;
   n_embd: number;

@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import type { StepResult } from '../lib/types';
+import type { ColorVar, StepResult } from '../lib/types';
 import type { ChartData } from 'chart.js';
 import { resolveVar } from '../lib/utils';
 
 export function useLossData(
   steps: StepResult[],
-  colorVar: 'a' | 'b',
+  colorVar: ColorVar,
 ): ChartData<'line', number[], number> {
   const lossValues = useMemo(() => steps.map((s) => s.loss), [steps]);
   const labels = useMemo(() => steps.map((s) => s.step), [steps]);
