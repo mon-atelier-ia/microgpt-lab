@@ -1364,3 +1364,288 @@ cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && 
 ```bash
 git commit -m "chore: all industry audit fixes complete — quality gates green"
 ```
+
+---
+
+## Chunk 5: Phase 4 — Final Quality Pass
+
+> **Context:** Post-audit normalization complete. Remaining gaps: smoke test, pre-push hooks, integration tests, bundle optimization, lint suppression cleanup, runtime type safety, CSP headers, license audit.
+
+### Task 29: Smoke test
+
+- [ ] **Step 1: Start dev server and verify manually**
+
+```bash
+cd app && pnpm dev
+```
+
+Open http://localhost:5173 and verify:
+- Solo mode: params panel renders with all controls
+- Select dataset, click Train → loss curve updates in real time
+- Click Generate → word grid populates
+- Switch to Compare → two columns, Model B has its own worker
+- Switch back to Solo → Model A training state preserved
+- Change architecture param while trained → confirm dialog appears
+- Cancel → params revert, model unchanged
+- Confirm → model re-inits, loss clears
+- Change LR mid-training → no reinit, takes effect on next step
+- Error state: try invalid config → error banner shows
+
+- [ ] **Step 2: Fix any runtime issues found**
+- [ ] **Step 3: Commit if fixes needed**
+
+---
+
+### Task 30: Pre-push hook validation
+
+- [ ] **Step 1: Run the actual pre-push hook**
+
+```bash
+cd app && npx tsc --noEmit && pnpm build && npx jscpd src/
+```
+
+These are the documented pre-push gates. Verify they pass end-to-end as the hook would run them.
+
+- [ ] **Step 2: Test the hook itself**
+
+```bash
+cd /c/Dev/microgpt-lab && git stash && git stash pop
+# Simulate a push by running .husky/pre-push manually if it exists
+```
+
+---
+
+### Task 31: Remove eslint-disable suppression
+
+**Files:**
+- Modify: `app/src/hooks/use-model-worker.ts`
+
+- [ ] **Step 1: Audit the `eslint-disable react-hooks/exhaustive-deps`**
+
+The auto-init `useEffect` in `model-panel.tsx` uses `// eslint-disable-next-line react-hooks/exhaustive-deps` to omit `initModel` and `params` from the deps array. This is intentional (init once on mount), but the pattern is fragile.
+
+Fix: Use a `useRef(false)` guard for "init once" instead of suppressing the lint:
+```ts
+const initialized = useRef(false);
+useEffect(() => {
+  if (!initialized.current) {
+    initialized.current = true;
+    initModel(params);
+  }
+}, [initModel, params]);
+```
+
+This satisfies the exhaustive-deps rule while maintaining mount-only behavior.
+
+- [ ] **Step 2: Remove all `eslint-disable` comments from app/src/**
+- [ ] **Step 3: Verify `npx eslint src/ --max-warnings=0`**
+- [ ] **Step 4: Commit**
+
+```bash
+git commit -m "fix: remove eslint-disable — use ref guard for mount-only init"
+```
+
+---
+
+### Task 32: Runtime type guard for WASM return values
+
+**Files:**
+- Modify: `app/src/workers/model-worker.ts`
+
+- [ ] **Step 1: Add a type guard for StepResult**
+
+Replace the unsafe `as` cast on `gpt.train_step()` with a runtime validator:
+```ts
+function isStepResult(v: unknown): v is StepResult {
+  return typeof v === 'object' && v !== null
+    && 'step' in v && typeof (v as any).step === 'number'
+    && 'loss' in v && typeof (v as any).loss === 'number'
+    && 'word' in v && typeof (v as any).word === 'string'
+    && 'lr' in v && typeof (v as any).lr === 'number';
+}
+```
+
+Use it in `trainChunk()`:
+```ts
+const raw = gpt.train_step();
+if (!isStepResult(raw)) {
+  post({ type: 'error', message: 'Unexpected train_step result' });
+  return;
+}
+post({ type: 'step', data: raw });
+```
+
+- [ ] **Step 2: Verify tsc + build**
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "fix: runtime type guard for WASM train_step return value"
+```
+
+---
+
+### Task 33: Bundle size — code-split Chart.js
+
+**Files:**
+- Modify: `app/src/components/model-panel/loss-panel.tsx`
+
+- [ ] **Step 1: Lazy-load Chart.js via React.lazy**
+
+Wrap the `Line` chart in a lazy-loaded component to split Chart.js (~200KB) into a separate chunk:
+
+```tsx
+import { lazy, Suspense } from 'react';
+const LazyLine = lazy(() =>
+  import('./loss-chart').then(m => ({ default: m.LossChart }))
+);
+```
+
+Create `app/src/components/model-panel/loss-chart.tsx` with the Chart.js imports and `<Line>` rendering.
+
+- [ ] **Step 2: Verify chunk split**
+
+```bash
+cd app && pnpm build 2>&1 | grep -i chunk
+```
+
+Expected: main chunk < 300KB, chart chunk separate.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "perf: lazy-load Chart.js to reduce initial bundle"
+```
+
+---
+
+### Task 34: CSP headers for WASM
+
+**Files:**
+- Modify: `app/vercel.json`
+
+- [ ] **Step 1: Add Content-Security-Policy header**
+
+WASM execution requires `'wasm-unsafe-eval'` in script-src. Add a security header:
+
+```json
+{
+  "source": "/(.*)",
+  "headers": [
+    {
+      "key": "Content-Security-Policy",
+      "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self'"
+    }
+  ]
+}
+```
+
+- [ ] **Step 2: Verify local build + serve works with CSP**
+
+```bash
+cd app && pnpm build && npx serve dist
+```
+
+Open in browser, check console for CSP violations.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "chore: add Content-Security-Policy headers for WASM"
+```
+
+---
+
+### Task 35: License audit
+
+- [ ] **Step 1: Check all dependency licenses**
+
+```bash
+cd app && npx license-checker --summary 2>/dev/null || pnpm exec license-checker --summary
+```
+
+Alternatively, manually verify key deps:
+- `chart.js`: MIT
+- `react-chartjs-2`: MIT
+- `@radix-ui/*`: MIT
+- `class-variance-authority`: Apache 2.0
+- `clsx`: MIT
+- `tailwind-merge`: MIT
+- `lucide-react`: ISC
+
+All must be compatible with MIT/Apache. Flag any GPL/AGPL/SSPL.
+
+- [ ] **Step 2: Add THIRD_PARTY_LICENSES.md if needed**
+- [ ] **Step 3: Commit**
+
+```bash
+git commit -m "chore: verify dependency license compatibility"
+```
+
+---
+
+### Task 36: Integration tests — worker + hook
+
+**Files:**
+- Create: `app/src/hooks/__tests__/use-model-worker.test.ts`
+
+- [ ] **Step 1: Install jsdom + @testing-library/react**
+
+```bash
+cd app && pnpm add -D @testing-library/react @testing-library/react-hooks jsdom
+```
+
+Add to vitest config in `vite.config.js`:
+```js
+test: { environment: 'jsdom' }
+```
+
+- [ ] **Step 2: Write integration test**
+
+Test the useModelWorker hook lifecycle with a mock worker. Verify:
+- `initModel` sends correct message to worker
+- `train` sets trainState to 'training'
+- Step messages update steps array
+- `train_done` sets trainState to 'trained'
+- `generate` sends correct message
+- `dispose` is sent on cleanup
+
+- [ ] **Step 3: Run tests**
+
+```bash
+cd app && npx vitest run
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git commit -m "test: add integration tests for useModelWorker hook"
+```
+
+---
+
+### Task 37: Final quality gate (definitive)
+
+- [ ] **Step 1: Run ALL checks**
+
+```bash
+cd model-rs && cargo test --release && cargo fmt --check && cargo clippy -- -D warnings
+cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && npx jscpd src/ && npx vitest run
+```
+
+- [ ] **Step 2: Verify zero eslint-disable comments**
+
+```bash
+grep -r "eslint-disable" app/src/ | grep -v node_modules | grep -v __tests__
+```
+
+Expected: 0 results (or only in shadcn/ui generated files).
+
+- [ ] **Step 3: Verify bundle size**
+
+Main chunk < 300KB gzipped.
+
+- [ ] **Step 4: Final commit**
+
+```bash
+git commit -m "chore: final quality pass — all gates green, zero suppressions"
+```
