@@ -7,3 +7,5 @@ app/report/
 .playwright-mcp/
 pnpm-build-config.yaml
 .superpowers/
+
+.vercel
