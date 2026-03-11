@@ -365,7 +365,7 @@ impl WasmGpt {
 
     /// Run one training step using tensor engine.
     /// Returns JS object: { step, loss, word, lr }.
-    pub fn train_step(&mut self) -> JsValue {
+    pub fn train_step(&mut self) -> Result<JsValue, JsError> {
         let epoch_idx = self.step_count % self.docs.len();
         if epoch_idx == 0 {
             self.train_order = Self::shuffled_order(self.docs.len(), &mut self.rng);
@@ -390,7 +390,7 @@ impl WasmGpt {
             word: doc,
             lr: lr_t,
         })
-        .unwrap_or(JsValue::NULL)
+        .map_err(|e| JsError::new(&format!("train_step serialization failed: {e}")))
     }
 
     // ── Ch6: Traced training step (streaming) ──────────────────────

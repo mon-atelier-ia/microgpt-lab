@@ -117,7 +117,7 @@ export interface InitOutput {
     readonly wasmgpt_reset_training: (a: number) => void;
     readonly wasmgpt_set_lr: (a: number, b: number) => void;
     readonly wasmgpt_train: (a: number, b: number) => void;
-    readonly wasmgpt_train_step: (a: number) => any;
+    readonly wasmgpt_train_step: (a: number) => [number, number, number];
     readonly wasmgpt_train_step_traced: (a: number) => [number, number, number];
     readonly wasmgpt_training_meta: (a: number) => [number, number, number];
     readonly wasmgpt_vocab_tokens: (a: number) => [number, number];

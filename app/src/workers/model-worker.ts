@@ -105,6 +105,12 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
       case 'generate':
         handleGenerate(e.data.temperature, e.data.n_samples);
         break;
+      case 'dispose':
+        if (gpt) {
+          gpt.free();
+          gpt = null;
+        }
+        break;
     }
   } catch (err) {
     post({ type: 'error', message: err instanceof Error ? err.message : String(err) });

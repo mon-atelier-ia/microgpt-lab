@@ -184,7 +184,10 @@ export class WasmGpt {
      */
     train_step() {
         const ret = wasm.wasmgpt_train_step(this.__wbg_ptr);
-        return ret;
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return takeFromExternrefTable0(ret[0]);
     }
     /**
      * Run one training step with full gradient + parameter capture.

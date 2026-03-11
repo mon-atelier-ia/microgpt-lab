@@ -57,16 +57,18 @@ function ModelPanelInner({
       next.n_layer !== params.n_layer ||
       next.block_size !== params.block_size;
 
-    setParams(next);
-
     if (archChanged) {
       if (trainState === 'trained') {
         const ok = window.confirm('Changing this parameter will reset training. Continue?');
         if (!ok) return;
       }
+      setParams(next);
       initModel(next);
-    } else if (lrChanged) {
-      setLr(next.lr);
+    } else {
+      setParams(next);
+      if (lrChanged) {
+        setLr(next.lr);
+      }
     }
   }
 

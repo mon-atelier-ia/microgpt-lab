@@ -21,7 +21,8 @@ export type WorkerMessage =
   | { type: 'init'; datasetText: string; config: ModelParams }
   | { type: 'train'; n_steps: number }
   | { type: 'set_lr'; lr: number }
-  | { type: 'generate'; temperature: number; n_samples: number };
+  | { type: 'generate'; temperature: number; n_samples: number }
+  | { type: 'dispose' };
 
 export type WorkerResponse =
   | { type: 'ready' }
