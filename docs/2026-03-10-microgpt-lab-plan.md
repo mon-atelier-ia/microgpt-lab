@@ -1623,13 +1623,153 @@ git commit -m "test: add integration tests for useModelWorker hook"
 
 ---
 
-### Task 37: Final quality gate (definitive)
+### Task 37: Component tests
+
+**Files:**
+- Create: `app/src/components/model-panel/__tests__/params-panel.test.tsx`
+- Create: `app/src/components/model-panel/__tests__/inference-panel.test.tsx`
+- Create: `app/src/components/model-panel/__tests__/error-banner.test.tsx`
+- Create: `app/src/components/model-panel/__tests__/model-panel.test.tsx`
+
+- [ ] **Step 1: Install @testing-library/react + @testing-library/user-event**
+
+```bash
+cd app && pnpm add -D @testing-library/react @testing-library/user-event
+```
+
+- [ ] **Step 2: ParamsPanel tests** (`params-panel.test.tsx`)
+
+- Renders all dataset options from PRESETS
+- Renders n_embd/n_head/n_layer/block_size selects
+- n_head options update when n_embd changes (divisibility filter)
+- LR slider renders with log-scale value
+- Temperature slider renders in [0.1, 2.0] range
+- Train button shows "Entraîner" when idle, "Entraînement…" when training
+- Train button disabled during training
+- Generate button calls onGenerate
+- Calls onParamsChange with correct payload on control changes
+- trainSteps select renders options [100, 200, 500, 1000, 2000]
+
+- [ ] **Step 3: InferencePanel tests** (`inference-panel.test.tsx`)
+
+- Empty state: shows placeholder message
+- With words: renders word grid with `role="list"` and `role="listitem"`
+- Shows word count in footer
+- Shows temperature in footer when provided
+- Uses correct model color for word styling
+
+- [ ] **Step 4: ErrorBanner tests** (`error-banner.test.tsx`)
+
+- Returns null when message is null
+- Renders with `role="alert"` when message is provided
+- Displays the error message text
+
+- [ ] **Step 5: ModelPanel integration tests** (`model-panel.test.tsx`)
+
+Mock `useModelWorker` hook. Verify:
+- Renders all three sub-panels (params, loss, inference)
+- Horizontal layout applies correct flex ratios
+- Vertical layout applies correct flex ratios
+- ErrorBanner appears when errorMessage is set
+- AlertDialog appears when changing arch params while trained
+- AlertDialog cancel does not call initModel
+- AlertDialog confirm calls initModel with new params
+- LR change calls setLr without initModel
+
+- [ ] **Step 6: Run tests**
+
+```bash
+cd app && npx vitest run
+```
+
+- [ ] **Step 7: Commit**
+
+```bash
+git commit -m "test: add component tests for panels, error banner, model panel"
+```
+
+---
+
+### Task 38: E2E tests (Playwright)
+
+**Files:**
+- Create: `app/e2e/solo-flow.spec.ts`
+- Create: `app/e2e/compare-flow.spec.ts`
+- Create: `app/playwright.config.ts`
+
+- [ ] **Step 1: Install Playwright**
+
+```bash
+cd app && pnpm add -D @playwright/test && npx playwright install chromium
+```
+
+- [ ] **Step 2: Configure Playwright** (`app/playwright.config.ts`)
+
+```ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  webServer: {
+    command: 'pnpm dev',
+    port: 5173,
+    reuseExistingServer: true,
+  },
+  use: {
+    baseURL: 'http://localhost:5173',
+  },
+});
+```
+
+Add script to `package.json`: `"test:e2e": "playwright test"`
+
+- [ ] **Step 3: Solo flow E2E** (`solo-flow.spec.ts`)
+
+- Page loads, TopBar visible with "microgpt-lab" title
+- Solo mode active by default
+- Params panel renders with dataset select, architecture controls, sliders, buttons
+- Select "Prénoms FR" dataset
+- Click "Entraîner" → button changes to "Entraînement…"
+- Loss curve appears and updates (canvas element present)
+- Training completes → button reverts to "Entraîner"
+- Click "Générer" → word grid populates with generated words
+- Word count footer updates
+- Change n_embd → confirm dialog if trained
+- Cancel dialog → params unchanged
+- Confirm dialog → loss curve clears, model re-inits
+
+- [ ] **Step 4: Compare flow E2E** (`compare-flow.spec.ts`)
+
+- Click "Compare" → two model panels appear side by side
+- Each panel has independent controls
+- Train Model A → loss curve A updates
+- Train Model B → loss curve B updates independently
+- Switch back to "Solo" → Model A state preserved (loss curve still visible)
+- Switch back to "Compare" → Model A still has data, Model B is fresh
+
+- [ ] **Step 5: Run E2E**
+
+```bash
+cd app && pnpm test:e2e
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+git commit -m "test: add Playwright E2E tests for Solo and Compare flows"
+```
+
+---
+
+### Task 39: Final quality gate (definitive)
+
+> Renumbered from Task 37. Includes all test suites.
 
 - [ ] **Step 1: Run ALL checks**
 
 ```bash
 cd model-rs && cargo test --release && cargo fmt --check && cargo clippy -- -D warnings
-cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && npx jscpd src/ && npx vitest run
+cd app && npx tsc --noEmit && pnpm build && npx eslint src/ --max-warnings=0 && npx jscpd src/ && npx vitest run && pnpm test:e2e
 ```
 
 - [ ] **Step 2: Verify zero eslint-disable comments**
