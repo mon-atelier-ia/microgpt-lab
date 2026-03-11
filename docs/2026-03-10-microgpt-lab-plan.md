@@ -2067,6 +2067,64 @@ git commit -m "feat: add reset model button in Solo and Compare views"
 git commit -m "fix: prevent WASM OOM via autograd graph detach between training steps"
 ```
 
+### Task 61: LR schedule adaptatif — overfit & sweet spot par dataset
+
+> **Contexte** : Le LR decay actuel est linéaire sur `n_steps` fixé à 1000 dans `TrainConfig::default()`. Problèmes :
+> - Après 1000 steps, `lr_t = 0` → Adam ne met plus à jour les poids, l'entraînement est mort.
+> - Le nombre de steps pour overfitter dépend de la taille du dataset (tokens uniques, vocabulaire, séquences).
+> - L'utilisateur veut pouvoir overfitter librement puis retry avec d'autres params.
+>
+> **Réflexions dataset size vs steps :**
+> - **Petit dataset** (~50 prénoms, ~200 tokens uniques) : overfit possible en ~500-1000 steps, sweet spot ~300-500 steps.
+> - **Moyen dataset** (~150 pokémon, ~800 tokens) : overfit ~2000-3000 steps, sweet spot ~1000-1500 steps.
+> - **Gros dataset** (~4500 baby names, ~3000+ tokens) : overfit ~5000-10000 steps, sweet spot ~2000-4000 steps.
+> - Le sweet spot = loss stabilisée mais pas encore surapprentissage (génère des mots crédibles, pas du copier-coller du dataset).
+> - Avec LR decay linéaire sur 1000, les gros datasets ne convergent jamais car le LR tombe à 0 avant d'atteindre le sweet spot.
+>
+> **Options à évaluer :**
+> 1. **LR constant** (`lr_t = tc.lr`) — simple, laisse l'utilisateur décider quand arrêter. Risque : instabilité sur long training.
+> 2. **Decay proportionnel au dataset** — calculer `n_steps` en fonction de `vocab_size * block_size` au lieu de le hardcoder.
+> 3. **Cosine annealing avec warm restart** — LR cyclique, permet de continuer indéfiniment sans tomber à 0.
+> 4. **Exposer n_steps dans l'UI** — laisser l'utilisateur contrôler le schedule complet.
+>
+> **Décision :** à trancher après tests empiriques sur les 4 datasets.
+
+- [ ] **Step 1: Benchmark empirique** — Entraîner chaque dataset (prénoms, dinosaures, pokémon, baby-names) avec LR constant 0.01 sur 5000 steps. Logger loss toutes les 100 steps. Identifier overfit point et sweet spot pour chaque dataset.
+- [ ] **Step 2: Choisir le schedule** — Comparer les résultats et choisir l'option (1-4) la plus adaptée à l'UX "overfit & retry".
+- [ ] **Step 3: Implémenter** — Modifier `adam_step()` dans `model.rs` et `tensor_model.rs` selon l'option choisie.
+- [ ] **Step 4: Rebuild WASM** — `./build-wasm.sh` et vérifier que le frontend fonctionne.
+- [ ] **Step 5: Commit**
+
+```bash
+git commit -m "feat: adaptive LR schedule based on dataset size"
+```
+
+---
+
+### Task 62: Nice-to-have — Gamification de l'entraînement (sweet spot reward & overfitting alert)
+
+> **Contexte** : Rendre l'entraînement ludique et pédagogique en donnant du feedback visuel à l'utilisateur sur la qualité de son entraînement. Dépend de Task 61 (benchmark empirique pour connaître les seuils par dataset).
+>
+> **Idées :**
+> - **Sweet spot reward** : Quand la loss atteint une zone optimale (bons mots générés, loss stabilisée), afficher un feedback positif (animation, badge, message encourageant). Le seuil dépend du dataset — utiliser les résultats du benchmark Task 61.
+> - **Message d'overfitting** : Quand la loss descend trop bas et que les mots générés sont des copies exactes du dataset, afficher un avertissement pédagogique ("Le modèle récite le dataset — il ne généralise plus").
+> - **Détection** : comparer les mots générés au dataset source (exact match ratio). Si >80% de matches exacts → overfitting. Alternativement, détecter quand la loss remonte après un minimum (validation loss si applicable).
+> - **UX** : subtil et non-bloquant — toast/badge, pas de modal. Ton pédagogique, pas punitif.
+>
+> **Priorité :** nice-to-have, après Tasks 59-61.
+
+- [ ] **Step 1: Définir les seuils** — À partir du benchmark Task 61, établir pour chaque dataset : zone sweet spot (loss range), seuil overfitting (exact match ratio ou loss plancher).
+- [ ] **Step 2: Détection overfitting** — Comparer les mots générés au dataset source côté frontend. Calculer le taux de match exact.
+- [ ] **Step 3: UI feedback** — Ajouter un composant toast/badge dans `InferencePanel` : message positif au sweet spot, avertissement à l'overfitting.
+- [ ] **Step 4: Tests** — Vérifier que les messages apparaissent aux bons moments sur chaque dataset.
+- [ ] **Step 5: Commit**
+
+```bash
+git commit -m "feat: gamify training with sweet spot reward and overfitting alert"
+```
+
+---
+
 ### Task 58: Vérification post-déploiement
 
 - [ ] **Step 1: Redéployer sur Vercel**
