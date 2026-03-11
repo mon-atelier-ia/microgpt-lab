@@ -14,10 +14,12 @@ function computeEma(values: number[], alpha: number): number[] {
 
 const EMA_ALPHA = 0.1;
 
-export function useLossData(
-  steps: StepResult[],
-  colorVar: ColorVar,
-): ChartData<'line', number[], number> {
+export type LossDataResult = {
+  chartData: ChartData<'line', number[], number>;
+  lastEma: number | null;
+};
+
+export function useLossData(steps: StepResult[], colorVar: ColorVar): LossDataResult {
   return useMemo(() => {
     const rawColor = resolveVar(`--model-${colorVar}`);
     const emaColor = resolveVar(`--model-${colorVar}-accent`);
@@ -25,29 +27,32 @@ export function useLossData(
     const ema = computeEma(losses, EMA_ALPHA);
 
     return {
-      labels: steps.map((s) => s.step),
-      datasets: [
-        {
-          label: 'Loss brute',
-          data: losses,
-          borderColor: rawColor,
-          borderWidth: 1,
-          pointRadius: 0,
-          tension: 0.1,
-          borderDash: [],
-          order: 1,
-        },
-        {
-          label: 'EMA',
-          data: ema,
-          borderColor: emaColor,
-          borderWidth: 2.5,
-          pointRadius: 0,
-          tension: 0.3,
-          borderDash: [],
-          order: 0,
-        },
-      ],
+      chartData: {
+        labels: steps.map((s) => s.step),
+        datasets: [
+          {
+            label: 'Loss brute',
+            data: losses,
+            borderColor: rawColor,
+            borderWidth: 1,
+            pointRadius: 0,
+            tension: 0.1,
+            borderDash: [],
+            order: 1,
+          },
+          {
+            label: 'EMA',
+            data: ema,
+            borderColor: emaColor,
+            borderWidth: 2.5,
+            pointRadius: 0,
+            tension: 0.3,
+            borderDash: [],
+            order: 0,
+          },
+        ],
+      },
+      lastEma: ema.length > 0 ? ema[ema.length - 1] : null,
     };
   }, [steps, colorVar]);
 }

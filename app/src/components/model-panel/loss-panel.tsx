@@ -40,7 +40,7 @@ type LossPanelProps = {
 };
 
 export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
-  const data = useLossData(steps, colorVar);
+  const { chartData, lastEma } = useLossData(steps, colorVar);
   const lastStep = steps[steps.length - 1];
   const hasData = steps.length > 0;
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -76,8 +76,9 @@ export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
               <span
                 className="font-mono text-xs font-bold"
                 style={{ color: modelAccent(colorVar) }}
+                title="EMA (α=0.1)"
               >
-                {lastStep.loss.toFixed(4)}
+                {lastEma !== null ? lastEma.toFixed(4) : lastStep.loss.toFixed(4)}
               </span>
             </>
           )}
@@ -98,7 +99,7 @@ export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
               </div>
             }
           >
-            <LossChart data={data} chartOptions={chartOptions} />
+            <LossChart data={chartData} chartOptions={chartOptions} />
           </Suspense>
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-text-muted">

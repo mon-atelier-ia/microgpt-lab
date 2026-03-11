@@ -18,6 +18,41 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 
+function ArchResetDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogTitle className="text-sm font-semibold">
+          Réinitialiser l&apos;entraînement ?
+        </AlertDialogTitle>
+        <AlertDialogDescription className="mt-2 text-xs text-text-secondary">
+          Modifier les paramètres d&apos;architecture réinitialisera la progression.
+        </AlertDialogDescription>
+        <div className="mt-4 flex justify-end gap-2">
+          <AlertDialogCancel asChild>
+            <Button size="sm" variant="ghost">
+              Annuler
+            </Button>
+          </AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button size="sm" onClick={onConfirm} className="bg-error text-surface-0">
+              Réinitialiser
+            </Button>
+          </AlertDialogAction>
+        </div>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 export type ModelPanelProps = {
   colorVar: ColorVar;
   layout: 'horizontal' | 'vertical';
@@ -123,31 +158,11 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
         />
       </div>
 
-      <AlertDialog
+      <ArchResetDialog
         open={pendingArch !== null}
         onOpenChange={(open) => !open && setPendingArch(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogTitle className="text-sm font-semibold">
-            Réinitialiser l&apos;entraînement ?
-          </AlertDialogTitle>
-          <AlertDialogDescription className="mt-2 text-xs text-text-secondary">
-            Modifier les paramètres d&apos;architecture réinitialisera la progression.
-          </AlertDialogDescription>
-          <div className="mt-4 flex justify-end gap-2">
-            <AlertDialogCancel asChild>
-              <Button size="sm" variant="ghost">
-                Annuler
-              </Button>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button size="sm" onClick={confirmArchChange} className="bg-error text-surface-0">
-                Réinitialiser
-              </Button>
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={confirmArchChange}
+      />
     </div>
   );
 }
