@@ -1979,9 +1979,9 @@ git commit -m "chore: chunk 6 complete — all audit findings fixed"
 **Files:**
 - Modify: `app/src/App.tsx` ou state management
 
-- [ ] **Step 1: Lift Model A state pour qu'il persiste entre Solo et Compare**
-- [ ] **Step 2: Vérifier que les params, la loss curve et les mots générés de A sont préservés**
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Lift Model A state pour qu'il persiste entre Solo et Compare** — ✅ Déjà fait : `useModelWorker()` est appelé dans `App` et passé en prop aux vues
+- [x] **Step 2: Vérifier que les params, la loss curve et les mots générés de A sont préservés** — ✅ Confirmé : le hook ne se démonte pas au switch
+- [x] **Step 3: Commit** — N/A, aucun changement nécessaire
 
 ```bash
 git commit -m "fix: preserve Model A state across Solo/Compare mode switch"
