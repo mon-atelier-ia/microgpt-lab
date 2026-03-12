@@ -146,13 +146,15 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
   }, [initModel, params]);
 
   const isHorizontal = layout === 'horizontal';
-  const containerClass = isHorizontal ? 'flex flex-row gap-3 min-w-0' : 'flex flex-col gap-3';
+  const containerClass = isHorizontal
+    ? 'flex flex-col gap-3 md:flex-row md:min-w-0'
+    : 'flex flex-col gap-3';
   const glowClass = colorVar === 'a' ? 'panel-glow-a' : 'panel-glow-b';
 
   return (
     <div className={containerClass}>
       <ErrorBanner message={errorMessage} />
-      <div className={isHorizontal ? 'flex-[0_0_40%] min-w-0' : ''}>
+      <div className={isHorizontal ? 'md:flex-[0_0_40%] md:min-w-0' : ''}>
         <ParamsPanel
           params={params}
           onParamsChange={ph.handleParamsChange}
@@ -164,10 +166,10 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
           glowClass={glowClass}
         />
       </div>
-      <div className={isHorizontal ? 'flex-[0_0_25%] min-w-0' : ''}>
+      <div className={isHorizontal ? 'md:flex-[0_0_25%] md:min-w-0' : ''}>
         <LossPanel steps={steps} colorVar={colorVar} glowClass={glowClass} />
       </div>
-      <div className={isHorizontal ? 'flex-[1_1_35%] min-w-0' : ''}>
+      <div className={isHorizontal ? 'md:flex-[1_1_35%] md:min-w-0' : ''}>
         <InferencePanel
           words={words}
           colorVar={colorVar}
