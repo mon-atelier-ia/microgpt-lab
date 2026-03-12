@@ -171,6 +171,8 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   try {
     await dispatch(e.data);
   } catch (err) {
+    // After a WASM crash, the instance is corrupted — force re-init
+    gpt = null;
     const raw = err instanceof Error ? err.message : String(err);
     const message =
       raw === 'unreachable' || raw.includes('RuntimeError')

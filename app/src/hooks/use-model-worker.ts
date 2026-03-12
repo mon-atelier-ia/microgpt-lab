@@ -121,8 +121,14 @@ export function useModelWorker() {
     workerRef.current?.postMessage(msg);
   }, []);
 
+  const trainStateRef = useRef(trainState);
+  useEffect(() => {
+    trainStateRef.current = trainState;
+  }, [trainState]);
+
   const initModel = useCallback(
     async (params: ModelParams) => {
+      if (trainStateRef.current === 'training') return;
       const preset = PRESETS.find((p) => p.id === params.datasetId);
       if (!preset) return;
       clearBuffer();
@@ -138,6 +144,7 @@ export function useModelWorker() {
 
   const train = useCallback(
     (n_steps: number) => {
+      if (trainStateRef.current === 'training') return;
       setTrainState('training');
       send({ type: 'train', n_steps });
     },
@@ -153,6 +160,7 @@ export function useModelWorker() {
 
   const generate = useCallback(
     (temperature: number, n_samples: number) => {
+      if (trainStateRef.current === 'training') return;
       send({ type: 'generate', temperature, n_samples });
     },
     [send],
