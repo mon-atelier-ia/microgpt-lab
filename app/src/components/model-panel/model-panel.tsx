@@ -18,23 +18,25 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 
-function ArchResetDialog({
+function ConfirmResetDialog({
   open,
   onOpenChange,
   onConfirm,
+  title,
+  description,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  title: string;
+  description: string;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
-        <AlertDialogTitle className="text-sm font-semibold">
-          Réinitialiser l&apos;entraînement ?
-        </AlertDialogTitle>
+        <AlertDialogTitle className="text-sm font-semibold">{title}</AlertDialogTitle>
         <AlertDialogDescription className="mt-2 text-xs text-text-secondary">
-          Modifier les paramètres d&apos;architecture réinitialisera la progression.
+          {description}
         </AlertDialogDescription>
         <div className="mt-4 flex justify-end gap-2">
           <AlertDialogCancel asChild>
@@ -77,29 +79,10 @@ function ModelPanelWithOwnWorker(props: Omit<ModelPanelInnerProps, 'handle'>) {
   return <ModelPanelInner {...props} handle={handle} />;
 }
 
-function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
-  const {
-    trainState,
-    steps,
-    words,
-    errorMessage,
-    params,
-    setParams,
-    initModel,
-    train,
-    setLr,
-    generate,
-  } = handle;
+function useParamsHandler(handle: WorkerHandle) {
+  const { trainState, params, setParams, initModel, setLr, resetModel } = handle;
   const [pendingArch, setPendingArch] = useState<ModelParams | null>(null);
-  const initialized = useRef(false);
-
-  // Auto-init on mount with default params
-  useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true;
-      initModel(params);
-    }
-  }, [initModel, params]);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   function handleParamsChange(next: ModelParams) {
     const lrChanged = next.lr !== params.lr;
@@ -114,19 +97,53 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
       initModel(next);
     } else {
       setParams(next);
-      if (lrChanged) {
-        setLr(next.lr);
-      }
+      if (lrChanged) setLr(next.lr);
     }
   }
 
   function confirmArchChange() {
-    if (pendingArch) {
-      setParams(pendingArch);
-      initModel(pendingArch);
-      setPendingArch(null);
+    if (!pendingArch) return;
+    setParams(pendingArch);
+    initModel(pendingArch);
+    setPendingArch(null);
+  }
+
+  function handleReset() {
+    if (trainState === 'trained' || trainState === 'error') {
+      setResetDialogOpen(true);
+    } else {
+      resetModel();
     }
   }
+
+  function confirmReset() {
+    setResetDialogOpen(false);
+    resetModel();
+  }
+
+  return {
+    pendingArch,
+    setPendingArch,
+    resetDialogOpen,
+    setResetDialogOpen,
+    handleParamsChange,
+    confirmArchChange,
+    handleReset,
+    confirmReset,
+  };
+}
+
+function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
+  const { trainState, steps, words, errorMessage, params, initModel, train, generate } = handle;
+  const ph = useParamsHandler(handle);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true;
+      initModel(params);
+    }
+  }, [initModel, params]);
 
   const isHorizontal = layout === 'horizontal';
   const containerClass = isHorizontal ? 'flex flex-row gap-3 min-w-0' : 'flex flex-col gap-3';
@@ -138,9 +155,10 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
       <div className={isHorizontal ? 'flex-[0_0_40%] min-w-0' : ''}>
         <ParamsPanel
           params={params}
-          onParamsChange={handleParamsChange}
+          onParamsChange={ph.handleParamsChange}
           onTrain={() => train(params.trainSteps)}
           onGenerate={() => generate(params.temperature, DEFAULT_N_SAMPLES)}
+          onReset={ph.handleReset}
           trainState={trainState}
           colorVar={colorVar}
           glowClass={glowClass}
@@ -158,10 +176,19 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
         />
       </div>
 
-      <ArchResetDialog
-        open={pendingArch !== null}
-        onOpenChange={(open) => !open && setPendingArch(null)}
-        onConfirm={confirmArchChange}
+      <ConfirmResetDialog
+        open={ph.pendingArch !== null}
+        onOpenChange={(open) => !open && ph.setPendingArch(null)}
+        onConfirm={ph.confirmArchChange}
+        title="Réinitialiser l'entraînement ?"
+        description="Modifier les paramètres d'architecture réinitialisera la progression."
+      />
+      <ConfirmResetDialog
+        open={ph.resetDialogOpen}
+        onOpenChange={ph.setResetDialogOpen}
+        onConfirm={ph.confirmReset}
+        title="Réinitialiser le modèle ?"
+        description="Le modèle sera recréé de zéro. La progression et les mots générés seront perdus."
       />
     </div>
   );

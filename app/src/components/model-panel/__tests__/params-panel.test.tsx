@@ -26,6 +26,7 @@ describe('ParamsPanel', () => {
         onParamsChange={noop}
         onTrain={noop}
         onGenerate={noop}
+        onReset={noop}
         trainState="idle"
         colorVar="a"
       />,
@@ -42,6 +43,7 @@ describe('ParamsPanel', () => {
         onParamsChange={noop}
         onTrain={noop}
         onGenerate={noop}
+        onReset={noop}
         trainState="training"
         colorVar="a"
       />,
@@ -58,6 +60,7 @@ describe('ParamsPanel', () => {
         onParamsChange={noop}
         onTrain={noop}
         onGenerate={noop}
+        onReset={noop}
         trainState="idle"
         colorVar="b"
       />,
@@ -74,11 +77,64 @@ describe('ParamsPanel', () => {
         onParamsChange={noop}
         onTrain={noop}
         onGenerate={noop}
+        onReset={noop}
         trainState="training"
         colorVar="a"
       />,
     );
     const genBtn = getByRole('button', { name: /Générer/i });
     expect((genBtn as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe('ParamsPanel — reset button', () => {
+  it('renders reset button', () => {
+    const { getByRole } = render(
+      <ParamsPanel
+        params={defaultParams}
+        onParamsChange={noop}
+        onTrain={noop}
+        onGenerate={noop}
+        onReset={noop}
+        trainState="idle"
+        colorVar="a"
+      />,
+    );
+    const resetBtn = getByRole('button', { name: /réinitialiser/i });
+    expect(resetBtn).toBeDefined();
+    expect((resetBtn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('reset button is disabled when training', () => {
+    const { getByRole } = render(
+      <ParamsPanel
+        params={defaultParams}
+        onParamsChange={noop}
+        onTrain={noop}
+        onGenerate={noop}
+        onReset={noop}
+        trainState="training"
+        colorVar="a"
+      />,
+    );
+    const resetBtn = getByRole('button', { name: /réinitialiser/i });
+    expect((resetBtn as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('calls onReset when reset button is clicked', () => {
+    const onReset = vi.fn();
+    const { getByRole } = render(
+      <ParamsPanel
+        params={defaultParams}
+        onParamsChange={noop}
+        onTrain={noop}
+        onGenerate={noop}
+        onReset={onReset}
+        trainState="idle"
+        colorVar="a"
+      />,
+    );
+    getByRole('button', { name: /réinitialiser/i }).click();
+    expect(onReset).toHaveBeenCalledOnce();
   });
 });

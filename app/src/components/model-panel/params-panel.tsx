@@ -20,6 +20,7 @@ export type ParamsPanelProps = {
   onParamsChange: (params: ModelParams) => void;
   onTrain: () => void;
   onGenerate: () => void;
+  onReset: () => void;
   trainState: TrainState;
   colorVar: ColorVar;
   glowClass?: string;
@@ -34,6 +35,7 @@ type ArchGridProps = {
 type ActionButtonsProps = {
   onTrain: () => void;
   onGenerate: () => void;
+  onReset: () => void;
   isTraining: boolean;
   trainBtnStyle: CSSProperties;
   genBtnStyle: CSSProperties;
@@ -42,6 +44,7 @@ type ActionButtonsProps = {
 function ActionButtons({
   onTrain,
   onGenerate,
+  onReset,
   isTraining,
   trainBtnStyle,
   genBtnStyle,
@@ -72,6 +75,16 @@ function ActionButtons({
         style={genBtnStyle}
       >
         Générer
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="font-semibold uppercase tracking-wider"
+        onClick={onReset}
+        disabled={isTraining}
+        aria-label="Réinitialiser le modèle"
+      >
+        ↺
       </Button>
     </div>
   );
@@ -118,6 +131,7 @@ export function ParamsPanel({
   onParamsChange,
   onTrain,
   onGenerate,
+  onReset,
   trainState,
   colorVar,
   glowClass,
@@ -206,6 +220,7 @@ export function ParamsPanel({
       <ActionButtons
         onTrain={onTrain}
         onGenerate={onGenerate}
+        onReset={onReset}
         isTraining={isTraining}
         trainBtnStyle={trainBtnStyle}
         genBtnStyle={genBtnStyle}

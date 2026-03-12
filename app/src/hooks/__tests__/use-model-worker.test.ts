@@ -5,10 +5,12 @@ import type { StepResult } from '../../lib/types';
 // ---------------------------------------------------------------------------
 // Mock PRESETS so initModel doesn't need real data files
 // ---------------------------------------------------------------------------
+const TEST_PRESET_ID = 'test-preset';
+
 vi.mock('../../data/presets', () => ({
   PRESETS: [
     {
-      id: 'test-preset',
+      id: TEST_PRESET_ID,
       name: 'Test',
       description: 'Test preset',
       load: async () => ['word1', 'word2'],
@@ -57,7 +59,7 @@ describe('useModelWorker — outbound messages', () => {
     const useModelWorker = await getHook();
     const { result } = renderHook(() => useModelWorker());
     const params = {
-      datasetId: 'test-preset',
+      datasetId: TEST_PRESET_ID,
       n_embd: 32,
       n_head: 2,
       n_layer: 2,
@@ -161,5 +163,41 @@ describe('useModelWorker — inbound messages', () => {
     });
     expect(result.current.trainState).toBe('error');
     expect(result.current.errorMessage).toBe('something broke');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resetModel
+// ---------------------------------------------------------------------------
+describe('useModelWorker — resetModel', () => {
+  it('clears steps, words, errorMessage and sends init to worker', async () => {
+    vi.useFakeTimers();
+    const useModelWorker = await getHook();
+    const { result } = renderHook(() => useModelWorker());
+
+    // Set params to use test preset and simulate some state
+    act(() => {
+      result.current.setParams({ ...result.current.params, datasetId: 'test-preset' });
+      mockWorkerInstance.simulateMessage({ type: 'train_done' });
+      mockWorkerInstance.simulateMessage({ type: 'generated', words: ['alpha'] });
+    });
+    expect(result.current.trainState).toBe('trained');
+    expect(result.current.words).toEqual(['alpha']);
+
+    mockWorkerInstance.postMessage.mockClear();
+
+    // Reset
+    await act(async () => {
+      result.current.resetModel();
+    });
+
+    expect(result.current.trainState).toBe('idle');
+    expect(result.current.words).toEqual([]);
+    expect(result.current.steps).toEqual([]);
+    expect(result.current.errorMessage).toBeNull();
+    expect(mockWorkerInstance.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'init' }),
+    );
+    vi.useRealTimers();
   });
 });

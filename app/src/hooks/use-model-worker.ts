@@ -158,6 +158,10 @@ export function useModelWorker() {
     [send],
   );
 
+  const resetModel = useCallback(() => {
+    initModel(params);
+  }, [initModel, params]);
+
   return {
     trainState,
     steps,
@@ -169,6 +173,7 @@ export function useModelWorker() {
     train,
     setLr,
     generate,
+    resetModel,
   };
 }
 
