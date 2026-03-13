@@ -1993,12 +1993,16 @@ git commit -m "fix: preserve Model A state across Solo/Compare mode switch"
 - Create: `app/public/favicon.ico` (or `favicon.svg`)
 - Modify: `index.html` if needed
 
-- [ ] **Step 1: Generate/add a minimal favicon**
-- [ ] **Step 2: Verify no 404 on deployed site**
-- [ ] **Step 3: Commit**
+- [x] **Step 1: Lab flask SVG favicon** — `app/public/favicon.svg` with OKLCH palette (#1a1a2e bg, #3b8edb flask, #2e6fb3 liquid)
+- [x] **Step 2: Console banner easter egg** — `app/public/banner.js`, P-A.G ASCII art, reads `--model-a` CSS var at runtime
+- [x] **Step 3: CSP compliance** — Moved inline script to external `banner.js` (CSP `script-src 'self'` blocks inline)
+- [x] **Step 4: Reusable template** — `C:\Dev\Easter_eggs\console-log-banner.html` with `{{APP_NAME}}`, `{{CSS_VAR}}`, `{{FALLBACK}}` placeholders
+- [x] **Step 5: Commits** — `35bc029`, `7985268`, `277b310`
 
 ```bash
-git commit -m "chore: add favicon"
+git commit -m "feat: add lab flask favicon with OKLCH palette colors (Task 55)"
+git commit -m "feat: add console banner easter egg with dynamic OKLCH color (Task 55)"
+git commit -m "fix: move console banner to external script for CSP compliance"
 ```
 
 ### Task 56: EMA smoothing sur la loss curve (style TensorBoard)
@@ -2041,16 +2045,29 @@ git commit -m "style: complete visual overhaul — typography, color identity, a
 
 > **Contexte** : L'utilisateur doit pouvoir remettre un modèle à zéro (poids, steps, loss, mots générés) sans recharger la page. Utile pour relancer une expérience propre ou comparer des runs successifs.
 
-- [ ] **Step 1: Worker message** — Ajouter un message `reset` dans `WorkerMessage` (types.ts). Le worker reçoit `{ type: 'reset' }`, appelle `handleInit` avec les params courants pour réinstancier le modèle WASM from scratch.
-- [ ] **Step 2: Hook** — Exposer `resetModel()` dans `useModelWorker`. Clear steps, words, trainState → 'idle', puis envoyer `init` au worker avec les params actuels.
-- [ ] **Step 3: UI ParamsPanel** — Ajouter un bouton « Réinitialiser » (icône refresh) dans la barre d'actions, style ghost avec accent muted. Désactivé pendant l'entraînement (busy guard).
-- [ ] **Step 4: Confirm dialog** — Si `trainState === 'trained'`, afficher un AlertDialog de confirmation avant reset (même pattern que le changement d'architecture).
-- [ ] **Step 5: Solo + Compare** — Vérifier que le bouton fonctionne dans les deux modes. En Compare, chaque panel a son propre reset indépendant.
-- [ ] **Step 6: Tests** — Ajouter un test unitaire pour `resetModel()` dans use-model-worker.test.ts et un test composant pour le bouton.
-- [ ] **Step 7: Commit**
+- [x] **Step 1: Worker message** — Réutilise `initModel(params)` existant (pas de nouveau message worker nécessaire)
+- [x] **Step 2: Hook** — `resetModel()` exposé dans `useModelWorker`, délègue à `initModel(params)`
+- [x] **Step 3: UI ParamsPanel** — Bouton ↺ ghost dans ActionButtons, désactivé pendant l'entraînement, aria-label
+- [x] **Step 4: Confirm dialog** — `ConfirmResetDialog` générique (title/description en props), affiché si trained ou error
+- [x] **Step 5: Solo + Compare** — Vérifié : chaque panel a son propre reset indépendant via WorkerHandle
+- [x] **Step 6: Tests** — 4 tests ajoutés (hook resetModel + 3 bouton reset), `renderPanel()` helper DRY
+- [x] **Step 7: Commit** — `c081662`, `9698da1`
 
 ```bash
 git commit -m "feat: add reset model button in Solo and Compare views"
+```
+
+### Task 60a: Defensive guards — empêcher le frontend de crasher le WASM
+
+> **Contexte** : Le WASM crash souvent à cause de commandes envoyées pendant l'entraînement ou après un crash. Deux couches de défense ajoutées.
+
+- [x] **Step 1: Hook guards** — `trainStateRef` (useRef + useEffect sync) dans `useModelWorker`. `initModel`, `train`, `generate` court-circuités si `trainState === 'training'`
+- [x] **Step 2: Worker crash recovery** — `gpt = null` dans le catch après crash WASM → force ré-init propre au prochain `initModel`
+- [x] **Step 3: Dead code removal** — Suppression du flag `busy` dans le worker (dead code en single-threaded)
+- [x] **Step 4: Commit** — `607a71b`
+
+```bash
+git commit -m "fix: add defensive guards against WASM crashes"
 ```
 
 ### Task 60: Fix structural — WASM memory (OOM sur gros datasets)
