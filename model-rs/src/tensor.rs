@@ -512,9 +512,14 @@ impl Tensor {
         }
 
         // Reverse topological order.
+        // We *take* children instead of cloning: backward consumes the graph,
+        // freeing GradFn data (stored Vec<f64>) immediately per node instead
+        // of holding everything alive until the entire DAG is dropped.
         for v in topo.iter().rev() {
-            let v_grad = v.0.borrow().grad.clone();
-            let children: Vec<(Tensor, Option<GradFn>)> = v.0.borrow().children.clone();
+            let (v_grad, children) = {
+                let mut inner = v.0.borrow_mut();
+                (inner.grad.clone(), std::mem::take(&mut inner.children))
+            };
 
             match children.as_slice() {
                 // MatMul: children[0] = lhs, children[1] = rhs

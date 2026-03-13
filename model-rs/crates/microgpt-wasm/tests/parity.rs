@@ -260,8 +260,7 @@ fn train_step_returns_step_result() {
 fn train_reduces_loss() {
     let mut gpt = microgpt_wasm::WasmGpt::new(TEST_NAMES).unwrap();
 
-    let r1: TrainStepResult =
-        serde_wasm_bindgen::from_value(gpt.train_step().unwrap()).unwrap();
+    let r1: TrainStepResult = serde_wasm_bindgen::from_value(gpt.train_step().unwrap()).unwrap();
     let loss_1 = r1.loss;
 
     // Train 50 more steps
