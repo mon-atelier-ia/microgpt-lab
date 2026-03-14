@@ -7,7 +7,7 @@ use microgpt_rs::model::Model;
 use microgpt_rs::value::Value;
 
 pub use crate::trace_types::{
-    TraceOptimizer, TraceParamOption, TraceStep, TraceStepParam, TrainingMeta,
+    TraceOptimizer, TraceParamOption, TraceStep, TraceStepParam,
 };
 
 // ── Parameter tracking (pub(crate) — shared with train_step_traced) ─────
