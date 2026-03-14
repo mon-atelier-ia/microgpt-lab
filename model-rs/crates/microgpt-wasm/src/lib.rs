@@ -367,6 +367,12 @@ impl WasmGpt {
             self.step_count,
             &self.tc,
         );
+        if !loss.is_finite() {
+            return Err(JsError::new(&format!(
+                "L\u{2019}entra\u{00ee}nement a diverg\u{00e9} au step {} (loss={}). Essayez un taux d\u{2019}apprentissage plus bas.",
+                self.step_count, loss
+            )));
+        }
         self.step_count += 1;
         self.weights_dirty = true;
 
@@ -417,6 +423,12 @@ impl WasmGpt {
         let loss = Tensor::sum_scalars(&losses).scale(1.0 / n as f64);
         loss.backward();
         let loss_val = loss.data()[0];
+        if !loss_val.is_finite() {
+            return Err(JsError::new(&format!(
+                "L\u{2019}entra\u{00ee}nement a diverg\u{00e9} au step {} (loss={}). Essayez un taux d\u{2019}apprentissage plus bas.",
+                self.step_count, loss_val
+            )));
+        }
         // Capture grads BEFORE adam_step zeros them.
         let mut grad_snap: HashMap<String, Vec<f64>> = HashMap::with_capacity(self.tracked.len());
         for tp in &self.tracked {
