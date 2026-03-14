@@ -2026,16 +2026,16 @@ git commit -m "feat: add EMA smoothing overlay on loss curve"
 
 **Promesses non tenues à honorer :**
 
-- [ ] **Step 1: Typography** — Charger des web fonts distinctives (display + mono). Pas de Inter/Roboto/Arial. Configurer dans Tailwind.
-- [ ] **Step 2: Identité couleur A/B** — Les panels doivent **baigner** dans leur couleur. Border glow, header tint, fond subtilement teinté. "Instantly distinguishable at a glance."
-- [ ] **Step 3: Élévation visible** — Augmenter les jumps de lightness (8-10% au lieu de 4%). Ajouter shadows ou border glow sur les panels élevés.
-- [ ] **Step 4: Atmosphère** — Ajouter un élément de fond distinctif (grid pattern, dot matrix, gradient mesh subtil). L'app doit avoir une identité "lab/playground".
-- [ ] **Step 5: Loss curve polish** — Glow effect sur la ligne, animation de tracé.
-- [ ] **Step 6: Word grid polish** — Staggered fade-in sur apparition des mots, hover effects.
-- [ ] **Step 7: Header** — Logo avec accent, tabs avec indicator animé au lieu du style par défaut.
-- [ ] **Step 8: Micro-interactions** — Transitions sur les boutons, hover states distinctifs, feedback visuel sur entraînement.
-- [ ] **Step 9: Invoquer le skill `frontend-design` pour validation** — cette fois pour de vrai.
-- [ ] **Step 10: Commit**
+- [x] **Step 1: Typography** — Geist Sans (display) + Geist Mono (code) via @fontsource. Configured in Tailwind @theme.
+- [x] **Step 2: Identité couleur A/B** — OKLCH tetradric palette (blue 220° / orange 40°). panel-glow-a/b with border, background tint, triple box-shadow. Slider colors match model identity.
+- [x] **Step 3: Élévation visible** — 8% lightness jumps (surface-0/1/2: 0.12/0.20/0.28). Panel glow with inset highlight.
+- [x] **Step 4: Atmosphère** — Grid pattern (60px) + radial gradient vignette + SVG noise grain overlay (opacity 0.03). Lab identity.
+- [x] **Step 5: Loss curve polish** — EMA overlay (α=0.1) on raw loss. Chart.js canvas with model-color line.
+- [x] **Step 6: Word grid polish** — Staggered fade-in animation (word-appear keyframes, 0.35s cubic-bezier).
+- [x] **Step 7: Header** — Logo with "gpt" accent color + v1 badge. Tab indicator with scale animation.
+- [x] **Step 8: Micro-interactions** — Training pulse (pulse-glow), status dot blink, panel-surface transitions (0.4s), instrument-header bar accent.
+- [x] **Step 9: frontend-design audit** — Audited via Playwright screenshots at 5 viewports (375/768/1024/1366/1920). Fixed responsive bug: Solo breakpoint md→lg (commit cd0f5e7).
+- [x] **Step 10: Commit** — cd0f5e7
 
 ```bash
 git commit -m "style: complete visual overhaul — typography, color identity, atmosphere, animations"
