@@ -15,7 +15,8 @@ import type {
   WorkerResponse,
 } from '../lib/types';
 import { DEFAULT_PARAMS } from '../lib/constants';
-import { loadDatasetText } from '../lib/dataset-loader';
+import { loadDatasetWords } from '../lib/dataset-loader';
+import { buildDatasetProfile, type DatasetProfile } from '../lib/training-metrics';
 
 const MAX_STEPS = 5000;
 
@@ -94,6 +95,7 @@ export function useModelWorker() {
   const [words, setWords] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [params, setParams] = useState<ModelParams>({ ...DEFAULT_PARAMS });
+  const [datasetProfile, setDatasetProfile] = useState<DatasetProfile | null>(null);
   const { stepBufferRef, flushTimerRef, flushSteps, clearBuffer } = useStepBuffer(setSteps);
 
   useEffect(() => {
@@ -129,13 +131,15 @@ export function useModelWorker() {
   const initModel = useCallback(
     async (params: ModelParams) => {
       if (trainStateRef.current === 'training') return;
-      const datasetText = await loadDatasetText(params.datasetId);
-      if (!datasetText) return;
+      const datasetWords = await loadDatasetWords(params.datasetId);
+      if (!datasetWords) return;
+      const datasetText = datasetWords.join('\n');
       clearBuffer();
       setSteps([]);
       setWords([]);
       setTrainState('idle');
       setErrorMessage(null);
+      setDatasetProfile(buildDatasetProfile(datasetWords));
       send({ type: 'init', datasetText, config: params });
     },
     [send, clearBuffer],
@@ -176,6 +180,7 @@ export function useModelWorker() {
     errorMessage,
     params,
     setParams,
+    datasetProfile,
     initModel,
     train,
     setLr,

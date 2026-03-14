@@ -74,6 +74,8 @@ describe('useModelWorker — outbound messages', () => {
     expect(mockWorkerInstance.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'init', datasetText: 'word1\nword2', config: params }),
     );
+    expect(result.current.datasetProfile).not.toBeNull();
+    expect(result.current.datasetProfile?.words).toEqual(['word1', 'word2']);
   });
 
   it('train sets trainState to "training" and sends { type: train, n_steps }', async () => {
@@ -198,6 +200,8 @@ describe('useModelWorker — resetModel', () => {
     expect(mockWorkerInstance.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'init' }),
     );
+    expect(result.current.datasetProfile).not.toBeNull();
+    expect(result.current.datasetProfile?.words).toEqual(['word1', 'word2']);
     vi.useRealTimers();
   });
 });
