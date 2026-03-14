@@ -16,7 +16,10 @@ export type FeedbackLevel =
 
 export type FeedbackResult = {
   level: FeedbackLevel;
+  /** Technical description of the current state. */
   message: string;
+  /** Ado-friendly hint with emoji — pedagogical tone for 10-14 years old. */
+  hint: string;
   memorization: number;
   quality: number;
   diversity: number;
@@ -138,20 +141,41 @@ export function computeCapacityRatio(
 
 const CAPACITY_THRESHOLD = 10;
 
-const MESSAGES: Record<FeedbackLevel, string> = {
-  untrained: '',
-  random: 'Le mod\u00e8le g\u00e9n\u00e8re du bruit \u2014 entra\u00eenez-le davantage.',
-  learning: 'Le mod\u00e8le apprend les patterns du langage\u2026',
-  'sweet-spot': 'Bonne g\u00e9n\u00e9ralisation !',
-  'low-diversity':
-    'Le mod\u00e8le manque de cr\u00e9ativit\u00e9 \u2014 essayez d\u2019augmenter la temp\u00e9rature.',
-  overfitting: 'Le mod\u00e8le m\u00e9morise le dataset \u2014 il ne g\u00e9n\u00e9ralise plus.',
-  underpowered: '',
+const MESSAGES: Record<FeedbackLevel, { message: string; hint: string }> = {
+  untrained: { message: '', hint: '' },
+  random: {
+    message: '🎲 Le modèle génère du bruit — entraînez-le davantage.',
+    hint: 'Le modèle tâtonne encore — patience !',
+  },
+  learning: {
+    message: '📈 Le modèle apprend les patterns du langage…',
+    hint: 'Ça progresse ! Le modèle commence à comprendre…',
+  },
+  'sweet-spot': {
+    message: '🎯 Bonne généralisation !',
+    hint: 'Bravo ! Le modèle invente des mots crédibles !',
+  },
+  'low-diversity': {
+    message: '🔁 Le modèle manque de créativité — augmentez la température.',
+    hint: 'Toujours les mêmes mots… Monte la température !',
+  },
+  overfitting: {
+    message: '🧠 Le modèle mémorise le dataset — il ne généralise plus.',
+    hint: 'Le modèle triche — il récite au lieu d\u2019inventer !',
+  },
+  underpowered: { message: '', hint: '' },
 };
 
-function underpoweredMessage(cfg: ModelConfig, vocabSize: number, datasetSize: number): string {
+function underpoweredMessages(
+  cfg: ModelConfig,
+  vocabSize: number,
+  datasetSize: number,
+): { message: string; hint: string } {
   const params = computeParamCount(cfg, vocabSize);
-  return `Capacit\u00e9 limit\u00e9e : ${params} param\u00e8tres pour ${datasetSize} noms. Augmentez n_embd ou n_layer.`;
+  return {
+    message: `⚡ Capacité limitée : ${params} paramètres pour ${datasetSize} noms. Augmentez n_embd ou n_layer.`,
+    hint: `Modèle trop petit pour ce dataset — augmente n_embd !`,
+  };
 }
 
 function isUnderpowered(scores: MetricScores, opts: FeedbackOptions): boolean {
@@ -178,7 +202,7 @@ function isSweetSpot(scores: MetricScores, normMem: number): boolean {
 export function computeFeedback(scores: MetricScores, opts: FeedbackOptions): FeedbackResult {
   const base = { ...scores };
 
-  if (opts.wordCount === 0) return { level: 'untrained', message: '', ...base };
+  if (opts.wordCount === 0) return { level: 'untrained', message: '', hint: '', ...base };
 
   const normMem = normalizeMemorization(scores.memorization, opts.temperature);
   const hasTrend = detectOverfittingTrend(opts.trendHistory ?? []);
@@ -191,10 +215,10 @@ export function computeFeedback(scores: MetricScores, opts: FeedbackOptions): Fe
   else if (isUnderpowered(scores, opts)) level = 'underpowered';
   else if (isSweetSpot(scores, normMem)) level = 'sweet-spot';
 
-  const message =
+  const { message, hint } =
     level === 'underpowered'
-      ? underpoweredMessage(opts.modelConfig, opts.vocabSize, opts.datasetSize)
+      ? underpoweredMessages(opts.modelConfig, opts.vocabSize, opts.datasetSize)
       : MESSAGES[level];
 
-  return { level, message, ...base };
+  return { level, message, hint, ...base };
 }

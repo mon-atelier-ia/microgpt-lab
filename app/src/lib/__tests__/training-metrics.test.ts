@@ -28,6 +28,72 @@ describe('buildDatasetProfile', () => {
     const profile = buildDatasetProfile([]);
     expect(profile.words).toEqual([]);
     expect(profile.avgLength).toBe(0);
+    expect(profile.vocabSize).toBe(1); // only BOS
+  });
+
+  it('computes vocabSize as unique chars + 1 (BOS)', () => {
+    // 'ab' + 'bc' → unique chars {a,b,c} → vocabSize = 4
+    const profile = buildDatasetProfile(['ab', 'bc']);
+    expect(profile.vocabSize).toBe(4);
+  });
+
+  it('vocabSize matches Rust build_vocab for Prénoms FR (50)', () => {
+    // Rust build_vocab uses only chars present in dataset (not full alphabet).
+    // These 50 prénoms have 24 unique chars (no k, w) + BOS = 25.
+    const prenoms = [
+      'alain',
+      'alexandre',
+      'andre',
+      'anne',
+      'bernard',
+      'brigitte',
+      'catherine',
+      'cecile',
+      'charles',
+      'christiane',
+      'christine',
+      'claude',
+      'daniel',
+      'denis',
+      'dominique',
+      'elisabeth',
+      'eric',
+      'francois',
+      'francoise',
+      'gerard',
+      'henri',
+      'isabelle',
+      'jacques',
+      'jean',
+      'laurent',
+      'louis',
+      'marcel',
+      'marguerite',
+      'marie',
+      'martine',
+      'michel',
+      'monique',
+      'nathalie',
+      'nicolas',
+      'patrick',
+      'paul',
+      'philippe',
+      'pierre',
+      'raymond',
+      'rene',
+      'robert',
+      'roger',
+      'simone',
+      'sophie',
+      'stephane',
+      'sylvie',
+      'thierry',
+      'thomas',
+      'xavier',
+      'yves',
+    ];
+    const profile = buildDatasetProfile(prenoms);
+    expect(profile.vocabSize).toBe(25);
   });
 });
 

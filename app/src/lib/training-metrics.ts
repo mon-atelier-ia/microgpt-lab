@@ -38,6 +38,8 @@ export type DatasetProfile = {
   bigramDist: Map<string, number>;
   /** Average word length. */
   avgLength: number;
+  /** Vocabulary size (unique chars + 1 BOS token). Matches Rust build_vocab(). */
+  vocabSize: number;
 };
 
 /** Build a reusable dataset profile from raw dataset words. */
@@ -46,7 +48,10 @@ export function buildDatasetProfile(datasetWords: string[]): DatasetProfile {
   const wordSet = new Set(words);
   const bigramDist = bigramDistribution(words);
   const avgLength = words.length > 0 ? words.reduce((s, w) => s + w.length, 0) / words.length : 0;
-  return { words, wordSet, bigramDist, avgLength };
+  const chars = new Set<string>();
+  for (const w of words) for (const c of w) chars.add(c);
+  const vocabSize = chars.size + 1; // +1 for BOS token (matches Rust build_vocab)
+  return { words, wordSet, bigramDist, avgLength, vocabSize };
 }
 
 // ── Levenshtein ─────────────────────────────────────────────────────
