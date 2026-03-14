@@ -85,7 +85,7 @@ Key design:
 | `src/lib/utils.ts` | `cn()` — generic Tailwind class merger (no domain logic) |
 | `src/lib/model-colors.ts` | `resolveVar()`, `modelColor()`, `modelAccent()`, `modelMuted()` — domain color helpers |
 | `src/lib/validation.ts` | `validHeadCounts()`, `isArchChange()` |
-| `src/lib/dataset-loader.ts` | `loadDatasetText()` — resolve preset ID → text string |
+| `src/lib/dataset-loader.ts` | `loadDatasetWords()` — resolve preset ID → word array |
 | `src/lib/worker-utils.ts` | `validateConfig()`, `isStepResult()`, `sampleFromProbs()` — pure functions for Worker |
 
 ## Import Boundaries

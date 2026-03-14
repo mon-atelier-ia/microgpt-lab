@@ -2149,46 +2149,52 @@ Pour chaque dataset (Prénoms FR 50, Prénoms FR 1000, Prénoms FR 33k, Baby Nam
 - [x] **Step 2b: `lib/training-feedback.ts`** — 7 feedback levels (untrained, random, learning, sweet-spot, low-diversity, overfitting, underpowered). Temperature normalization. OLS trend detection. Dynamic capacity ratio for underpowered.
 - [x] **Step 2c: Tests** — 98 vitest tests including benchmark validation with real Prénoms FR (50) data, Levenshtein edge cases, capacity ratio calculations.
 
-#### Step 3: Accès au dataset source côté frontend
+#### Step 3: DatasetProfile côté main thread — DONE
 
-- [ ] **Step 3a: Exposer les mots du dataset** — Le dataset est chargé dans le worker via `loadDatasetText()`. Il faut que le main thread ait aussi accès à la liste de mots pour le calcul de match ratio. Option : stocker les mots du dataset dans le hook `useModelWorker` après `loadDatasetText()`, ou les recharger depuis `PRESETS`.
-- [ ] **Step 3b: Choisir l'approche** — Évaluer si on réutilise `loadDatasetText()` côté main thread (async, mais les données sont déjà en cache du browser), ou si on ajoute un champ `datasetWords` au state du hook. Documenter le choix.
+> Mis à jour : Step 2 a introduit `buildDatasetProfile()` (wordSet + bigramDist + avgLength) au lieu d'un simple tableau de mots. Le main thread a besoin du profil complet, pas juste des mots bruts.
+
+- [x] **Step 3a: Charger le dataset côté main thread** — `loadDatasetWords()` dans `useModelWorker.initModel()`. Un seul appel `preset.load()`, le texte est dérivé par `join('\n')`. `loadDatasetText()` supprimé (dead code).
+- [x] **Step 3b: Construire et mémoïser le DatasetProfile** — `buildDatasetProfile(datasetWords)` appelé dans `initModel`, stocké en state React. Recalculé uniquement au changement de dataset (via `initModel`/`resetModel`).
+- [x] **Step 3c: Exposer le profil** — `datasetProfile: DatasetProfile | null` exposé dans le return de `useModelWorker()` (et donc dans `WorkerHandle`).
 
 #### Step 4: Intégration UI dans InferencePanel
 
-- [ ] **Step 4a: Modifier `InferencePanel`** — Ajouter un prop `feedback: FeedbackLevel` (pas de logique de calcul dans le composant — pure display).
-- [ ] **Step 4b: Badge feedback** — Afficher un badge inline sous les mots générés :
-  - `'none'` → rien
-  - `'learning'` → badge neutre "Le modèle apprend…" (couleur text-muted)
-  - `'sweet-spot'` → badge positif "Bonne généralisation !" (couleur success)
-  - `'overfitting'` → badge avertissement "Le modèle récite le dataset" (couleur error/warning)
-- [ ] **Step 4c: Câbler dans ModelPanelInner** — Appeler `computeMatchRatio()` + `computeFeedback()` avec les words, lastEma, et datasetWords. Passer le résultat en prop à InferencePanel.
+> Mis à jour : 7 niveaux de feedback (pas 3). Messages définis dans `MESSAGES` + message dynamique pour `underpowered`. Scores (memorization/quality/diversity) disponibles pour affichage optionnel.
+
+- [ ] **Step 4a: Modifier `InferencePanel`** — Ajouter un prop `feedback: FeedbackResult | null` (pas juste le level — inclut message + scores). Pure display, zéro logique de calcul.
+- [ ] **Step 4b: Badge feedback** — Afficher un badge inline sous les mots générés, 7 états :
+  - `'untrained'` → rien (pas de badge)
+  - `'random'` → badge neutre "Le modèle génère du bruit" (couleur muted)
+  - `'learning'` → badge neutre "Le modèle apprend…" (couleur muted)
+  - `'sweet-spot'` → badge positif "Bonne généralisation !" (couleur success/green)
+  - `'low-diversity'` → badge info "Manque de créativité" (couleur warning/amber)
+  - `'overfitting'` → badge avertissement "Mémorise le dataset" (couleur error/red)
+  - `'underpowered'` → badge info dynamique "Capacité limitée : X params pour Y noms" (couleur warning/amber)
+- [ ] **Step 4c: Câbler dans ModelPanelInner** — Appeler `computeMemorization()` + `computeQuality()` + `computeDiversity()` avec les words générés et le `DatasetProfile`, puis `computeFeedback()` avec les scores + options (temperature, lossEma, totalSteps, modelConfig, vocabSize, datasetSize). Passer `FeedbackResult` en prop à InferencePanel.
 - [ ] **Step 4d: ARIA** — Le badge doit avoir `role="status"` et `aria-live="polite"` pour les lecteurs d'écran.
 
 #### Step 5: Tests composant
 
-- [ ] **Step 5a: Test InferencePanel** — Vérifier que chaque FeedbackLevel affiche le bon badge/message.
-- [ ] **Step 5b: Test intégration** — Vérifier dans le browser (Playwright) que le badge apparaît après entraînement + génération sur Prénoms FR (50) avec 200 steps vs 2000 steps.
+> Mis à jour : pas de Playwright long-running training. Tests unitaires par mock des scores.
+
+- [ ] **Step 5a: Test InferencePanel badge** — 7 tests : un par `FeedbackLevel`. Mock du `FeedbackResult`, vérifier le message affiché, la couleur CSS, et les attributs ARIA (`role="status"`, `aria-live="polite"`).
+- [ ] **Step 5b: Test InferencePanel sans feedback** — Vérifier que `feedback={null}` n'affiche aucun badge (pas de régression).
+- [ ] **Step 5c: Test intégration câblage** — Vérifier dans `ModelPanelInner` que le feedback est calculé quand words + datasetProfile sont disponibles, et `null` sinon.
 
 #### Step 6: Validation visuelle
 
-- [ ] **Step 6a: Screenshots** — Capturer le rendu du badge dans chaque état (none, learning, sweet-spot, overfitting) à chaque viewport (mobile 375, laptop 1366).
-- [ ] **Step 6b: Audit visuel** — Vérifier que le badge est lisible, bien positionné, ne casse pas le layout, respecte les couleurs du modèle A/B.
+- [ ] **Step 6a: Screenshots** — Capturer le rendu du badge dans les 6 états visibles (random, learning, sweet-spot, low-diversity, overfitting, underpowered) à mobile 375 et laptop 1366.
+- [ ] **Step 6b: Audit visuel** — Vérifier lisibilité, positionnement, couleurs cohérentes avec le thème A/B, pas de casse layout.
 
 #### Step 7: Commits
 
-- [ ] **Step 7a: Commit benchmark** — `docs: add empirical loss thresholds benchmark per dataset`
-- [ ] **Step 7b: Commit détection** — `feat: add training feedback detection (match ratio + loss thresholds)`
-- [ ] **Step 7c: Commit UI** — `feat: add sweet-spot and overfitting badges in InferencePanel`
-- [ ] **Step 7d: Commit tests** — `test: training feedback detection + InferencePanel badge states`
+> Mis à jour : Steps 1-2 déjà committés. Commits restants pour Steps 3-6.
 
-```bash
-# Commits atomiques, pas un seul gros commit
-git commit -m "docs: add empirical loss thresholds benchmark per dataset"
-git commit -m "feat: add training feedback detection (match ratio + loss thresholds)"
-git commit -m "feat: add sweet-spot and overfitting badges in InferencePanel"
-git commit -m "test: training feedback detection + InferencePanel badge states"
-```
+- [x] **Step 7a: Commit benchmark** — `docs: add empirical loss thresholds benchmark per dataset` *(done: 8eada7c)*
+- [x] **Step 7b: Commit détection** — `feat: add training feedback detection (memorization + quality + diversity)` *(done: 0fac545, 76714d5, ffacbc9, e6c2956, 617721f)*
+- [ ] **Step 7c: Commit dataset profile** — `feat: expose DatasetProfile on main thread for feedback computation`
+- [ ] **Step 7d: Commit UI** — `feat: add feedback badge in InferencePanel (7 levels, ARIA)`
+- [ ] **Step 7e: Commit tests** — `test: InferencePanel feedback badge states + integration`
 
 ---
 
