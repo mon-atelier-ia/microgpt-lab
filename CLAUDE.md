@@ -13,7 +13,7 @@ Parameter experimentation playground for microGPT — tweak hyperparameters, com
 - **Frontend:** React 19 + Vite 7 + Tailwind CSS 4
 - **Language:** TypeScript 5.9 (strict mode, `allowJs: false`)
 - **Package manager:** pnpm
-- **Quality:** ESLint 9 + sonarjs + @typescript-eslint + Prettier + jscpd
+- **Quality:** ESLint 9 (complexity ≤10, cognitive ≤12, max-lines ≤300, max-fn ≤100) + sonarjs + @typescript-eslint + Prettier + jscpd
 - **Model:** microgpt-rs compiled to WASM (`model-rs/`), imported from microgpt-xray
 
 ## Conventions
@@ -28,19 +28,26 @@ Parameter experimentation playground for microGPT — tweak hyperparameters, com
 ```
 microgpt-lab/
 ├── app/                  # Frontend (React + Vite + Tailwind)
-│   ├── src/              # Application source
-│   ├── wasm-pkg/         # Pre-built WASM bindings
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── vite.config.js
-│   └── eslint.config.js
-├── model-rs/             # Rust/WASM engine (from microgpt-xray)
-│   ├── src/              # Core microgpt-rs library
-│   └── crates/microgpt-wasm/  # WASM bindings
-├── docs/                 # Documentation
-├── build-wasm.sh         # Build WASM from Rust sources
-├── check-wasm.sh         # Check WASM staleness
-└── package.json          # Root (husky + lint-staged)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── model-panel/  # Triptyque: params, loss, inference
+│   │   │   ├── ui/           # Shared UI (button, slider, select, alert-dialog, confirm-reset-dialog)
+│   │   │   ├── top-bar.tsx
+│   │   │   ├── solo-view.tsx
+│   │   │   └── compare-view.tsx
+│   │   ├── hooks/            # use-model-worker, use-loss-data, use-loss-chart-options
+│   │   ├── workers/          # model-worker.ts (WASM bridge)
+│   │   ├── lib/              # types, constants, utils(cn), model-colors, validation, dataset-loader, worker-utils
+│   │   ├── data/             # Dataset presets (lazy-loaded)
+│   │   └── theme/            # OKLCH tokens
+│   ├── wasm-pkg/             # Pre-built WASM bindings
+│   └── eslint.config.js      # Strict rules (complexity ≤10, max-lines ≤300)
+├── model-rs/                 # Rust/WASM engine (from microgpt-xray)
+│   ├── src/                  # Core: config, model, tensor, tensor_model, forward, inference
+│   └── crates/microgpt-wasm/ # WASM bindings: lib.rs, trace.rs, trace_types.rs, training_trace.rs
+├── docs/                     # Documentation (design, plan, architecture, SRP audit)
+├── build-wasm.sh
+└── package.json              # Root (husky + lint-staged)
 ```
 
 ## Commands
@@ -63,7 +70,7 @@ cd model-rs && cargo clippy -- -D warnings  # Lint
 ## Quality gates
 
 **pre-commit** (staged files):
-- ESLint --fix --max-warnings=0
+- ESLint --fix --max-warnings=0 (complexity ≤10, cognitive ≤12, max-lines ≤300, max-fn ≤100, max-depth ≤4)
 - Prettier --write
 
 **pre-push** (full project):
@@ -74,7 +81,7 @@ cd model-rs && cargo clippy -- -D warnings  # Lint
 ## Key rules
 
 - **Zero Rust dependencies**: the model is std-only
-- **Karpathy-faithful**: architecture matches the reference gist
+- **Karpathy-faithful**: architecture matches the reference gist (deviations documented in `docs/reference-microgpt-karpathy.md` §13)
 - Run `cargo fmt` and `cargo clippy -- -D warnings` before committing Rust changes
 
 ## Git rules — STRICT

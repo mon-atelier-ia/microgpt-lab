@@ -18,14 +18,14 @@ Two layers:
 | `src/model.rs` | GPT architecture (scalar engine) — embeddings, attention, MLP, Adam optimizer |
 | `src/tensor.rs` | Tensor autograd engine — batched operations |
 | `src/tensor_model.rs` | GPT architecture (tensor engine) — same arch, tensor-backed for performance |
-| `src/config.rs` | `ModelConfig` + `TrainConfig` with defaults |
+| `src/config.rs` | `ModelConfig` + `TrainConfig` (optimizer) + `InferenceConfig` (sampling) |
 | `crates/microgpt-wasm/src/lib.rs` | WASM bindings — `WasmGpt` class exposed to JS via wasm-bindgen |
 
 Key design:
 - Architecture faithful to [Karpathy's microgpt.py gist](https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95)
 - Zero dependencies (std-only Rust)
 - Dynamic tokenizer: extracts unique characters from dataset at training time
-- Adam optimizer with linear LR decay: `lr_t = lr * (1 - step/n_steps)`
+- Adam optimizer with constant LR (no decay — playground mode, see `docs/reference-microgpt-karpathy.md` §13.1)
 
 ## `app/` — React Frontend
 
@@ -44,7 +44,7 @@ Key design:
 | `src/components/top-bar.tsx` | Mode tabs (Solo/Compare) + dataset selector, APG roving tabindex pattern |
 | `src/components/error-boundary.tsx` | React error boundary with French messages |
 | **Model Panel (triptyque)** | |
-| `src/components/model-panel/model-panel.tsx` | Orchestrator: params → worker → loss/inference. Arch reset confirmation dialog |
+| `src/components/model-panel/model-panel.tsx` | Orchestrator: params → worker → loss/inference. useParamsHandler (constraint logic) |
 | `src/components/model-panel/params-panel.tsx` | Hyperparameter controls (n_embd, n_head, n_layer, block_size, lr, temperature) |
 | `src/components/model-panel/loss-panel.tsx` | Real-time loss curve (Chart.js) with raw + EMA lines, animated first draw |
 | `src/components/model-panel/loss-chart.tsx` | Lazy-loaded Chart.js wrapper (react-chartjs-2) |
@@ -54,7 +54,8 @@ Key design:
 | `src/components/ui/button.tsx` | Button with variants |
 | `src/components/ui/slider.tsx` | Slider control |
 | `src/components/ui/select.tsx` | Select dropdown |
-| `src/components/ui/alert-dialog.tsx` | Confirmation dialog |
+| `src/components/ui/alert-dialog.tsx` | Alert dialog (Radix) |
+| `src/components/ui/confirm-reset-dialog.tsx` | Generic confirmation dialog (arch change + model reset) |
 
 ### Hooks
 
@@ -62,12 +63,13 @@ Key design:
 |------|------|
 | `src/hooks/use-model-worker.ts` | Web Worker lifecycle — init, train, generate, set_lr, dispose. Exports `WorkerHandle` type |
 | `src/hooks/use-loss-data.ts` | EMA computation + Chart.js dataset formatting. Returns `{ chartData, lastEma }` |
+| `src/hooks/use-loss-chart-options.ts` | Chart.js options builder + first-render animation state |
 
 ### Workers
 
 | File | Role |
 |------|------|
-| `src/workers/model-worker.ts` | Web Worker: synchronous training loop, WASM instance management, validation, crash handling |
+| `src/workers/model-worker.ts` | Web Worker: synchronous training loop, WASM instance management, crash handling |
 
 ### Data & Lib
 
@@ -79,9 +81,12 @@ Key design:
 | `src/data/dinosaures.ts` | ~100 dinosaur names |
 | `src/data/pokemon-fr.ts` | ~150 Pokémon FR names |
 | `src/lib/types.ts` | Shared types only (ModelParams, StepResult, TrainState, ColorVar, WorkerMessage, WorkerResponse) |
-| `src/lib/constants.ts` | DEFAULT_PARAMS, DEFAULT_N_SAMPLES |
-| `src/lib/utils.ts` | `cn()`, `resolveVar()`, `modelAccent()`, `modelColor()` |
+| `src/lib/constants.ts` | DEFAULT_PARAMS, DEFAULT_N_SAMPLES, HEAD_OPTIONS |
+| `src/lib/utils.ts` | `cn()` — generic Tailwind class merger (no domain logic) |
+| `src/lib/model-colors.ts` | `resolveVar()`, `modelColor()`, `modelAccent()`, `modelMuted()` — domain color helpers |
 | `src/lib/validation.ts` | `validHeadCounts()`, `isArchChange()` |
+| `src/lib/dataset-loader.ts` | `loadDatasetText()` — resolve preset ID → text string |
+| `src/lib/worker-utils.ts` | `validateConfig()`, `isStepResult()`, `sampleFromProbs()` — pure functions for Worker |
 
 ## Import Boundaries
 
@@ -131,7 +136,8 @@ OKLCH tetradric palette with sRGB fallbacks:
 
 ## Quality Gates
 
-- **pre-commit**: ESLint --fix --max-warnings=0 + Prettier
+- **pre-commit**: ESLint --fix --max-warnings=0 (complexity ≤10, cognitive ≤12, max-lines ≤300, max-fn ≤100) + Prettier
 - **pre-push**: tsc --noEmit + vite build + jscpd (5% threshold)
-- **Tests**: Vitest (36 unit/component) + Playwright (5 E2E)
-- **Rust**: cargo test + cargo fmt --check + cargo clippy -- -D warnings
+- **Tests**: Vitest (40 unit/component) + Playwright (5 E2E)
+- **Rust**: cargo test (34 tests) + cargo fmt --check + cargo clippy -- -D warnings
+- **SRP audit**: `docs/2026-03-14-srp-audit.md`
