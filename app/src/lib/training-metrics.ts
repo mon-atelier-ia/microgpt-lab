@@ -7,6 +7,19 @@
  *   - Quality: are generated words linguistically plausible?
  *   - Diversity: is the model creative or collapsing?
  *
+ * References:
+ *   - Levenshtein fuzzy match: standard memorization detection (Carlini et al., MemHunter)
+ *   - Distinct-1/Distinct-2: Li et al. 2016 "A Diversity-Promoting Objective Function"
+ *   - Bigram cosine similarity: standard corpus similarity metric
+ *
+ * Known trade-offs vs full ML eval:
+ *   - No train/val split — WASM engine doesn't support held-out validation.
+ *     Match ratio against full dataset is used as overfitting proxy.
+ *   - No Self-BLEU — overkill for 3-10 char words. Distinct-2 + unique ratio
+ *     is sufficient for diversity measurement at this scale.
+ *   - Loss EMA ≈ log(perplexity) — used in feedback but not as an explicit
+ *     perplexity metric here. The relationship is exact for cross-entropy loss.
+ *
  * All functions are pure — no side effects, no hooks.
  */
 
