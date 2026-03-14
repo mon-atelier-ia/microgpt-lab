@@ -33,15 +33,23 @@ export default defineConfig([
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
-      complexity: ['warn', { max: 15 }],
-      'max-depth': ['warn', { max: 4 }],
-      'max-lines-per-function': ['warn', { max: 100, skipBlankLines: true, skipComments: true }],
-      'max-params': ['warn', { max: 4 }],
-      'sonarjs/cognitive-complexity': ['warn', 15],
-      'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }],
-      'sonarjs/no-identical-functions': 'warn',
-      'sonarjs/no-collapsible-if': 'warn',
-      'sonarjs/prefer-single-boolean-return': 'warn',
+      /* ── Complexity gates ──────────────────────────────── */
+      complexity: ['error', { max: 10 }],
+      'max-depth': ['error', { max: 4 }],
+      'max-lines-per-function': ['error', { max: 100, skipBlankLines: true, skipComments: true }],
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+      'max-params': ['error', { max: 4 }],
+      /* ── SonarJS quality ───────────────────────────────── */
+      'sonarjs/cognitive-complexity': ['error', 12],
+      'sonarjs/no-duplicate-string': ['error', { threshold: 3 }],
+      'sonarjs/no-identical-functions': 'error',
+      'sonarjs/no-collapsible-if': 'error',
+      'sonarjs/prefer-single-boolean-return': 'error',
     },
+  },
+  /* Data files are pure string arrays — exempt from max-lines */
+  {
+    files: ['src/data/**/*.ts'],
+    rules: { 'max-lines': 'off' },
   },
 ]);

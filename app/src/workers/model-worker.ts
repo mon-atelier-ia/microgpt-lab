@@ -89,36 +89,46 @@ function handleGenerate(temperature: number, n_samples: number) {
   post({ type: 'generated', words });
 }
 
+function handleSetLr(lr: number) {
+  if (!validateField(lr, 'lr')) return;
+  if (gpt) gpt.set_lr(lr);
+}
+
+function handleDispose() {
+  if (gpt) {
+    gpt.free();
+    gpt = null;
+  }
+}
+
 async function dispatch(msg: WorkerMessage) {
   switch (msg.type) {
-    case 'init': {
-      const err = validateConfig(msg.config);
-      if (err) {
-        post({ type: 'error', message: err });
-        return;
-      }
-      await handleInit(msg.datasetText, msg.config);
-      return;
-    }
+    case 'init':
+      return handleInitValidated(msg.datasetText, msg.config);
     case 'train':
-      if (!validateField(msg.n_steps, 'n_steps')) return;
-      handleTrain(msg.n_steps);
-      return;
+      return validateField(msg.n_steps, 'n_steps') && handleTrain(msg.n_steps);
     case 'set_lr':
-      if (!validateField(msg.lr, 'lr')) return;
-      if (gpt) gpt.set_lr(msg.lr);
-      return;
+      return handleSetLr(msg.lr);
     case 'generate':
-      if (!validateField(msg.temperature, 'temperature')) return;
-      handleGenerate(msg.temperature, msg.n_samples);
-      return;
+      return (
+        validateField(msg.temperature, 'temperature') &&
+        handleGenerate(msg.temperature, msg.n_samples)
+      );
     case 'dispose':
-      if (gpt) {
-        gpt.free();
-        gpt = null;
-      }
-      return;
+      return handleDispose();
   }
+}
+
+async function handleInitValidated(
+  datasetText: string,
+  config: { n_embd: number; n_head: number; n_layer: number; block_size: number },
+) {
+  const err = validateConfig(config);
+  if (err) {
+    post({ type: 'error', message: err });
+    return;
+  }
+  await handleInit(datasetText, config);
 }
 
 self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
