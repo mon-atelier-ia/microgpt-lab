@@ -2118,26 +2118,79 @@ git commit -m "fix: remove LR decay that froze training after 1000 steps"
 
 ---
 
-### Task 62: Nice-to-have — Gamification de l'entraînement (sweet spot reward & overfitting alert)
+### Task 62: Gamification de l'entraînement (sweet spot reward & overfitting alert)
 
-> **Contexte** : Rendre l'entraînement ludique et pédagogique en donnant du feedback visuel à l'utilisateur sur la qualité de son entraînement. Dépend de Task 61 (benchmark empirique pour connaître les seuils par dataset).
+> **Contexte** : Rendre l'entraînement ludique et pédagogique en donnant du feedback visuel à l'utilisateur sur la qualité de son entraînement. Deux métriques combinées : seuils de loss (benchmark empirique par dataset) + taux de match exact (mots générés vs dataset source).
 >
-> **Idées :**
-> - **Sweet spot reward** : Quand la loss atteint une zone optimale (bons mots générés, loss stabilisée), afficher un feedback positif (animation, badge, message encourageant). Le seuil dépend du dataset — utiliser les résultats du benchmark Task 61.
-> - **Message d'overfitting** : Quand la loss descend trop bas et que les mots générés sont des copies exactes du dataset, afficher un avertissement pédagogique ("Le modèle récite le dataset — il ne généralise plus").
-> - **Détection** : comparer les mots générés au dataset source (exact match ratio). Si >80% de matches exacts → overfitting. Alternativement, détecter quand la loss remonte après un minimum (validation loss si applicable).
-> - **UX** : subtil et non-bloquant — toast/badge, pas de modal. Ton pédagogique, pas punitif.
+> **Prérequis** : LR constant (Task 61 DONE). Le benchmark empirique des seuils de loss n'a PAS été fait dans Task 61 (on a skip en choisissant LR constant). Il est fait ici en Step 1.
 >
-> **Priorité :** nice-to-have, après Tasks 59-61.
+> **UX** : subtil et non-bloquant — badge inline dans InferencePanel, pas de modal ni toast. Ton pédagogique, pas punitif.
 
-- [ ] **Step 1: Définir les seuils** — À partir du benchmark Task 61, établir pour chaque dataset : zone sweet spot (loss range), seuil overfitting (exact match ratio ou loss plancher).
-- [ ] **Step 2: Détection overfitting** — Comparer les mots générés au dataset source côté frontend. Calculer le taux de match exact.
-- [ ] **Step 3: UI feedback** — Ajouter un composant toast/badge dans `InferencePanel` : message positif au sweet spot, avertissement à l'overfitting.
-- [ ] **Step 4: Tests** — Vérifier que les messages apparaissent aux bons moments sur chaque dataset.
-- [ ] **Step 5: Commit**
+#### Step 1: Benchmark empirique — seuils de loss par dataset
+
+Pour chaque dataset (Prénoms FR 50, Prénoms FR 1000, Prénoms FR 33k, Baby Names EN 1000, Names EN 8000, Dinosaures 1530, Pokémon FR 1022), avec les hyperparams par défaut (n_embd=16, n_head=4, n_layer=1, block_size=16, lr=0.01) :
+
+- [ ] **Step 1a: Entraîner 2000 steps** — Lancer dans le browser via Playwright, logger la loss EMA toutes les 100 steps.
+- [ ] **Step 1b: Générer 20 mots à step 200, 500, 1000, 2000** — Pour chaque dataset, à chaque checkpoint, générer des mots et calculer le taux de match exact vs dataset source.
+- [ ] **Step 1c: Consigner les résultats** — Documenter dans `docs/benchmark-loss-thresholds.md` un tableau par dataset : step | loss EMA | match exact % | qualité subjective (garbage / emerging / good / overfitting).
+- [ ] **Step 1d: Définir les seuils** — Pour chaque dataset, identifier :
+  - **Sweet spot** : plage de loss EMA où les mots sont crédibles et diversifiés (match exact < 50%)
+  - **Overfitting** : loss EMA plancher + match exact > 80%
+  - Consigner les seuils dans le même doc.
+
+#### Step 2: Détection côté frontend
+
+- [ ] **Step 2a: Créer `lib/training-feedback.ts`** — Module pur (pas un hook) avec :
+  - `type FeedbackLevel = 'none' | 'learning' | 'sweet-spot' | 'overfitting'`
+  - `computeMatchRatio(words: string[], datasetWords: string[]): number` — ratio de mots générés qui sont des copies exactes du dataset (case-insensitive)
+  - `computeFeedback(lastEma: number | null, matchRatio: number, datasetId: string): FeedbackLevel` — retourne le niveau basé sur les seuils du benchmark
+  - Les seuils par dataset sont des constantes dans ce fichier (pas de config externe)
+- [ ] **Step 2b: Créer `lib/training-feedback.test.ts`** — Tests unitaires :
+  - matchRatio = 0% → 'none' ou 'learning'
+  - matchRatio = 30%, loss dans sweet spot → 'sweet-spot'
+  - matchRatio = 90% → 'overfitting'
+  - Dataset inconnu → fallback seuils par défaut
+  - Edge cases : mots vides, loss null, 0 mots générés
+
+#### Step 3: Accès au dataset source côté frontend
+
+- [ ] **Step 3a: Exposer les mots du dataset** — Le dataset est chargé dans le worker via `loadDatasetText()`. Il faut que le main thread ait aussi accès à la liste de mots pour le calcul de match ratio. Option : stocker les mots du dataset dans le hook `useModelWorker` après `loadDatasetText()`, ou les recharger depuis `PRESETS`.
+- [ ] **Step 3b: Choisir l'approche** — Évaluer si on réutilise `loadDatasetText()` côté main thread (async, mais les données sont déjà en cache du browser), ou si on ajoute un champ `datasetWords` au state du hook. Documenter le choix.
+
+#### Step 4: Intégration UI dans InferencePanel
+
+- [ ] **Step 4a: Modifier `InferencePanel`** — Ajouter un prop `feedback: FeedbackLevel` (pas de logique de calcul dans le composant — pure display).
+- [ ] **Step 4b: Badge feedback** — Afficher un badge inline sous les mots générés :
+  - `'none'` → rien
+  - `'learning'` → badge neutre "Le modèle apprend…" (couleur text-muted)
+  - `'sweet-spot'` → badge positif "Bonne généralisation !" (couleur success)
+  - `'overfitting'` → badge avertissement "Le modèle récite le dataset" (couleur error/warning)
+- [ ] **Step 4c: Câbler dans ModelPanelInner** — Appeler `computeMatchRatio()` + `computeFeedback()` avec les words, lastEma, et datasetWords. Passer le résultat en prop à InferencePanel.
+- [ ] **Step 4d: ARIA** — Le badge doit avoir `role="status"` et `aria-live="polite"` pour les lecteurs d'écran.
+
+#### Step 5: Tests composant
+
+- [ ] **Step 5a: Test InferencePanel** — Vérifier que chaque FeedbackLevel affiche le bon badge/message.
+- [ ] **Step 5b: Test intégration** — Vérifier dans le browser (Playwright) que le badge apparaît après entraînement + génération sur Prénoms FR (50) avec 200 steps vs 2000 steps.
+
+#### Step 6: Validation visuelle
+
+- [ ] **Step 6a: Screenshots** — Capturer le rendu du badge dans chaque état (none, learning, sweet-spot, overfitting) à chaque viewport (mobile 375, laptop 1366).
+- [ ] **Step 6b: Audit visuel** — Vérifier que le badge est lisible, bien positionné, ne casse pas le layout, respecte les couleurs du modèle A/B.
+
+#### Step 7: Commits
+
+- [ ] **Step 7a: Commit benchmark** — `docs: add empirical loss thresholds benchmark per dataset`
+- [ ] **Step 7b: Commit détection** — `feat: add training feedback detection (match ratio + loss thresholds)`
+- [ ] **Step 7c: Commit UI** — `feat: add sweet-spot and overfitting badges in InferencePanel`
+- [ ] **Step 7d: Commit tests** — `test: training feedback detection + InferencePanel badge states`
 
 ```bash
-git commit -m "feat: gamify training with sweet spot reward and overfitting alert"
+# Commits atomiques, pas un seul gros commit
+git commit -m "docs: add empirical loss thresholds benchmark per dataset"
+git commit -m "feat: add training feedback detection (match ratio + loss thresholds)"
+git commit -m "feat: add sweet-spot and overfitting badges in InferencePanel"
+git commit -m "test: training feedback detection + InferencePanel badge states"
 ```
 
 ---
