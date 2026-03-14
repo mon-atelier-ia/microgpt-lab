@@ -92,13 +92,51 @@ export function detectOverfittingTrend(history: TrendEntry[]): boolean {
   return memSlope > 0.02 && divSlope < -0.02;
 }
 
+export type ModelConfig = {
+  n_embd: number;
+  n_head: number;
+  n_layer: number;
+  block_size: number;
+};
+
 export type FeedbackOptions = {
   temperature: number;
   lossEma: number | null;
   totalSteps: number;
   wordCount: number;
+  datasetSize: number;
+  vocabSize: number;
+  modelConfig: ModelConfig;
   trendHistory?: TrendEntry[];
 };
+
+/**
+ * Compute exact parameter count for the microgpt architecture.
+ * Formula: 2×V×E + B×E + L×12×E²
+ *   - wte: V×E, wpe: B×E, lm_head: V×E (= 2×V×E + B×E)
+ *   - Per layer: 4×E² (attn wq/wk/wv/wo) + 8×E² (mlp fc1/fc2) = 12×E²
+ */
+export function computeParamCount(cfg: ModelConfig, vocabSize: number): number {
+  const e = cfg.n_embd;
+  return 2 * vocabSize * e + cfg.block_size * e + cfg.n_layer * 12 * e * e;
+}
+
+/**
+ * Capacity ratio: params / dataset_size.
+ * Higher = more capacity per name. Below ~5, the model is likely underpowered.
+ * Based on empirical validation: defaults (4192 params / 50 names = 83) converge;
+ * defaults (4192 / 1000 = 4.2) don't.
+ */
+export function computeCapacityRatio(
+  cfg: ModelConfig,
+  vocabSize: number,
+  datasetSize: number,
+): number {
+  if (datasetSize === 0) return Infinity;
+  return computeParamCount(cfg, vocabSize) / datasetSize;
+}
+
+const CAPACITY_THRESHOLD = 10;
 
 const MESSAGES: Record<FeedbackLevel, string> = {
   untrained: '',
@@ -108,13 +146,17 @@ const MESSAGES: Record<FeedbackLevel, string> = {
   'low-diversity':
     'Le mod\u00e8le manque de cr\u00e9ativit\u00e9 \u2014 essayez d\u2019augmenter la temp\u00e9rature.',
   overfitting: 'Le mod\u00e8le m\u00e9morise le dataset \u2014 il ne g\u00e9n\u00e9ralise plus.',
-  underpowered: 'Ce dataset est trop grand pour ce mod\u00e8le \u2014 augmentez n_embd ou n_layer.',
+  underpowered: '',
 };
 
+function underpoweredMessage(cfg: ModelConfig, vocabSize: number, datasetSize: number): string {
+  const params = computeParamCount(cfg, vocabSize);
+  return `Capacit\u00e9 limit\u00e9e : ${params} param\u00e8tres pour ${datasetSize} noms. Augmentez n_embd ou n_layer.`;
+}
+
 function isUnderpowered(scores: MetricScores, opts: FeedbackOptions): boolean {
-  return (
-    scores.quality < 0.3 && opts.totalSteps >= 1000 && opts.lossEma !== null && opts.lossEma > 2.0
-  );
+  const ratio = computeCapacityRatio(opts.modelConfig, opts.vocabSize, opts.datasetSize);
+  return scores.quality < 0.3 && opts.totalSteps >= 500 && ratio < CAPACITY_THRESHOLD;
 }
 
 function isSweetSpot(scores: MetricScores, normMem: number): boolean {
@@ -149,5 +191,10 @@ export function computeFeedback(scores: MetricScores, opts: FeedbackOptions): Fe
   else if (isUnderpowered(scores, opts)) level = 'underpowered';
   else if (isSweetSpot(scores, normMem)) level = 'sweet-spot';
 
-  return { level, message: MESSAGES[level], ...base };
+  const message =
+    level === 'underpowered'
+      ? underpoweredMessage(opts.modelConfig, opts.vocabSize, opts.datasetSize)
+      : MESSAGES[level];
+
+  return { level, message, ...base };
 }

@@ -2120,11 +2120,19 @@ git commit -m "fix: remove LR decay that froze training after 1000 steps"
 
 ### Task 62: Gamification de l'entraînement (sweet spot reward & overfitting alert)
 
-> **Contexte** : Rendre l'entraînement ludique et pédagogique en donnant du feedback visuel à l'utilisateur sur la qualité de son entraînement. Deux métriques combinées : seuils de loss (benchmark empirique par dataset) + taux de match exact (mots générés vs dataset source).
+> **Contexte** : Rendre l'entraînement ludique et pédagogique en donnant du feedback visuel à l'utilisateur sur la qualité de son entraînement.
 >
-> **Prérequis** : LR constant (Task 61 DONE). Le benchmark empirique des seuils de loss n'a PAS été fait dans Task 61 (on a skip en choisissant LR constant). Il est fait ici en Step 1.
+> **Métriques** : 3 axes (memorization, quality, diversity) combinés en un feedback level unique.
+> - Memorization : exact match + Levenshtein fuzzy + prefix match
+> - Quality : bigram cosine similarity + length ratio
+> - Diversity : Distinct-1 + Distinct-2 (Li et al. 2016) + unique word ratio
+> Voir `docs/benchmark-loss-thresholds.md` pour les données empiriques.
 >
-> **UX** : subtil et non-bloquant — badge inline dans InferencePanel, pas de modal ni toast. Ton pédagogique, pas punitif.
+> **Décision architecturale (2026-03-14)** : La détection `underpowered` utilise un **calcul de capacité dynamique** (`param_count / dataset_size`) au lieu de seuils de loss hardcodés par config. Raison : l'UI permet 3×4×3×4 = 144 combinaisons d'hyperparams + 7 datasets = 1008 configs. Benchmarker chaque combo est impraticable. La formule `params = 2×V×E + B×E + L×12×E²` donne le nombre exact de paramètres pour toute config, et le ratio params/noms indique si le modèle a la capacité théorique. Le benchmark (Step 1, DONE) reste utile pour les seuils de match ratio (learning/sweet-spot/overfitting) et la validation empirique des températures.
+>
+> **Prérequis** : LR constant (Task 61 DONE). Benchmark Step 1 DONE.
+>
+> **UX** : subtil et non-bloquant — badge inline dans InferencePanel, pas de modal ni toast. Ton pédagogique, pas punitif. L'utilisateur peut toujours entraîner davantage (10×2000 = 20000 steps ≈ 30s) — ne jamais dire "impossible".
 
 #### Step 1: Benchmark empirique — seuils de loss par dataset
 
