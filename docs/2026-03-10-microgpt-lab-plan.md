@@ -2138,27 +2138,16 @@ git commit -m "fix: remove LR decay that froze training after 1000 steps"
 
 Pour chaque dataset (Prénoms FR 50, Prénoms FR 1000, Prénoms FR 33k, Baby Names EN 1000, Names EN 8000, Dinosaures 1530, Pokémon FR 1022), avec les hyperparams par défaut (n_embd=16, n_head=4, n_layer=1, block_size=16, lr=0.01) :
 
-- [ ] **Step 1a: Entraîner 2000 steps** — Lancer dans le browser via Playwright, logger la loss EMA toutes les 100 steps.
-- [ ] **Step 1b: Générer 20 mots à step 200, 500, 1000, 2000** — Pour chaque dataset, à chaque checkpoint, générer des mots et calculer le taux de match exact vs dataset source.
-- [ ] **Step 1c: Consigner les résultats** — Documenter dans `docs/benchmark-loss-thresholds.md` un tableau par dataset : step | loss EMA | match exact % | qualité subjective (garbage / emerging / good / overfitting).
-- [ ] **Step 1d: Définir les seuils** — Pour chaque dataset, identifier :
-  - **Sweet spot** : plage de loss EMA où les mots sont crédibles et diversifiés (match exact < 50%)
-  - **Overfitting** : loss EMA plancher + match exact > 80%
-  - Consigner les seuils dans le même doc.
+- [x] **Step 1a: Benchmark 7 datasets × 5000 steps** — Node.js script (`scripts/benchmark.mjs`) using WASM directly. 50 samples × 3 runs × 3 temperatures (0.5/0.8/1.2) per checkpoint.
+- [x] **Step 1b: Results documented** — `docs/benchmark-loss-thresholds.md`. Key finding: only Prénoms FR (50) converges. Temperature affects match ratio 3-5×.
+- [x] **Step 1c: Seuils définis** — At t=0.8: learning <10%, sweet-spot 10-50%, overfitting >50%. Temperature normalization factor applied.
+- [x] **Step 1d: Capacity ratio** — Underpowered detection uses dynamic `computeParamCount(cfg, vocabSize) / datasetSize` instead of hardcoded loss thresholds. Formula: `2×V×E + B×E + L×12×E²`. Works for all 1008 config combos.
 
-#### Step 2: Détection côté frontend
+#### Step 2: Détection côté frontend — DONE
 
-- [ ] **Step 2a: Créer `lib/training-feedback.ts`** — Module pur (pas un hook) avec :
-  - `type FeedbackLevel = 'none' | 'learning' | 'sweet-spot' | 'overfitting'`
-  - `computeMatchRatio(words: string[], datasetWords: string[]): number` — ratio de mots générés qui sont des copies exactes du dataset (case-insensitive)
-  - `computeFeedback(lastEma: number | null, matchRatio: number, datasetId: string): FeedbackLevel` — retourne le niveau basé sur les seuils du benchmark
-  - Les seuils par dataset sont des constantes dans ce fichier (pas de config externe)
-- [ ] **Step 2b: Créer `lib/training-feedback.test.ts`** — Tests unitaires :
-  - matchRatio = 0% → 'none' ou 'learning'
-  - matchRatio = 30%, loss dans sweet spot → 'sweet-spot'
-  - matchRatio = 90% → 'overfitting'
-  - Dataset inconnu → fallback seuils par défaut
-  - Edge cases : mots vides, loss null, 0 mots générés
+- [x] **Step 2a: `lib/training-metrics.ts`** — 3-axis scoring (memorization, quality, diversity). DatasetProfile precomputation. Levenshtein fuzzy match, bigram cosine similarity, Distinct-1/Distinct-2 (Li et al. 2016). Trade-offs documented in header (no val split, no Self-BLEU).
+- [x] **Step 2b: `lib/training-feedback.ts`** — 7 feedback levels (untrained, random, learning, sweet-spot, low-diversity, overfitting, underpowered). Temperature normalization. OLS trend detection. Dynamic capacity ratio for underpowered.
+- [x] **Step 2c: Tests** — 98 vitest tests including benchmark validation with real Prénoms FR (50) data, Levenshtein edge cases, capacity ratio calculations.
 
 #### Step 3: Accès au dataset source côté frontend
 
