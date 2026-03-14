@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ColorVar, StepResult } from '../lib/types';
 import type { ChartData } from 'chart.js';
-import { resolveVar } from '../lib/utils';
+import { resolveVar } from '../lib/model-colors';
 
 function computeEma(values: number[], alpha: number): number[] {
   if (values.length === 0) return [];

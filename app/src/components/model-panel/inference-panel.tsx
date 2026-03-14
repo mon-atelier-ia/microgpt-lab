@@ -1,5 +1,6 @@
 import type { ColorVar } from '../../lib/types';
-import { cn, modelColor, modelMuted } from '../../lib/utils';
+import { cn } from '../../lib/utils';
+import { modelColor, modelMuted } from '../../lib/model-colors';
 
 type InferencePanelProps = {
   words: string[];

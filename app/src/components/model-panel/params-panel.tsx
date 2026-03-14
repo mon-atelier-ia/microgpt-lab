@@ -11,7 +11,8 @@ import {
   HEAD_OPTIONS,
 } from '../../lib/constants';
 import { validHeadCounts } from '../../lib/validation';
-import { cn, modelColor, modelAccent, modelMuted } from '../../lib/utils';
+import { cn } from '../../lib/utils';
+import { modelColor, modelAccent, modelMuted } from '../../lib/model-colors';
 import { posToLr, lrToPos, formatLr } from './params-utils';
 import { Field, NumSelect, LabeledSlider } from './param-controls';
 
@@ -142,14 +143,7 @@ export function ParamsPanel({
   const isTraining = trainState === 'training';
 
   function update(patch: Partial<ModelParams>) {
-    const next = { ...params, ...patch };
-    if (patch.n_embd !== undefined) {
-      const nextHeads = validHeadCounts(patch.n_embd, [...HEAD_OPTIONS]);
-      if (!nextHeads.includes(next.n_head)) {
-        next.n_head = nextHeads[nextHeads.length - 1] ?? 1;
-      }
-    }
-    onParamsChange(next);
+    onParamsChange({ ...params, ...patch });
   }
 
   const trainBtnStyle: CSSProperties = { backgroundColor: accent, color: 'var(--surface-0)' };

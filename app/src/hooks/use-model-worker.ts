@@ -15,7 +15,7 @@ import type {
   WorkerResponse,
 } from '../lib/types';
 import { DEFAULT_PARAMS } from '../lib/constants';
-import { PRESETS } from '../data/presets';
+import { loadDatasetText } from '../lib/dataset-loader';
 
 const MAX_STEPS = 5000;
 
@@ -129,15 +129,14 @@ export function useModelWorker() {
   const initModel = useCallback(
     async (params: ModelParams) => {
       if (trainStateRef.current === 'training') return;
-      const preset = PRESETS.find((p) => p.id === params.datasetId);
-      if (!preset) return;
+      const datasetText = await loadDatasetText(params.datasetId);
+      if (!datasetText) return;
       clearBuffer();
       setSteps([]);
       setWords([]);
       setTrainState('idle');
       setErrorMessage(null);
-      const data = await preset.load();
-      send({ type: 'init', datasetText: data.join('\n'), config: params });
+      send({ type: 'init', datasetText, config: params });
     },
     [send, clearBuffer],
   );

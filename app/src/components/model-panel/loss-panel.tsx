@@ -1,37 +1,11 @@
-import { lazy, Suspense, useMemo, useState } from 'react';
-import type { ChartOptions, TooltipItem } from 'chart.js';
+import { lazy, Suspense } from 'react';
 import type { ColorVar, StepResult } from '../../lib/types';
 import { useLossData } from '../../hooks/use-loss-data';
-import { cn, modelAccent, resolveVar } from '../../lib/utils';
+import { useLossChartOptions } from '../../hooks/use-loss-chart-options';
+import { cn } from '../../lib/utils';
+import { modelAccent } from '../../lib/model-colors';
 
 const LossChart = lazy(() => import('./loss-chart').then((m) => ({ default: m.LossChart })));
-
-function buildChartOptions(textMuted: string, gridColor: string): ChartOptions<'line'> {
-  return {
-    animation: false as const,
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx: TooltipItem<'line'>) =>
-            `loss: ${ctx.parsed.y != null ? ctx.parsed.y.toFixed(4) : '—'}`,
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: { color: textMuted, maxTicksLimit: 6 },
-        grid: { color: gridColor },
-      },
-      y: {
-        ticks: { color: textMuted },
-        grid: { color: gridColor },
-      },
-    },
-  };
-}
 
 type LossPanelProps = {
   steps: StepResult[];
@@ -43,22 +17,7 @@ export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
   const { chartData, lastEma } = useLossData(steps, colorVar);
   const lastStep = steps[steps.length - 1];
   const hasData = steps.length > 0;
-  const [hasAnimated, setHasAnimated] = useState(false);
-  // Resolve CSS vars outside useMemo for theme reactivity
-  const textMuted = resolveVar('--text-muted');
-  const gridColor = resolveVar('--border-subtle');
-  const chartOptions = useMemo(() => {
-    const opts = buildChartOptions(textMuted, gridColor);
-    // Animate draw on first data appearance only, then disable for real-time perf
-    if (hasData && !hasAnimated) {
-      opts.animation = {
-        duration: 800,
-        easing: 'easeOutQuart',
-        onComplete: () => setHasAnimated(true),
-      };
-    }
-    return opts;
-  }, [hasData, hasAnimated, textMuted, gridColor]);
+  const { chartOptions } = useLossChartOptions(hasData);
 
   return (
     <div

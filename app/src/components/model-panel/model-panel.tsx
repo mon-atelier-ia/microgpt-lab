@@ -1,59 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ColorVar, ModelParams } from '../../lib/types';
-import { DEFAULT_N_SAMPLES } from '../../lib/constants';
-import { isArchChange } from '../../lib/validation';
+import { DEFAULT_N_SAMPLES, HEAD_OPTIONS } from '../../lib/constants';
+import { isArchChange, validHeadCounts } from '../../lib/validation';
 import { useModelWorker } from '../../hooks/use-model-worker';
 import type { WorkerHandle } from '../../hooks/use-model-worker';
 import { ParamsPanel } from './params-panel';
 import { LossPanel } from './loss-panel';
 import { InferencePanel } from './inference-panel';
 import { ErrorBanner } from './error-banner';
-import { Button } from '../ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogTitle,
-} from '../ui/alert-dialog';
-
-function ConfirmResetDialog({
-  open,
-  onOpenChange,
-  onConfirm,
-  title,
-  description,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  title: string;
-  description: string;
-}) {
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogTitle className="text-sm font-semibold">{title}</AlertDialogTitle>
-        <AlertDialogDescription className="mt-2 text-xs text-text-secondary">
-          {description}
-        </AlertDialogDescription>
-        <div className="mt-4 flex justify-end gap-2">
-          <AlertDialogCancel asChild>
-            <Button size="sm" variant="ghost">
-              Annuler
-            </Button>
-          </AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button size="sm" onClick={onConfirm} className="bg-error text-surface-0">
-              Réinitialiser
-            </Button>
-          </AlertDialogAction>
-        </div>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
+import { ConfirmResetDialog } from '../ui/confirm-reset-dialog';
 
 export type ModelPanelProps = {
   colorVar: ColorVar;
@@ -84,7 +39,16 @@ function useParamsHandler(handle: WorkerHandle) {
   const [pendingArch, setPendingArch] = useState<ModelParams | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
-  function handleParamsChange(next: ModelParams) {
+  function handleParamsChange(incoming: ModelParams) {
+    // Auto-correct n_head when n_embd changes and current head count is invalid
+    const next = { ...incoming };
+    if (incoming.n_embd !== params.n_embd) {
+      const heads = validHeadCounts(incoming.n_embd, [...HEAD_OPTIONS]);
+      if (!heads.includes(next.n_head)) {
+        next.n_head = heads[heads.length - 1] ?? 1;
+      }
+    }
+
     const lrChanged = next.lr !== params.lr;
     const archChanged = isArchChange(params, next);
 
