@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ColorVar, ModelParams } from '../../lib/types';
 import { DEFAULT_N_SAMPLES, HEAD_OPTIONS } from '../../lib/constants';
 import { isArchChange, validHeadCounts } from '../../lib/validation';
 import { useModelWorker } from '../../hooks/use-model-worker';
 import type { WorkerHandle } from '../../hooks/use-model-worker';
+import { computeMemorization, computeQuality, computeDiversity } from '../../lib/training-metrics';
+import { computeFeedback, type FeedbackResult } from '../../lib/training-feedback';
+import { useLossData } from '../../hooks/use-loss-data';
 import { ParamsPanel } from './params-panel';
 import { LossPanel } from './loss-panel';
 import { InferencePanel } from './inference-panel';
@@ -97,10 +100,40 @@ function useParamsHandler(handle: WorkerHandle) {
   };
 }
 
+function useFeedback(handle: WorkerHandle, lastEma: number | null): FeedbackResult | null {
+  const { words, steps, params, datasetProfile } = handle;
+
+  return useMemo(() => {
+    if (!datasetProfile || words.length === 0) return null;
+    const memorization = computeMemorization(words, datasetProfile);
+    const quality = computeQuality(words, datasetProfile);
+    const diversity = computeDiversity(words);
+    return computeFeedback(
+      { memorization, quality, diversity },
+      {
+        temperature: params.temperature,
+        lossEma: lastEma,
+        totalSteps: steps.length,
+        wordCount: words.length,
+        datasetSize: datasetProfile.words.length,
+        vocabSize: datasetProfile.vocabSize,
+        modelConfig: {
+          n_embd: params.n_embd,
+          n_head: params.n_head,
+          n_layer: params.n_layer,
+          block_size: params.block_size,
+        },
+      },
+    );
+  }, [words, steps.length, params, datasetProfile, lastEma]);
+}
+
 function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
   const { trainState, steps, words, errorMessage, params, initModel, train, generate } = handle;
   const ph = useParamsHandler(handle);
   const initialized = useRef(false);
+  const lossData = useLossData(steps, colorVar);
+  const feedback = useFeedback(handle, lossData.lastEma);
 
   useEffect(() => {
     if (!initialized.current) {
@@ -131,7 +164,7 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
         />
       </div>
       <div className={isHorizontal ? 'lg:flex-[0_0_25%] lg:min-w-0' : ''}>
-        <LossPanel steps={steps} colorVar={colorVar} glowClass={glowClass} />
+        <LossPanel steps={steps} colorVar={colorVar} glowClass={glowClass} lossData={lossData} />
       </div>
       <div className={isHorizontal ? 'lg:flex-[1_1_35%] lg:min-w-0' : ''}>
         <InferencePanel
@@ -139,6 +172,7 @@ function ModelPanelInner({ colorVar, layout, handle }: ModelPanelInnerProps) {
           colorVar={colorVar}
           temperature={params.temperature}
           glowClass={glowClass}
+          feedback={feedback}
         />
       </div>
 

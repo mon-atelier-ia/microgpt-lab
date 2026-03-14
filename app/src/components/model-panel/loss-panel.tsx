@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import type { ColorVar, StepResult } from '../../lib/types';
-import { useLossData } from '../../hooks/use-loss-data';
+import type { LossDataResult } from '../../hooks/use-loss-data';
 import { useLossChartOptions } from '../../hooks/use-loss-chart-options';
 import { cn } from '../../lib/utils';
 import { modelAccent } from '../../lib/model-colors';
@@ -11,10 +11,11 @@ type LossPanelProps = {
   steps: StepResult[];
   colorVar: ColorVar;
   glowClass?: string;
+  lossData: LossDataResult;
 };
 
-export function LossPanel({ steps, colorVar, glowClass }: LossPanelProps) {
-  const { chartData, lastEma } = useLossData(steps, colorVar);
+export function LossPanel({ steps, colorVar, glowClass, lossData }: LossPanelProps) {
+  const { chartData, lastEma } = lossData;
   const lastStep = steps[steps.length - 1];
   const hasData = steps.length > 0;
   const { chartOptions } = useLossChartOptions(hasData);

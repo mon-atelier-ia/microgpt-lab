@@ -1,4 +1,5 @@
 import type { ColorVar } from '../../lib/types';
+import type { FeedbackResult } from '../../lib/training-feedback';
 import { cn } from '../../lib/utils';
 import { modelColor, modelMuted } from '../../lib/model-colors';
 
@@ -7,13 +8,31 @@ type InferencePanelProps = {
   colorVar: ColorVar;
   temperature?: number;
   glowClass?: string;
+  feedback?: FeedbackResult | null;
 };
 
-export function InferencePanel({ words, colorVar, temperature, glowClass }: InferencePanelProps) {
+const BADGE_STYLES: Record<string, string> = {
+  random: 'text-text-muted',
+  learning: 'text-text-muted',
+  'sweet-spot': 'text-green-400',
+  'low-diversity': 'text-amber-400',
+  overfitting: 'text-red-400',
+  underpowered: 'text-amber-400',
+};
+
+export function InferencePanel({
+  words,
+  colorVar,
+  temperature,
+  glowClass,
+  feedback,
+}: InferencePanelProps) {
   const primary = modelColor(colorVar);
   const muted = modelMuted(colorVar);
   // Unique key per word set to force grid remount → re-trigger CSS stagger animations
   const genKey = words.join('\0');
+
+  const showBadge = feedback && feedback.level !== 'untrained' && feedback.message;
 
   return (
     <div
@@ -46,6 +65,17 @@ export function InferencePanel({ words, colorVar, temperature, glowClass }: Infe
               {word}
             </div>
           ))}
+        </div>
+      )}
+
+      {showBadge && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={cn('flex flex-col gap-0.5 text-xs', BADGE_STYLES[feedback.level])}
+        >
+          <span className="font-semibold">{feedback.message}</span>
+          <span className="text-text-muted">{feedback.hint}</span>
         </div>
       )}
 
