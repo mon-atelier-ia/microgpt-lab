@@ -25,25 +25,20 @@ export function InferencePanel({ words, colorVar, temperature, glowClass }: Infe
       </span>
 
       {words.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center py-8 text-xs text-text-muted">
+        <div className="py-8 text-center text-xs text-text-muted">
           Générez des mots après l&apos;entraînement
         </div>
       ) : (
-        <div
-          key={genKey}
-          role="list"
-          className="grid gap-2"
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(5rem, 1fr))' }}
-        >
+        <div key={genKey} role="list" className="flex flex-wrap gap-2">
           {words.map((word, i) => (
             <div
               key={`${i}-${word}`}
               role="listitem"
-              className="word-item rounded-md px-2 py-1.5 text-center font-mono text-sm font-semibold transition-all duration-200 hover:scale-105 hover:brightness-125"
+              className="word-item rounded-full px-3 py-1 font-mono text-sm font-semibold"
               style={{
                 color: primary,
                 backgroundColor: muted,
-                borderLeft: `2px solid ${primary}`,
+                border: `1px solid ${primary}`,
                 animationDelay: `${i * 60}ms`,
               }}
             >
