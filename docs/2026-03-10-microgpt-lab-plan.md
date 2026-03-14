@@ -2005,20 +2005,14 @@ git commit -m "feat: add console banner easter egg with dynamic OKLCH color (Tas
 git commit -m "fix: move console banner to external script for CSP compliance"
 ```
 
-### Task 56: EMA smoothing sur la loss curve (style TensorBoard)
+### Task 56: EMA smoothing sur la loss curve (style TensorBoard) — DONE
 
-**Files:**
-- Modify: `app/src/components/model-panel/loss-chart.tsx` (ou équivalent)
-- Modify: `app/src/lib/utils.ts` ou nouveau helper
+> Implémenté dans Task 57 (refonte visuelle). EMA α=0.1 dans `use-loss-data.ts`, overlay Chart.js avec raw loss semi-transparent et EMA trait épais, couleurs OKLCH par modèle A/B.
 
-- [ ] **Step 1: Implémenter calcul EMA (α ≈ 0.1) sur les données de loss**
-- [ ] **Step 2: Ajouter une seconde série Chart.js (EMA) en overlay sur la loss brute**
-- [ ] **Step 3: Loss brute en trait fin semi-transparent, EMA en trait épais — couleur OKLCH cohérente avec le modèle (A/B)**
-- [ ] **Step 4: Commit**
-
-```bash
-git commit -m "feat: add EMA smoothing overlay on loss curve"
-```
+- [x] **Step 1: Implémenter calcul EMA (α ≈ 0.1) sur les données de loss** — `computeEma()` dans `use-loss-data.ts`
+- [x] **Step 2: Ajouter une seconde série Chart.js (EMA) en overlay sur la loss brute** — dataset `EMA` dans `chartData`
+- [x] **Step 3: Loss brute en trait fin semi-transparent, EMA en trait épais — couleur OKLCH cohérente avec le modèle (A/B)** — raw=muted, EMA=accent
+- [x] **Step 4: Commit** — inclus dans les commits de Task 57
 
 ### Task 57: REFONTE VISUELLE — Tenir les promesses du design spec
 
