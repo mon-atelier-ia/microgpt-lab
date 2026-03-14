@@ -69,7 +69,7 @@ describe('computeFeedback', () => {
     // At t=0.5, raw memorization 0.6 is normalized down to ~0.4 (below 0.5 threshold)
     const scores: MetricScores = { memorization: 0.6, quality: 0.6, diversity: 0.6 };
     const result = computeFeedback(scores, { ...defaultOpts, temperature: 0.5 });
-    // 0.6 / 1.5 = 0.4 → not overfitting, could be sweet-spot
+    // 0.6 / 1.5 = 0.4 -> not overfitting, could be sweet-spot
     expect(result.level).not.toBe('overfitting');
   });
 
@@ -77,7 +77,7 @@ describe('computeFeedback', () => {
     // At t=1.2, raw memorization 0.3 is normalized UP to ~0.5 (hits threshold)
     const scores: MetricScores = { memorization: 0.3, quality: 0.5, diversity: 0.5 };
     const result = computeFeedback(scores, { ...defaultOpts, temperature: 1.2 });
-    // 0.3 / 0.6 = 0.5 → borderline overfitting
+    // 0.3 / 0.6 = 0.5 -> borderline overfitting
     expect(result.level).toBe('overfitting');
   });
 
@@ -98,7 +98,7 @@ describe('detectOverfittingTrend', () => {
     );
   });
 
-  it('detects memorization↑ + diversity↓ over 3 entries', () => {
+  it('detects memorization up + diversity down over 3 entries', () => {
     const trend = [
       { memorization: 0.1, quality: 0.5, diversity: 0.8 },
       { memorization: 0.3, quality: 0.5, diversity: 0.6 },
@@ -107,20 +107,32 @@ describe('detectOverfittingTrend', () => {
     expect(detectOverfittingTrend(trend)).toBe(true);
   });
 
-  it('returns false if memorization is not monotonically increasing', () => {
+  it('handles noisy but upward memorization trend via regression', () => {
+    // 0.1 -> 0.3 -> 0.29 -> 0.5: not strictly monotonic, but slope > 0.02
+    // Uses last 3: [0.3, 0.29, 0.5] => slope ~ +0.1
+    const trend = [
+      { memorization: 0.1, quality: 0.5, diversity: 0.9 },
+      { memorization: 0.3, quality: 0.5, diversity: 0.7 },
+      { memorization: 0.29, quality: 0.5, diversity: 0.55 },
+      { memorization: 0.5, quality: 0.5, diversity: 0.3 },
+    ];
+    expect(detectOverfittingTrend(trend)).toBe(true);
+  });
+
+  it('returns false if memorization slope is flat', () => {
     const trend = [
       { memorization: 0.3, quality: 0.5, diversity: 0.8 },
-      { memorization: 0.2, quality: 0.5, diversity: 0.6 },
-      { memorization: 0.5, quality: 0.5, diversity: 0.4 },
+      { memorization: 0.3, quality: 0.5, diversity: 0.6 },
+      { memorization: 0.3, quality: 0.5, diversity: 0.4 },
     ];
     expect(detectOverfittingTrend(trend)).toBe(false);
   });
 
-  it('returns false if diversity is not monotonically decreasing', () => {
+  it('returns false if diversity slope is flat', () => {
     const trend = [
       { memorization: 0.1, quality: 0.5, diversity: 0.5 },
-      { memorization: 0.3, quality: 0.5, diversity: 0.7 },
-      { memorization: 0.5, quality: 0.5, diversity: 0.4 },
+      { memorization: 0.3, quality: 0.5, diversity: 0.5 },
+      { memorization: 0.5, quality: 0.5, diversity: 0.5 },
     ];
     expect(detectOverfittingTrend(trend)).toBe(false);
   });
