@@ -24,8 +24,8 @@ test.describe('Compare mode', () => {
     await expect(page.getByText('Modèle A')).toBeVisible();
     await expect(page.getByText('Modèle B')).toBeVisible();
 
-    // Both panels should have a "Training status" train button and a "Générer" button
-    const trainBtns = page.getByRole('button', { name: 'Training status' });
+    // Both panels should have a train button and a "Générer" button
+    const trainBtns = page.getByTestId('train-btn');
     await expect(trainBtns).toHaveCount(2);
 
     const genBtns = page.getByRole('button', { name: 'Générer' });

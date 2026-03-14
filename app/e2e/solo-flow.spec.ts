@@ -14,8 +14,8 @@ test.describe('Solo mode', () => {
   test('train and generate flow', async ({ page }) => {
     await page.goto('/');
 
-    // The train button has aria-label="Training status" and shows "Entraîner" initially
-    const trainBtn = page.getByRole('button', { name: 'Training status' });
+    // The train button shows "Entraîner" initially
+    const trainBtn = page.getByTestId('train-btn');
     await expect(trainBtn).toBeVisible();
     await expect(trainBtn).toHaveText(/entra[îi]ner/i);
 
@@ -35,8 +35,8 @@ test.describe('Solo mode', () => {
     const genBtn = page.getByRole('button', { name: 'Générer' });
     await genBtn.click();
 
-    // Word grid should populate — the list is inside aria-label="Generated words"
-    const wordList = page.locator('[aria-label="Generated words"] [role="list"]');
+    // Word grid should populate — the list is inside aria-label="Mots générés"
+    const wordList = page.locator('[aria-label="Mots générés"] [role="list"]');
     await expect(wordList).toBeVisible({ timeout: 10000 });
 
     const items = wordList.locator('[role="listitem"]');

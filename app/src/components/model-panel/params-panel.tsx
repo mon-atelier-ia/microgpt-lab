@@ -61,6 +61,7 @@ function ActionButtons({
         onClick={onTrain}
         disabled={isTraining}
         style={trainBtnStyle}
+        data-testid="train-btn"
       >
         {isTraining ? 'Entraînement…' : 'Entraîner'}
       </Button>
