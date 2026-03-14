@@ -81,10 +81,9 @@ impl TensorModel {
         self.params.iter().map(|t| t.shape().len()).sum()
     }
 
-    /// Adam update with linear LR decay (same formula as scalar engine).
+    /// Adam update with constant LR (no decay — playground mode).
     /// Zero-clone: mutates data in-place via `adam_update`.
     pub fn adam_step(&mut self, step: usize, tc: &TrainConfig) {
-        let lr_t = (tc.lr * (1.0 - step as f64 / tc.n_steps as f64)).max(0.0);
         let step1 = (step + 1) as f64;
 
         let mut flat_idx = 0;
@@ -100,7 +99,7 @@ impl TensorModel {
                     v_buf[idx] = tc.beta2 * v_buf[idx] + (1.0 - tc.beta2) * g * g;
                     let m_hat = m_buf[idx] / (1.0 - tc.beta1.powf(step1));
                     let v_hat = v_buf[idx] / (1.0 - tc.beta2.powf(step1));
-                    data[i] -= lr_t * m_hat / (v_hat.sqrt() + tc.eps);
+                    data[i] -= tc.lr * m_hat / (v_hat.sqrt() + tc.eps);
                 }
             });
             flat_idx += p.shape().len();

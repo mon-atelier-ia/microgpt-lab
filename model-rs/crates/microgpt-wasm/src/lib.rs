@@ -380,7 +380,6 @@ impl WasmGpt {
             self.step_count,
             &self.tc,
         );
-        let lr_t = (self.tc.lr * (1.0 - self.step_count as f64 / self.tc.n_steps as f64)).max(0.0);
         self.step_count += 1;
         self.weights_dirty = true;
 
@@ -388,7 +387,7 @@ impl WasmGpt {
             step: self.step_count,
             loss,
             word: doc,
-            lr: lr_t,
+            lr: self.tc.lr,
         })
         .map_err(|e| JsError::new(&format!("train_step serialization failed: {e}")))
     }
@@ -431,8 +430,6 @@ impl WasmGpt {
         let loss = Tensor::sum_scalars(&losses).scale(1.0 / n as f64);
         loss.backward();
         let loss_val = loss.data()[0];
-        let lr_t = (self.tc.lr * (1.0 - self.step_count as f64 / self.tc.n_steps as f64)).max(0.0);
-
         // Capture grads BEFORE adam_step zeros them.
         let mut grad_snap: HashMap<String, Vec<f64>> = HashMap::with_capacity(self.tracked.len());
         for tp in &self.tracked {
@@ -463,7 +460,7 @@ impl WasmGpt {
             step: self.step_count,
             word: doc,
             loss: Some(loss_val),
-            learning_rate: lr_t,
+            learning_rate: self.tc.lr,
             params,
         };
 
@@ -484,7 +481,7 @@ impl WasmGpt {
                 beta2: self.tc.beta2,
                 eps: self.tc.eps,
                 base_learning_rate: self.tc.lr,
-                schedule: "linear_decay(lr_t = lr * (1 - step / num_steps))".into(),
+                schedule: "constant".into(),
             },
             parameter_options: param_options,
             initial_step: initial,

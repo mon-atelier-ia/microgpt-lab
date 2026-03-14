@@ -137,9 +137,8 @@ impl Model {
         &self.params_flat
     }
 
-    /// Adam update with linear LR decay.
+    /// Adam update with constant LR (no decay — playground mode).
     pub fn adam_step(&mut self, step: usize, tc: &TrainConfig) {
-        let lr_t = (tc.lr * (1.0 - step as f64 / tc.n_steps as f64)).max(0.0);
         let step1 = (step + 1) as f64;
         for i in 0..self.params_flat.len() {
             let g = self.params_flat[i].grad();
@@ -148,7 +147,7 @@ impl Model {
             let m_hat = self.m_buf[i] / (1.0 - tc.beta1.powf(step1));
             let v_hat = self.v_buf[i] / (1.0 - tc.beta2.powf(step1));
             self.params_flat[i]
-                .set_data(self.params_flat[i].data() - lr_t * m_hat / (v_hat.sqrt() + tc.eps));
+                .set_data(self.params_flat[i].data() - tc.lr * m_hat / (v_hat.sqrt() + tc.eps));
             self.params_flat[i].zero_grad();
         }
     }
