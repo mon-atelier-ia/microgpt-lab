@@ -31,7 +31,7 @@ impl Default for ModelConfig {
     }
 }
 
-/// Training and inference hyperparameters.
+/// Training (optimizer) hyperparameters.
 #[derive(Debug, Clone, Copy)]
 pub struct TrainConfig {
     /// Number of training iterations (default: 1000).
@@ -46,10 +46,6 @@ pub struct TrainConfig {
     pub eps: f64,
     /// Weight initialization standard deviation (default: 0.08).
     pub std_init: f64,
-    /// Inference sampling temperature (default: 0.5).
-    pub temperature: f64,
-    /// Number of names to generate per inference call (default: 5).
-    pub n_samples: usize,
 }
 
 impl Default for TrainConfig {
@@ -61,6 +57,22 @@ impl Default for TrainConfig {
             beta2: 0.99,
             eps: 1e-8,
             std_init: 0.08,
+        }
+    }
+}
+
+/// Inference sampling parameters.
+#[derive(Debug, Clone, Copy)]
+pub struct InferenceConfig {
+    /// Sampling temperature (default: 0.5).
+    pub temperature: f64,
+    /// Number of names to generate per inference call (default: 5).
+    pub n_samples: usize,
+}
+
+impl Default for InferenceConfig {
+    fn default() -> Self {
+        Self {
             temperature: 0.5,
             n_samples: 5,
         }

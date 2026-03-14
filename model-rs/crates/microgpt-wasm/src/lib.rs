@@ -1,5 +1,6 @@
 mod backprop_trace;
 mod trace;
+mod trace_types;
 mod training_trace;
 
 use std::collections::HashMap;
@@ -16,6 +17,7 @@ use microgpt_rs::tensor_model::TensorModel;
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
+use trace_types::{StepResult, TrainingMeta};
 use training_trace::{
     MatrixKind, TraceOptimizer, TraceStepParam, TrackedParam, build_param_options, capture_step,
 };
@@ -35,21 +37,6 @@ struct ConfigResult {
     block_size: usize,
     head_dim: usize,
     vocab_size: usize,
-}
-
-#[derive(Serialize)]
-struct StepResult {
-    step: usize,
-    loss: f64,
-    word: String,
-    lr: f64,
-}
-
-#[derive(Serialize)]
-struct TrainingMeta {
-    optimizer: TraceOptimizer,
-    parameter_options: Vec<training_trace::TraceParamOption>,
-    initial_step: training_trace::TraceStep,
 }
 
 fn parse_docs(names_text: &str) -> Vec<String> {

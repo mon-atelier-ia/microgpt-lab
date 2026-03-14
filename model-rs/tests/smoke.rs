@@ -1,4 +1,4 @@
-use microgpt_rs::config::{ModelConfig, TrainConfig};
+use microgpt_rs::config::{InferenceConfig, ModelConfig, TrainConfig};
 use microgpt_rs::data::{build_vocab, tokenize};
 use microgpt_rs::inference::generate;
 use microgpt_rs::model::Model;
@@ -78,11 +78,12 @@ fn training_reduces_loss() {
 fn generate_produces_output() {
     let mc = ModelConfig::default();
     let tc = TrainConfig::default();
+    let ic = InferenceConfig::default();
     let mut rng = Rng::new(42);
     let docs = small_dataset();
     let vocab = build_vocab(&docs);
     let model = Model::new(vocab.size(), &mut rng, mc, &tc);
-    let samples = generate(&model.sd, &vocab, &mut rng, &mc, 3, tc.temperature, "");
+    let samples = generate(&model.sd, &vocab, &mut rng, &mc, 3, ic.temperature, "");
     assert_eq!(samples.len(), 3);
 }
 
@@ -90,11 +91,12 @@ fn generate_produces_output() {
 fn generate_with_prefix() {
     let mc = ModelConfig::default();
     let tc = TrainConfig::default();
+    let ic = InferenceConfig::default();
     let mut rng = Rng::new(42);
     let docs = small_dataset();
     let vocab = build_vocab(&docs);
     let model = Model::new(vocab.size(), &mut rng, mc, &tc);
-    let samples = generate(&model.sd, &vocab, &mut rng, &mc, 3, tc.temperature, "em");
+    let samples = generate(&model.sd, &vocab, &mut rng, &mc, 3, ic.temperature, "em");
     assert_eq!(samples.len(), 3);
     for s in &samples {
         assert!(s.starts_with("em"), "Should start with prefix: got '{s}'");

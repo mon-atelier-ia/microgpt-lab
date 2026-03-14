@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 use std::time::Instant;
 
-use microgpt_rs::config::{ModelConfig, TrainConfig};
+use microgpt_rs::config::{InferenceConfig, ModelConfig, TrainConfig};
 use microgpt_rs::data::{build_vocab, tokenize};
 use microgpt_rs::inference::generate;
 use microgpt_rs::model::Model;
@@ -114,6 +114,7 @@ fn names() -> Vec<&'static str> {
 fn main() {
     let mc = ModelConfig::default();
     let tc = TrainConfig::default();
+    let ic = InferenceConfig::default();
     let mut rng = Rng::new(42);
     let docs = names();
     let vocab = build_vocab(&docs);
@@ -142,8 +143,8 @@ fn main() {
                 &vocab,
                 &mut rng,
                 &mc,
-                tc.n_samples,
-                tc.temperature,
+                ic.n_samples,
+                ic.temperature,
                 "",
             );
             print!(

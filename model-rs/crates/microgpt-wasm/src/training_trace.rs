@@ -1,48 +1,14 @@
-//! Training-trace types and helpers shared between `train_step_traced()`
+//! Training-trace business logic shared between `train_step_traced()`
 //! (lib.rs) and `training_meta()`.
 
 use std::collections::HashMap;
 
 use microgpt_rs::model::Model;
 use microgpt_rs::value::Value;
-use serde::Serialize;
 
-// ── Serializable result types (match TypeScript TrainingTrace) ────────────
-
-#[derive(Serialize)]
-pub struct TraceOptimizer {
-    pub name: String,
-    pub beta1: f64,
-    pub beta2: f64,
-    pub eps: f64,
-    pub base_learning_rate: f64,
-    pub schedule: String,
-}
-
-#[derive(Serialize)]
-pub struct TraceParamOption {
-    pub id: String,
-    pub label: String,
-    pub matrix: String,
-    pub row_index: usize,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub token_char_display: Option<String>,
-}
-
-#[derive(Serialize)]
-pub struct TraceStepParam {
-    pub grad: Vec<f64>,
-    pub after: Vec<f64>,
-}
-
-#[derive(Serialize)]
-pub struct TraceStep {
-    pub step: usize,
-    pub word: String,
-    pub loss: Option<f64>,
-    pub learning_rate: f64,
-    pub params: HashMap<String, TraceStepParam>,
-}
+pub use crate::trace_types::{
+    TraceOptimizer, TraceParamOption, TraceStep, TraceStepParam, TrainingMeta,
+};
 
 // ── Parameter tracking (pub(crate) — shared with train_step_traced) ─────
 
