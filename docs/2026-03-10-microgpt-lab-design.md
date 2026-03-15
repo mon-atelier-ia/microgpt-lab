@@ -188,10 +188,38 @@ Vercel with optimized config:
 - WASM files served with correct MIME type
 - Cache headers for WASM binary
 
+## Training Feedback (Gamification)
+
+After generating words, the inference panel displays a dual-tone feedback badge based on three ML metrics:
+
+- **Memorization** — Levenshtein fuzzy match against dataset (with temperature normalization)
+- **Quality** — bigram cosine similarity + word length plausibility
+- **Diversity** — Distinct-1/Distinct-2 (Li et al. 2016) + unique ratio
+
+Seven feedback levels, evaluated in priority order:
+
+| Level | Emoji | Technical message | Ado-friendly hint |
+|-------|-------|-------------------|-------------------|
+| `untrained` | — | (none) | (none) |
+| `random` | 🎲 | Le modèle génère du bruit | Le modèle tâtonne encore — patience ! |
+| `learning` | 📈 | Le modèle apprend les patterns du langage… | Ça progresse ! Le modèle commence à comprendre… |
+| `sweet-spot` | 🎯 | Bonne généralisation ! | Bravo ! Le modèle invente des mots crédibles ! |
+| `low-diversity` | 🔁 | Le modèle manque de créativité | Toujours les mêmes mots… Monte la température ! |
+| `overfitting` | 🧠 | Le modèle mémorise le dataset | Le modèle triche — il récite au lieu d'inventer ! |
+| `underpowered` | ⚡ | Capacité limitée : X params pour Y noms | Modèle trop petit pour ce dataset — augmente n_embd ! |
+
+Design decisions:
+- `DatasetProfile` (vocabSize, wordSet, bigramDist) pre-computed once per dataset change
+- Dynamic capacity ratio (`params/dataset_size`) replaces hardcoded thresholds
+- OLS trend detection for overfitting (rising memorization + falling diversity)
+- No val split (WASM limitation), no Self-BLEU (overkill at this scale)
+- Badge has `role="status"` + `aria-live="polite"` for accessibility
+- Benchmark: `docs/benchmark-loss-thresholds.md`
+
 ## Implementation Notes
 
-- Invoke `frontend-design` skill during UI implementation for color/polish pass
-- shadcn/ui components to install: Slider, Select, Button, Tooltip (4 Radix packages)
-- Chart.js + react-chartjs-2 to add as dependencies
+- shadcn/ui components: Slider, Select, Button, AlertDialog (4 Radix packages)
+- Chart.js + react-chartjs-2 for loss curves (lazy-loaded, ~55KB gzip)
 - Web Worker communication via `postMessage` / `onmessage` (no shared state)
 - Solo and Compare share the same underlying `ModelPanel` component; Solo renders one, Compare renders two
+- WASM guards: NaN/Inf loss detection, prefix clamped to block_size in compute_probs

@@ -44,11 +44,11 @@ Key design:
 | `src/components/top-bar.tsx` | Mode tabs (Solo/Compare) + dataset selector, APG roving tabindex pattern |
 | `src/components/error-boundary.tsx` | React error boundary with French messages |
 | **Model Panel (triptyque)** | |
-| `src/components/model-panel/model-panel.tsx` | Orchestrator: params → worker → loss/inference. useParamsHandler (constraint logic) |
+| `src/components/model-panel/model-panel.tsx` | Orchestrator: params → worker → loss/inference. useParamsHandler (constraint logic), useFeedback (scoring + badge) |
 | `src/components/model-panel/params-panel.tsx` | Hyperparameter controls (n_embd, n_head, n_layer, block_size, lr, temperature) |
 | `src/components/model-panel/loss-panel.tsx` | Real-time loss curve (Chart.js) with raw + EMA lines, animated first draw |
 | `src/components/model-panel/loss-chart.tsx` | Lazy-loaded Chart.js wrapper (react-chartjs-2) |
-| `src/components/model-panel/inference-panel.tsx` | Generated words display |
+| `src/components/model-panel/inference-panel.tsx` | Generated words display + feedback badge (7 levels, dual-tone: emoji+technical + ado-friendly hint) |
 | `src/components/model-panel/error-banner.tsx` | Worker error display |
 | **UI primitives (shadcn/Radix)** | |
 | `src/components/ui/button.tsx` | Button with variants |
@@ -61,7 +61,7 @@ Key design:
 
 | File | Role |
 |------|------|
-| `src/hooks/use-model-worker.ts` | Web Worker lifecycle — init, train, generate, set_lr, dispose. Exports `WorkerHandle` type |
+| `src/hooks/use-model-worker.ts` | Web Worker lifecycle — init, train, generate, set_lr, dispose. Builds `DatasetProfile` on init. Exports `WorkerHandle` type |
 | `src/hooks/use-loss-data.ts` | EMA computation + Chart.js dataset formatting. Returns `{ chartData, lastEma }` |
 | `src/hooks/use-loss-chart-options.ts` | Chart.js options builder + first-render animation state |
 
@@ -87,6 +87,8 @@ Key design:
 | `src/lib/validation.ts` | `validHeadCounts()`, `isArchChange()` |
 | `src/lib/dataset-loader.ts` | `loadDatasetWords()` — resolve preset ID → word array |
 | `src/lib/worker-utils.ts` | `validateConfig()`, `isStepResult()`, `sampleFromProbs()` — pure functions for Worker |
+| `src/lib/training-metrics.ts` | `buildDatasetProfile()`, `computeMemorization()`, `computeQuality()`, `computeDiversity()` — ML evaluation metrics (Levenshtein, Distinct-1/2, bigram cosine) |
+| `src/lib/training-feedback.ts` | `computeFeedback()` — 7-level feedback system (untrained→sweet-spot→overfitting) with temperature normalization and OLS trend detection |
 
 ## Import Boundaries
 
@@ -124,6 +126,14 @@ Architecture change while trained:
 WASM crash (OOM / panic):
   → model-worker.ts catches "unreachable" → posts French error message
   → user must re-init model
+
+Training feedback (gamification):
+  → After generate: useFeedback() in model-panel.tsx
+  → computeMemorization(words, datasetProfile) — Levenshtein fuzzy match
+  → computeQuality(words, datasetProfile) — bigram cosine + length similarity
+  → computeDiversity(words) — Distinct-1/2 + unique ratio
+  → computeFeedback(scores, opts) — 7 levels with temperature normalization
+  → InferencePanel renders dual-tone badge: emoji+technical (bold) + ado-friendly hint (muted)
 ```
 
 ## Design Tokens
@@ -138,6 +148,6 @@ OKLCH tetradric palette with sRGB fallbacks:
 
 - **pre-commit**: ESLint --fix --max-warnings=0 (complexity ≤10, cognitive ≤12, max-lines ≤300, max-fn ≤100) + Prettier
 - **pre-push**: tsc --noEmit + vite build + jscpd (5% threshold)
-- **Tests**: Vitest (40 unit/component) + Playwright (5 E2E)
-- **Rust**: cargo test (34 tests) + cargo fmt --check + cargo clippy -- -D warnings
+- **Tests**: Vitest (108 unit/component) + Playwright (5 E2E)
+- **Rust**: cargo test (36 tests, incl. 20k/50k step stress tests) + cargo fmt --check + cargo clippy -- -D warnings
 - **SRP audit**: `docs/2026-03-14-srp-audit.md`

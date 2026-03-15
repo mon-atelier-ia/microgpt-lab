@@ -37,7 +37,7 @@ microgpt-lab/
 │   │   │   └── compare-view.tsx
 │   │   ├── hooks/            # use-model-worker, use-loss-data, use-loss-chart-options
 │   │   ├── workers/          # model-worker.ts (WASM bridge)
-│   │   ├── lib/              # types, constants, utils(cn), model-colors, validation, dataset-loader, worker-utils
+│   │   ├── lib/              # types, constants, utils(cn), model-colors, validation, dataset-loader, worker-utils, training-metrics, training-feedback
 │   │   ├── data/             # Dataset presets (lazy-loaded)
 │   │   └── theme/            # OKLCH tokens
 │   ├── wasm-pkg/             # Pre-built WASM bindings
