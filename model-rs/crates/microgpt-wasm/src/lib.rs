@@ -198,8 +198,12 @@ impl WasmGpt {
         let cfg = self.model.config;
         let (mut keys, mut vals) = new_kv_cache(&cfg);
 
+        // Only use the last block_size tokens to avoid pos_emb out-of-bounds.
+        let start = prefix_ids.len().saturating_sub(cfg.block_size);
+        let window = &prefix_ids[start..];
+
         let mut logits = vec![];
-        for (pos, &id) in prefix_ids.iter().enumerate() {
+        for (pos, &id) in window.iter().enumerate() {
             let token_id = id as usize;
             if token_id >= self.model.vocab_size {
                 return Err(JsError::new(&format!(
