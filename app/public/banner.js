@@ -1,9 +1,14 @@
 addEventListener("DOMContentLoaded", () => {
   const s = getComputedStyle(document.documentElement);
   const a = s.getPropertyValue("--model-a").trim() || "oklch(0.65 0.15 220)";
+  const b = s.getPropertyValue("--model-b").trim() || a;
   console.log(
     "%c\n  ██████╗         █████╗    ██████╗\n  ██╔══██╗       ██╔══██╗   ██╔════╝\n  ██████╔╝       ███████║   ██║  ███╗\n  ██╔═══╝ █████╗ ██╔══██║   ██║   ██║\n  ██║     ╚════╝ ██║  ██║ ▄ ╚██████╔╝\n  ╚═╝            ╚═╝  ╚═╝ ▀  ╚═════╝\n",
-    "color:" + a + ";font-family:monospace;",
+    "background:linear-gradient(135deg," + a + "," + b + ");" +
+    "-webkit-background-clip:text;" +
+    "-webkit-text-fill-color:transparent;" +
+    "color:" + a + ";" +
+    "font-family:monospace;font-size:14px;line-height:1.4;",
   );
   console.log(
     "%c microgpt-lab — par P-A.G ",
