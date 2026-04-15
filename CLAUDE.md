@@ -89,3 +89,8 @@ cd model-rs && cargo clippy -- -D warnings  # Lint
 - NEVER run `git push` without explicit user request
 - NEVER run destructive git commands (force push, reset --hard, etc.)
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `style:`, `chore:`, `docs:`
+
+
+## Wiki
+
+Syntheses wiki : `C:\Dev\wiki\topics\ia\` (subdomain microgpt) et `C:\Dev\wiki\entities\microgpt-lab.md`
