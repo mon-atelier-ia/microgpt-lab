@@ -9,3 +9,5 @@ pnpm-build-config.yaml
 .superpowers/
 
 .vercel
+.superpowers/
+test-results/
